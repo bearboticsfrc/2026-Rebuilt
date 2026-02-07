@@ -1,3 +1,3 @@
-package subsystems;
+package frc.robot.subsystems;
 
 public class Spindexer {}
