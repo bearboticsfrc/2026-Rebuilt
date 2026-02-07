@@ -1,0 +1,37 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L - start to shooting pos"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L - shooting to bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L - over bump to neu. zone"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L - neu zone to bump"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

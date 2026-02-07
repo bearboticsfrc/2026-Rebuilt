@@ -1,0 +1,31 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R - start pos to score"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R - score to outpost"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "R - outpost to tower"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

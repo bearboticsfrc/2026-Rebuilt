@@ -1,0 +1,37 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L - Shoot L"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L Shoot - Depot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Depot- Shoot L"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L Shoot - Tower"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
