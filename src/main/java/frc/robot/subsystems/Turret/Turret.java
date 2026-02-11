@@ -136,7 +136,6 @@ public class Turret extends SubsystemBase implements NTSendable {
     builder.addDoubleProperty("Motor Voltage", this::getVoltage, null);
     builder.addDoubleProperty("Rotations", this::getPositionRotations, null);
     builder.addDoubleProperty("setPoint", this::getSetpointRotations, null);
-
     builder.addDoubleProperty("Velocity RPM", this::getVelocityRPM, null);
     builder.addDoubleProperty("StatorCurrent", this::getStatorCurrent, null);
   }
