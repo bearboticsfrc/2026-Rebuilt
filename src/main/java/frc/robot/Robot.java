@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Spindexer;
 
 public class Robot extends TimedRobot {
   private final Importance MINIMUM_IMPORTANCE = Importance.CRITICAL;
@@ -31,6 +32,8 @@ public class Robot extends TimedRobot {
   private final CommandXboxController copilot = new CommandXboxController(0);
 
   private final Intake intake = new Intake();
+
+  private final Spindexer spindexer = new Spindexer();
 
   public Robot() {
     m_robotContainer = new RobotContainer();
@@ -99,6 +102,7 @@ public class Robot extends TimedRobot {
 
     // pilot controlls
     pilot.rightTrigger().whileTrue(intake.runIntake());
+    pilot.rightBumper().whileTrue(spindexer.spindex());
 
     // copilot controlls
     copilot.a().whileTrue(Commands.run(() -> System.out.println("COPILOT A")));
