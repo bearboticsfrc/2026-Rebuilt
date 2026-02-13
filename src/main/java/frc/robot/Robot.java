@@ -14,6 +14,9 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.subsystems.Intake;
 
 public class Robot extends TimedRobot {
   private final Importance MINIMUM_IMPORTANCE = Importance.CRITICAL;
@@ -22,6 +25,12 @@ public class Robot extends TimedRobot {
 
   // @Logged(importance = Importance.CRITICAL)
   private final RobotContainer m_robotContainer;
+
+  private final CommandXboxController pilot = new CommandXboxController(0);
+
+  private final CommandXboxController copilot = new CommandXboxController(0);
+
+  private final Intake intake = new Intake();
 
   public Robot() {
     m_robotContainer = new RobotContainer();
@@ -84,5 +93,14 @@ public class Robot extends TimedRobot {
   @Logged
   public double getMatchTime() {
     return DriverStation.getMatchTime();
+  }
+
+  public void configureBindings() {
+
+    // pilot controlls
+    pilot.rightTrigger().whileTrue(intake.runIntake());
+
+    // copilot controlls
+    copilot.a().whileTrue(Commands.run(() -> System.out.println("COPILOT A")));
   }
 }

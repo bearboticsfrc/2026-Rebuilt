@@ -7,6 +7,8 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.networktables.NTSendableBuilder;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.spectrumLib.CachedDouble;
 
@@ -23,42 +25,51 @@ public class Intake extends SubsystemBase {
     cachedVoltage = new CachedDouble(this::getVoltage);
     flywheelMotor = new TalonFX(1); // Replace 1 with actual CAN ID
     armMotor = new TalonFX(2); // Replace 2 with actual CAN ID
-    TalonFXConfiguration configs = new TalonFXConfiguration();
 
-    configs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    configs.Slot0.kP = 2.0; // Replace 2.0 with actual kP value
-    configs.Slot0.kI = 0;
-    configs.Slot0.kD = 0.1;
+    // arm config
+    TalonFXConfiguration armConfig = new TalonFXConfiguration();
 
-    armMotor.getConfigurator().apply(configs);
+    armConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    armConfig.Slot0.kP = 2.0; // Replace 2.0 with actual kP value
+    armConfig.Slot0.kI = 0;
+    armConfig.Slot0.kD = 0.1;
+
+    // flywheel config
+    TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
+
+    flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    flywheelConfig.Slot0.kP = 2.0; // Replace 2.0 with actual kP value
+    flywheelConfig.Slot0.kI = 0;
+    flywheelConfig.Slot0.kD = 0.1;
+
+    armMotor.getConfigurator().apply(armConfig);
+    flywheelMotor.getConfigurator().apply(flywheelConfig);
   }
 
-  public void runIntake() {
-    flywheelMotor.setControl(m_openLoopRequest.withOutput(0.4));
+  // runs the intake
+  public Command runIntake() {
+    return Commands.run(() -> flywheelMotor.setControl(m_openLoopRequest.withOutput(0.4)), this);
   }
 
-  public void stopIntake() {
-    flywheelMotor.setControl(m_openLoopRequest.withOutput(0.0));
+  // stops intake
+  public Command stopIntake() {
+    return Commands.run(() -> flywheelMotor.setControl(m_openLoopRequest.withOutput(0.0)), this);
   }
-
-  public void extenderOut() {
+  // intake out
+  public Command extenderOut() {
     double currentPosition = armMotor.getPosition().getValueAsDouble();
-    if (currentPosition < extendedPos) {
-      armMotor.setControl(m_positionRequest.withPosition(extendedPos));
 
-    } else {
-      armMotor.setControl(m_positionRequest.withPosition(currentPosition));
-    }
+    return (currentPosition < extendedPos)
+        ? Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(extendedPos)))
+        : Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(currentPosition)));
   }
-
-  public void extenderIn() {
+  // retract intake
+  public Command extenderIn() {
     double currentPosition = armMotor.getPosition().getValueAsDouble();
-    if (currentPosition > retractedPos) {
-      armMotor.setControl(m_positionRequest.withPosition(retractedPos));
 
-    } else {
-      armMotor.setControl(m_positionRequest.withPosition(currentPosition));
-    }
+    return (currentPosition < extendedPos)
+        ? Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(retractedPos)))
+        : Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
   public void initSendable(NTSendableBuilder builder) {
