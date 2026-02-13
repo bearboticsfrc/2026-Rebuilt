@@ -42,6 +42,7 @@ public class Intake extends SubsystemBase {
     flywheelConfig.Slot0.kI = 0;
     flywheelConfig.Slot0.kD = 0.1;
 
+    // apply configs
     armMotor.getConfigurator().apply(armConfig);
     flywheelMotor.getConfigurator().apply(flywheelConfig);
   }
@@ -55,6 +56,7 @@ public class Intake extends SubsystemBase {
   public Command stopIntake() {
     return Commands.run(() -> flywheelMotor.setControl(m_openLoopRequest.withOutput(0.0)), this);
   }
+
   // intake out
   public Command extenderOut() {
     double currentPosition = armMotor.getPosition().getValueAsDouble();
@@ -63,6 +65,7 @@ public class Intake extends SubsystemBase {
         ? Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(extendedPos)))
         : Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(currentPosition)));
   }
+
   // retract intake
   public Command extenderIn() {
     double currentPosition = armMotor.getPosition().getValueAsDouble();
