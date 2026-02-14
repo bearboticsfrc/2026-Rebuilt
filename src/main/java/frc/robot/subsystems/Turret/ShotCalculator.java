@@ -1,6 +1,9 @@
 package frc.robot.subsystems.Turret;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -9,22 +12,20 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
+// import frc.robot.field.AllianceFlipUtil;
 import frc.robot.subsystems.Turret.TrajectoryCalculator.TargetingSolver;
-import frc.robot.field.AllianceFlipUtil;
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
 import java.util.function.Supplier;
-
 
 public class ShotCalculator {
 
-  public ShotCalculator(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
+  public ShotCalculator(
+      Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
     this.poseSupplier = poseSupplier;
     this.chassisSpeedsSupplier = chassisSpeedsSupplier;
   }
 
   private final Supplier<Pose2d> poseSupplier;
-  private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;    
+  private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
 
   Translation2d blueHub = new Translation2d(4.63, 4.03);
   Translation2d blueOutpost = new Translation2d(0.43, 0.3);
@@ -35,7 +36,7 @@ public class ShotCalculator {
   }
 
   public Translation2d getHub() {
-    return AllianceFlipUtil.apply(blueHub);
+    return FlippingUtil.flipFieldPosition(blueHub);
   }
 
   public Translation2d getOutpost() {
@@ -44,33 +45,37 @@ public class ShotCalculator {
 
   public Translation2d getDepot() {
     return FlippingUtil.flipFieldPosition(blueDepot);
-  }    
-  
+  }
+
   @Logged
   public double getHubDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getHub()));
   }
+
   @Logged
   public double getOutpostDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getOutpost()));
   }
+
   @Logged
   public double getDepotDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getDepot()));
   }
+
   @Logged
   public double getHubDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getHub()));
   }
+
   @Logged
   public double getOutpostDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getOutpost()));
   }
+
   @Logged
   public double getDepotDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getDepot()));
   }
-
 
   @Logged Rotation2d robotRotation;
   @Logged Rotation2d turretRotation;
@@ -104,10 +109,12 @@ public class ShotCalculator {
    * @param deltaTimeSeconds Time into the future to predict
    * @return Predicted future pose
    */
-  public Pose2d predictFuturePose(Pose2d currentPose, ChassisSpeeds chassisSpeeds, double deltaTimeSeconds) {
-    
+  public Pose2d predictFuturePose(
+      Pose2d currentPose, ChassisSpeeds chassisSpeeds, double deltaTimeSeconds) {
+
     // Calculate change in position over deltaTime
-    double turretAngularVelocity = chassisSpeeds.omegaRadiansPerSecond * 1.41061531; // finds angular speed
+    double turretAngularVelocity =
+        chassisSpeeds.omegaRadiansPerSecond * 1.41061531; // finds angular speed
     Rotation2d botYaw = getBotYaw();
 
     botVx = chassisSpeeds.vxMetersPerSecond; // velocity of the robot in the y direction
@@ -127,7 +134,7 @@ public class ShotCalculator {
     // Apply transform to current pose
     return currentPose.plus(transform);
   }
-  
+
   // calculates trajectory, returns time, velocity, and angle of launch, will need to correct angle
   // variance
   // Hood will need to be perpindicular to the returned angle
