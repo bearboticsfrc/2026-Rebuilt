@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Turret;
+package frc.robot.subsystems.TrajectoryCalculator;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static java.lang.Math.cos;
@@ -13,8 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
-// import frc.robot.field.AllianceFlipUtil;
-import frc.robot.subsystems.Turret.TrajectoryCalculator.TargetingSolver;
+
 import java.util.function.Supplier;
 
 public class ShotCalculator {

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Turret.TrajectoryCalculator;
+package frc.robot.subsystems.TrajectoryCalculator;
 
 /**
  * Trajectory targeting solver. Takes a target distance and finds the optimal launch velocity and
