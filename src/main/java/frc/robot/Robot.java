@@ -105,7 +105,7 @@ public class Robot extends TimedRobot {
   public void configureBindings() {
 
     // pilot controlls
-    pilot.rightBumper().whileTrue(intake.extenderOut());
+    pilot.rightBumper().whileTrue(intake.extendReverse());
     pilot.leftTrigger().whileTrue(intake.extendRun());
     new Trigger(() -> !pilot.rightBumper().getAsBoolean() && !pilot.leftTrigger().getAsBoolean())
         .whileTrue(intake.retractStop());

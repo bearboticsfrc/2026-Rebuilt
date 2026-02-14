@@ -135,4 +135,14 @@ public class Intake extends SubsystemBase {
           extenderIn().schedule();
         });
   }
+  
+  // run reverse
+  public Command extendReverse() {
+    return Commands.run(
+        () -> {
+          reverseIntake().schedule();
+          extenderOut().schedule();
+        });
+  }
+
 }
