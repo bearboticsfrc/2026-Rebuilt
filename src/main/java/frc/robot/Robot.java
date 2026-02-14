@@ -16,6 +16,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
 
@@ -34,6 +36,8 @@ public class Robot extends TimedRobot {
   private final Intake intake = new Intake();
 
   private final Spindexer spindexer = new Spindexer();
+
+  private final Climber climber = new Climber();
 
   public Robot() {
     m_robotContainer = new RobotContainer();
@@ -101,8 +105,12 @@ public class Robot extends TimedRobot {
   public void configureBindings() {
 
     // pilot controlls
-    pilot.rightTrigger().whileTrue(intake.runIntake());
-    pilot.rightBumper().whileTrue(spindexer.spindex());
+    pilot.rightBumper().whileTrue(intake.extenderOut());
+    pilot.leftTrigger().whileTrue(intake.extendRun());
+    new Trigger(() -> !pilot.rightBumper().getAsBoolean() && !pilot.leftTrigger().getAsBoolean())
+        .whileTrue(intake.retractStop());
+    pilot.y().onTrue(climber.climb());
+    pilot.x().onTrue(climber.decend());
 
     // copilot controlls
     copilot.a().whileTrue(Commands.run(() -> System.out.println("COPILOT A")));
