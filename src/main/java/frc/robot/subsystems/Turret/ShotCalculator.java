@@ -19,20 +19,18 @@ import java.util.function.Supplier;
 
 public class ShotCalculator {
 
-  
   private final Supplier<Pose2d> poseSupplier;
   private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
   private final Translation2d blueHub;
   private final Translation2d blueOutpost;
   private final Translation2d blueDepot;
-
   
   public ShotCalculator(
       Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
     this.poseSupplier = poseSupplier;
     this.chassisSpeedsSupplier = chassisSpeedsSupplier;
     // Initialize alliance-dependent field positions here (safe to call DriverStation)
-  if (DriverStation.getAlliance().map(a -> a == DriverStation.Alliance.Blue).orElse(false)) {
+    if (DriverStation.getAlliance().map(a -> a == DriverStation.Alliance.Blue).orElse(false)) {
       blueHub = new Translation2d(4.63, 4.03);
       blueOutpost = new Translation2d(0.43, 0.3);
       blueDepot = new Translation2d(0.43, 7.5);
@@ -43,50 +41,49 @@ public class ShotCalculator {
     }
   }
 
-
-  public Rotation2d getBotYaw() {
+  private Rotation2d getBotYaw() {
     return poseSupplier.get().getRotation();
   }
 
-  public Translation2d getHub() {
+  private Translation2d getHub() {
     return FlippingUtil.flipFieldPosition(blueHub);
   }
 
-  public Translation2d getOutpost() {
+  private Translation2d getOutpost() {
     return FlippingUtil.flipFieldPosition(blueOutpost);
   }
 
-  public Translation2d getDepot() {
+  private Translation2d getDepot() {
     return FlippingUtil.flipFieldPosition(blueDepot);
   }
 
   @Logged
-  public double getHubDistance() {
+  private double getHubDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getHub()));
   }
 
   @Logged
-  public double getOutpostDistance() {
+  private double getOutpostDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getOutpost()));
   }
 
   @Logged
-  public double getDepotDistance() {
+  private double getDepotDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getDepot()));
   }
 
   @Logged
-  public double getHubDistance(Pose2d location) {
+  private double getHubDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getHub()));
   }
 
   @Logged
-  public double getOutpostDistance(Pose2d location) {
+  private double getOutpostDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getOutpost()));
   }
 
   @Logged
-  public double getDepotDistance(Pose2d location) {
+  private double getDepotDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getDepot()));
   }
 
@@ -98,7 +95,7 @@ public class ShotCalculator {
   @Logged Angle futureTurretRelativeRotation;
   @Logged Pose2d futureLocation = new Pose2d();
 
-  public void updateFutureTurretRotation(Pose2d futurePose) {
+  private void updateFutureTurretRotation(Pose2d futurePose) {
     futureRobotRotation = futurePose.getRotation();
     futureTurretRotation = ((getHub().minus(futurePose.getTranslation())).getAngle());
     futureTurretRelativeRotation =
@@ -122,7 +119,7 @@ public class ShotCalculator {
    * @param deltaTimeSeconds Time into the future to predict
    * @return Predicted future pose
    */
-  public Pose2d predictFuturePose(
+  private Pose2d predictFuturePose(
       Pose2d currentPose, ChassisSpeeds chassisSpeeds, double deltaTimeSeconds) {
 
     // Calculate change in position over deltaTime
@@ -148,34 +145,34 @@ public class ShotCalculator {
     return currentPose.plus(transform);
   }
 
-  // calculates trajectory, returns time, velocity, and angle of launch, will need to correct angle
-  // variance
+  // calculates trajectory, returns time, velocity, and angle of launch, 
+  // will need to correct angle variance
   // Hood will need to be perpindicular to the returned angle
-  public double[] getHubTrajectorySolutions() {
+  private double[] getHubTrajectorySolutions() {
     return TargetingSolver.solveHubTrajectory(getHubDistance() * 3.280839895);
   }
 
-  public double[] getDepotTrajectorySolutions() {
+  private double[] getDepotTrajectorySolutions() {
     return TargetingSolver.solveGroundTrajectory(getDepotDistance() * 3.280839895);
   }
 
-  public double[] getOutpostTrajectorySolutions() {
+  private double[] getOutpostTrajectorySolutions() {
     return TargetingSolver.solveGroundTrajectory(getOutpostDistance() * 3.280839895);
   }
 
-  public double[] getHubTrajectorySolutions(Pose2d robotPose) {
+  private double[] getHubTrajectorySolutions(Pose2d robotPose) {
     return TargetingSolver.solveHubTrajectory(getHubDistance(robotPose) * 3.280839895);
   }
 
-  public double[] getDepotTrajectorySolutions(Pose2d robotPose) {
+  private double[] getDepotTrajectorySolutions(Pose2d robotPose) {
     return TargetingSolver.solveGroundTrajectory(getDepotDistance(robotPose) * 3.280839895);
   }
 
-  public double[] getOutpostTrajectorySolutions(Pose2d robotPose) {
+  private double[] getOutpostTrajectorySolutions(Pose2d robotPose) {
     return TargetingSolver.solveGroundTrajectory(getOutpostDistance(robotPose) * 3.280839895);
   }
 
-  public ChassisSpeeds getChassisSpeeds() {
+  private ChassisSpeeds getChassisSpeeds() {
     return chassisSpeedsSupplier.get();
   }
 
@@ -208,5 +205,14 @@ public class ShotCalculator {
       trajectorySolution[2],
       futureTurretRotation.getDegrees()
     };
+  }
+
+  public double flywheelRPMFromVelocity(double velocityFPS) {
+    // Convert velocity from feet per second to meters per second
+    double velocityMPS = velocityFPS * 0.3048;
+    // Calculate the required flywheel RPM using the formula: RPM = (velocity * 60) / (2 * π * radius)
+    // Flywheel diameter of 0.1007 meters (3.965 inches)
+    double flywheelDiameter = 0.1007;
+    return (velocityMPS * 60) / (Math.PI * flywheelDiameter);
   }
 }
