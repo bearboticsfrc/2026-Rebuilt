@@ -252,7 +252,7 @@ public class TargetingSolver {
             new TargetingSolution(
                 currentVelocity, currentAngle, achievedDistance, achievedHeight, distanceError, 0);
 
-        if (error <= ACCEPTABLE_ERROR && iterations >= 100) {
+        if (error <= ACCEPTABLE_ERROR && iterations >= 75) {
           return bestSolution;
         }
       }

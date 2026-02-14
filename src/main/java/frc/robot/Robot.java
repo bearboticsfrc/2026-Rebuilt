@@ -15,8 +15,10 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ShooterCommand;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
@@ -34,6 +36,8 @@ public class Robot extends TimedRobot {
   private final CommandXboxController copilot = new CommandXboxController(0);
 
   private final Intake intake = new Intake();
+
+  private final ShooterCommand shooter = new ShooterCommand();
 
   private final Spindexer spindexer = new Spindexer();
 
@@ -112,7 +116,24 @@ public class Robot extends TimedRobot {
     pilot.y().onTrue(climber.climb());
     pilot.x().onTrue(climber.decend());
 
+    new Trigger (() -> pilot.rightTrigger().getAsBoolean() && 
+          copilot.rightTrigger().getAsBoolean())
+          .whileTrue(shooter.shootAt("Outpost"));
+          
+    new Trigger (() -> pilot.rightTrigger().getAsBoolean() && 
+          copilot.leftTrigger().getAsBoolean())
+          .whileTrue(shooter.shootAt("Depot"));
+
+    new Trigger (() -> pilot.rightTrigger().getAsBoolean() && 
+          !copilot.leftTrigger().getAsBoolean() && 
+          !copilot.rightTrigger().getAsBoolean())
+          .whileTrue(shooter.shootAt("Hub"));
+
     // copilot controlls
     copilot.a().whileTrue(Commands.run(() -> System.out.println("COPILOT A")));
+
+    
+    copilot.rightTrigger().whileTrue(shooter.shootAt("Outpost"));
+    copilot.leftTrigger().whileTrue(shooter.shootAt("Depot"));
   }
 }
