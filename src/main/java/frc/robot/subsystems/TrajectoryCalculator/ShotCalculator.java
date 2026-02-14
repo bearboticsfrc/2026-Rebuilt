@@ -214,4 +214,5 @@ public class ShotCalculator {
     double flywheelDiameter = 0.1007;
     return (velocityMPS * 60) / (Math.PI * flywheelDiameter);
   }
+  
 }
