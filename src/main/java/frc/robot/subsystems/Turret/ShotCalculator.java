@@ -12,24 +12,37 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.DriverStation;
 // import frc.robot.field.AllianceFlipUtil;
 import frc.robot.subsystems.Turret.TrajectoryCalculator.TargetingSolver;
 import java.util.function.Supplier;
 
 public class ShotCalculator {
 
+  
+  private final Supplier<Pose2d> poseSupplier;
+  private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
+  private final Translation2d blueHub;
+  private final Translation2d blueOutpost;
+  private final Translation2d blueDepot;
+
+  
   public ShotCalculator(
       Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
     this.poseSupplier = poseSupplier;
     this.chassisSpeedsSupplier = chassisSpeedsSupplier;
+    // Initialize alliance-dependent field positions here (safe to call DriverStation)
+  if (DriverStation.getAlliance().map(a -> a == DriverStation.Alliance.Blue).orElse(false)) {
+      blueHub = new Translation2d(4.63, 4.03);
+      blueOutpost = new Translation2d(0.43, 0.3);
+      blueDepot = new Translation2d(0.43, 7.5);
+    } else {
+      blueHub = new Translation2d(12.04, 4.03);
+      blueOutpost = new Translation2d(16.24, 7.5);
+      blueDepot = new Translation2d(16.24, 0.3);
+    }
   }
 
-  private final Supplier<Pose2d> poseSupplier;
-  private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
-
-  Translation2d blueHub = new Translation2d(4.63, 4.03);
-  Translation2d blueOutpost = new Translation2d(0.43, 0.3);
-  Translation2d blueDepot = new Translation2d(0.43, 7.5);
 
   public Rotation2d getBotYaw() {
     return poseSupplier.get().getRotation();
