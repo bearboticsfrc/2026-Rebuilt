@@ -24,6 +24,7 @@ import frc.robot.commands.ShooterCommand;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
+import frc.robot.subsystems.TrajectoryCalculator.ShotCalculator;
 import frc.robot.subsystems.Turret.Turret;
 
 public class Robot extends TimedRobot {
@@ -47,6 +48,8 @@ public class Robot extends TimedRobot {
   private final Turret turret = new Turret();
 
   private final Climber climber = new Climber();
+
+  private final ShotCalculator shotCalculator = new ShotCalculator(drivetrain.getPose(), drivetrain.getChassisSpeeds());
 
   public Robot() {
     m_robotContainer = new RobotContainer();
@@ -113,7 +116,11 @@ public class Robot extends TimedRobot {
 
   public void configureDefaultCommands(){
     //set default turret rotation
+    
+    double[] shotCalculations = shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
+    turret.setAngle(Degrees.of(shotCalculations[3]));
   }
+
 
   public void configureBindings() {
 

@@ -9,6 +9,7 @@ public class Field {
   public static final Translation2d RED_HUB = new Translation2d(11.915394, 4.034536);
   public static final Translation2d BLUE_OUTPOST = new Translation2d(0.52, 0.639);
   public static final Translation2d BLUE_LEFT = new Translation2d(1.218, 7.082);
+  public static final Translation2d BLUE_ALLIANCE_LINE = new Translation2d(4,4);
 
   public static Translation2d getMyHub() {
     return AllianceFlipUtil.apply(BLUE_HUB);
@@ -20,5 +21,9 @@ public class Field {
 
   public static Translation2d getMyLeft() {
     return AllianceFlipUtil.apply(BLUE_LEFT);
+  }
+
+  public static Translation2d getMyAllianceLine() {
+    return AllianceFlipUtil.apply(BLUE_ALLIANCE_LINE);
   }
 }

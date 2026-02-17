@@ -19,6 +19,7 @@ public class ShooterCommand {
 
     public ShooterCommand() {}
 
+
     public Command shootAt(String targetLocation) {
         return new InstantCommand(() -> {
             double[] shotCalculations = shotCalculator.ShootOnMoveSolver(targetLocation);

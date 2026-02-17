@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.field.Field;
 
 import java.util.function.Supplier;
 
@@ -20,24 +21,14 @@ public class ShotCalculator {
 
   private final Supplier<Pose2d> poseSupplier;
   private final Supplier<ChassisSpeeds> chassisSpeedsSupplier;
-  private final Translation2d blueHub;
-  private final Translation2d blueOutpost;
-  private final Translation2d blueDepot;
+  private final Translation2d blueHub = Field.getMyHub();
+  private final Translation2d blueOutpost = Field.getMyOutpost();
+  private final Translation2d blueDepot = Field.getMyLeft();
   
   public ShotCalculator(
       Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
     this.poseSupplier = poseSupplier;
     this.chassisSpeedsSupplier = chassisSpeedsSupplier;
-    // Initialize alliance-dependent field positions here (safe to call DriverStation)
-    if (DriverStation.getAlliance().map(a -> a == DriverStation.Alliance.Blue).orElse(false)) {
-      blueHub = new Translation2d(4.63, 4.03);
-      blueOutpost = new Translation2d(0.43, 0.3);
-      blueDepot = new Translation2d(0.43, 7.5);
-    } else {
-      blueHub = new Translation2d(12.04, 4.03);
-      blueOutpost = new Translation2d(16.24, 7.5);
-      blueDepot = new Translation2d(16.24, 0.3);
-    }
   }
 
   private Rotation2d getBotYaw() {
@@ -45,15 +36,15 @@ public class ShotCalculator {
   }
 
   private Translation2d getHub() {
-    return FlippingUtil.flipFieldPosition(blueHub);
+    return blueHub;
   }
 
   private Translation2d getOutpost() {
-    return FlippingUtil.flipFieldPosition(blueOutpost);
+    return blueOutpost;
   }
 
   private Translation2d getDepot() {
-    return FlippingUtil.flipFieldPosition(blueDepot);
+    return blueDepot;
   }
 
   @Logged
@@ -69,6 +60,19 @@ public class ShotCalculator {
   @Logged
   private double getDepotDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getDepot()));
+  }
+
+  
+  public String targetLocation() {
+    String location = "Hub";
+    if (poseSupplier.get().getTranslation().getX() < Field.getMyAllianceLine().getX()) {
+      location = "Hub";
+    } else if (poseSupplier.get().getTranslation().getY() < Field.getMyAllianceLine().getY()) {
+      location = "Outpost";
+    } else if (poseSupplier.get().getTranslation().getY() >= Field.getMyAllianceLine().getY()) {
+      location = "Depot";
+    }
+    return location;
   }
 
   @Logged
