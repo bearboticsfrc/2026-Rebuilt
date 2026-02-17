@@ -7,64 +7,64 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Climber extends SubsystemBase {
-  private final TalonFX rotato;
+  private final TalonFX rotation;
   private final double rotatedOut = 0.0; // Replace with actual retracted position
   private final double rotatedIn = 1.0; // Replace with actual extended position
   private final PositionVoltage m_positionRequest = new PositionVoltage(0);
-  private final TalonFX extendoPatronum;
+  private final TalonFX extension;
   private final double extendedOut = 0.0; // Replace with actual retracted position
   private final double extendedIn = 1.0; // Replace with actual extended position
 
   public Climber() {
-    extendoPatronum = new TalonFX(1); // Replace 1 with actual CAN ID for extendoPatronum
-    rotato = new TalonFX(2); // Replace 2 with actual CAN ID for rotato
+    extension = new TalonFX(1); // Replace 1 with actual CAN ID for extendoPatronum
+    rotation = new TalonFX(2); // Replace 2 with actual CAN ID for rotato
   }
 
   // Rotates climber out/in
   // extends the climber
   public Command extendArm() {
-    double currentPosition = rotato.getPosition().getValueAsDouble();
+    double currentPosition = rotation.getPosition().getValueAsDouble();
 
     return (currentPosition < rotatedOut)
-        ? Commands.run(() -> rotato.setControl(m_positionRequest.withPosition(rotatedOut)))
-        : Commands.run(() -> rotato.setControl(m_positionRequest.withPosition(currentPosition)));
+        ? Commands.run(() -> rotation.setControl(m_positionRequest.withPosition(rotatedOut)))
+        : Commands.run(() -> rotation.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
   // retracts the climber
   public Command retractArm() {
-    double currentPosition = extendoPatronum.getPosition().getValueAsDouble();
+    double currentPosition = extension.getPosition().getValueAsDouble();
 
     return (currentPosition > rotatedIn)
-        ? Commands.run(() -> extendoPatronum.setControl(m_positionRequest.withPosition(rotatedIn)))
+        ? Commands.run(() -> extension.setControl(m_positionRequest.withPosition(rotatedIn)))
         : Commands.run(
-            () -> extendoPatronum.setControl(m_positionRequest.withPosition(currentPosition)));
+            () -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
   // stops the climber
   public void stop() {
-    extendoPatronum.set(0.0);
+    extension.set(0.0);
   }
 
   // retract / extend
   // extends the climber
   public Command extendClimb() {
-    double currentPosition = extendoPatronum.getPosition().getValueAsDouble();
+    double currentPosition = extension.getPosition().getValueAsDouble();
 
     return (currentPosition < extendedOut)
         ? Commands.run(
-            () -> extendoPatronum.setControl(m_positionRequest.withPosition(extendedOut)))
+            () -> extension.setControl(m_positionRequest.withPosition(extendedOut)))
         : Commands.run(
-            () -> extendoPatronum.setControl(m_positionRequest.withPosition(currentPosition)));
+            () -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
   // retracts the climber
   public Command retractClimb() {
-    double currentPosition = extendoPatronum.getPosition().getValueAsDouble();
+    double currentPosition = extension.getPosition().getValueAsDouble();
 
     return (currentPosition > extendedIn)
-        ? Commands.run(() -> extendoPatronum.setControl(m_positionRequest.withPosition(extendedIn)))
+        ? Commands.run(() -> extension.setControl(m_positionRequest.withPosition(extendedIn)))
         : Commands.run(
-            () -> extendoPatronum.setControl(m_positionRequest.withPosition(currentPosition)));
+            () -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
   // Climb

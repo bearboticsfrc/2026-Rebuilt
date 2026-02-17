@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import bearlib.fms.AllianceColor;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
@@ -22,6 +24,7 @@ import frc.robot.commands.ShooterCommand;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
+import frc.robot.subsystems.Turret.Turret;
 
 public class Robot extends TimedRobot {
   private final Importance MINIMUM_IMPORTANCE = Importance.CRITICAL;
@@ -40,6 +43,8 @@ public class Robot extends TimedRobot {
   private final ShooterCommand shooter = new ShooterCommand();
 
   private final Spindexer spindexer = new Spindexer();
+
+  private final Turret turret = new Turret();
 
   private final Climber climber = new Climber();
 
@@ -106,34 +111,35 @@ public class Robot extends TimedRobot {
     return DriverStation.getMatchTime();
   }
 
+  public void configureDefaultCommands(){
+    //set default turret rotation
+  }
+
   public void configureBindings() {
 
     // pilot controlls
     pilot.rightBumper().whileTrue(intake.extendReverse());
+    
     pilot.leftTrigger().whileTrue(intake.extendRun());
-    new Trigger(() -> !pilot.rightBumper().getAsBoolean() && !pilot.leftTrigger().getAsBoolean())
-        .whileTrue(intake.retractStop());
+    
     pilot.y().onTrue(climber.climb());
+    
     pilot.x().onTrue(climber.decend());
 
-    new Trigger (() -> pilot.rightTrigger().getAsBoolean() && 
-          copilot.rightTrigger().getAsBoolean())
-          .whileTrue(shooter.shootAt("Outpost"));
-          
-    new Trigger (() -> pilot.rightTrigger().getAsBoolean() && 
-          copilot.leftTrigger().getAsBoolean())
-          .whileTrue(shooter.shootAt("Depot"));
-
+    pilot.rightTrigger().and(copilot.rightTrigger()).whileTrue(shooter.shootAt("Outpost"));
+    
+    pilot.rightTrigger().and(copilot.leftTrigger()).whileTrue(shooter.shootAt("Depot"));
+    
     new Trigger (() -> pilot.rightTrigger().getAsBoolean() && 
           !copilot.leftTrigger().getAsBoolean() && 
           !copilot.rightTrigger().getAsBoolean())
           .whileTrue(shooter.shootAt("Hub"));
 
-    // copilot controlls
-    copilot.a().whileTrue(Commands.run(() -> System.out.println("COPILOT A")));
-
+    // change so that shooter just shoots at field "desired location" and operator binding changes what that is? 
     
+    // copilot controlls
     copilot.rightTrigger().whileTrue(shooter.shootAt("Outpost"));
+    
     copilot.leftTrigger().whileTrue(shooter.shootAt("Depot"));
   }
 }

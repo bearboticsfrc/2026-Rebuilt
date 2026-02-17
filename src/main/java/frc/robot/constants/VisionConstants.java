@@ -17,10 +17,6 @@ public class VisionConstants {
 
   public static final double CULLING_AMBIGUITY = 0.4;
 
-  private static final String FRONT_LEFT_CAMERA_NAME = "OV9281FrontLeft";
-  private static final String FRONT_RIGHT_CAMERA_NAME = "OV9281FrontRight";
-  private static final String REAR_CAMERA_NAME = "OV9281Rear";
-
   // The standard deviations of our vision estimated poses, which affect correction rate
   public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(0.001, 0.001, 0.001);
   public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS =

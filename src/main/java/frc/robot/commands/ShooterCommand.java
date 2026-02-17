@@ -14,8 +14,8 @@ public class ShooterCommand {
     private final ShootHood shootHood = new ShootHood();
     private final Flywheel flywheel = new Flywheel();
     private final Turret turret = new Turret();
-    private final ShotCalculator shotCalculator = new ShotCalculator(turret::getPose, turret::getChassisSpeeds);
-    //needs to import pose and chassisspeeds from commandswervedrivetrain
+    // private final CommandSwerveDrivetrain drivetrain = new CommandSwerveDrivetrain();
+    private final ShotCalculator shotCalculator = new ShotCalculator(drivetrain.getPose(), drivetrain.getChassisSpeeds());
 
     public ShooterCommand() {}
 
