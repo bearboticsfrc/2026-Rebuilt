@@ -116,7 +116,6 @@ public class Robot extends TimedRobot {
 
   public void configureDefaultCommands(){
     //set default turret rotation
-    
     double[] shotCalculations = shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
     turret.setAngle(Degrees.of(shotCalculations[3]));
   }
@@ -133,20 +132,18 @@ public class Robot extends TimedRobot {
     
     pilot.x().onTrue(climber.decend());
 
-    pilot.rightTrigger().and(copilot.rightTrigger()).whileTrue(shooter.shootAt("Outpost"));
+    // pilot.rightTrigger().and(copilot.rightTrigger()).whileTrue(shooter.shootAt("Outpost"));
     
-    pilot.rightTrigger().and(copilot.leftTrigger()).whileTrue(shooter.shootAt("Depot"));
+    // pilot.rightTrigger().and(copilot.leftTrigger()).whileTrue(shooter.shootAt("Depot"));
     
-    new Trigger (() -> pilot.rightTrigger().getAsBoolean() && 
-          !copilot.leftTrigger().getAsBoolean() && 
-          !copilot.rightTrigger().getAsBoolean())
-          .whileTrue(shooter.shootAt("Hub"));
+    // new Trigger (() -> pilot.rightTrigger().getAsBoolean() && 
+    //       !copilot.leftTrigger().getAsBoolean() && 
+    //       !copilot.rightTrigger().getAsBoolean())
+    //       .whileTrue(shooter.shootAt("Hub"));
 
     // change so that shooter just shoots at field "desired location" and operator binding changes what that is? 
     
     // copilot controlls
-    copilot.rightTrigger().whileTrue(shooter.shootAt("Outpost"));
-    
-    copilot.leftTrigger().whileTrue(shooter.shootAt("Depot"));
+
   }
 }

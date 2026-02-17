@@ -20,13 +20,13 @@ public class ShooterCommand {
     public ShooterCommand() {}
 
 
-    public Command shootAt(String targetLocation) {
+    public Command shootAt() {
         return new InstantCommand(() -> {
-            double[] shotCalculations = shotCalculator.ShootOnMoveSolver(targetLocation);
+            double[] shotCalculations = shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
             double flywheelRPM = shotCalculator.flywheelRPMFromVelocity(shotCalculations[1]);
             shootHood.setHoodAngle(Degrees.of(shotCalculations[2]));
             flywheel.runFlywheel(flywheelRPM);
-            turret.setAngle(Degrees.of(shotCalculations[3]));
-        }, shootHood, flywheel, turret);
+            // turret.setAngle(Degrees.of(shotCalculations[3]));
+        }, shootHood, flywheel/*, turret*/);
     }
 }
