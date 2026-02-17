@@ -4,8 +4,8 @@ import static edu.wpi.first.units.Units.Degrees;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.subsystems.Flywheel;
-import frc.robot.subsystems.ShootHood;
+import frc.robot.subsystems.Shooter.Flywheel;
+import frc.robot.subsystems.Shooter.ShootHood;
 import frc.robot.subsystems.Turret.Turret;
 import frc.robot.subsystems.TrajectoryCalculator.ShotCalculator;
 
@@ -20,7 +20,7 @@ public class ShooterCommand {
     public ShooterCommand() {}
 
 
-    public Command shootAt() {
+    public Command shoot() {
         return new InstantCommand(() -> {
             double[] shotCalculations = shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
             double flywheelRPM = shotCalculator.flywheelRPMFromVelocity(shotCalculations[1]);

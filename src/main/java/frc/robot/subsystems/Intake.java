@@ -80,26 +80,6 @@ public class Intake extends SubsystemBase {
         : Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
-  public void initSendable(NTSendableBuilder builder) {
-    builder.addDoubleProperty("setPoint", this::getSetpointRotations, null);
-    builder.addDoubleProperty("Velocity RPM", this::getVelocityRPM, null);
-  }
-
-  @Logged
-  public double getVoltage() {
-    return cachedVoltage.getAsDouble();
-  }
-
-  @Logged
-  public double getSetpointRotations() {
-    return armMotor.getPosition().getValueAsDouble();
-  }
-
-  @Logged
-  public double getVelocityRPM() {
-    return flywheelMotor.getVelocity().getValueAsDouble() * 60; // Convert to RPM
-  }
-
   // activate
   public Command activate() {
     return Commands.run(
@@ -143,6 +123,26 @@ public class Intake extends SubsystemBase {
           reverseIntake().schedule();
           extenderOut().schedule();
         });
+  }
+
+  public void initSendable(NTSendableBuilder builder) {
+    builder.addDoubleProperty("setPoint", this::getSetpointRotations, null);
+    builder.addDoubleProperty("Velocity RPM", this::getVelocityRPM, null);
+  }
+
+  @Logged
+  public double getVoltage() {
+    return cachedVoltage.getAsDouble();
+  }
+
+  @Logged
+  public double getSetpointRotations() {
+    return armMotor.getPosition().getValueAsDouble();
+  }
+
+  @Logged
+  public double getVelocityRPM() {
+    return flywheelMotor.getVelocity().getValueAsDouble() * 60; // Convert to RPM
   }
 
 }

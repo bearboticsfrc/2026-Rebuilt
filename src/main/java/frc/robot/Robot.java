@@ -13,6 +13,7 @@ import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -132,18 +133,10 @@ public class Robot extends TimedRobot {
     
     pilot.x().onTrue(climber.decend());
 
-    // pilot.rightTrigger().and(copilot.rightTrigger()).whileTrue(shooter.shootAt("Outpost"));
-    
-    // pilot.rightTrigger().and(copilot.leftTrigger()).whileTrue(shooter.shootAt("Depot"));
-    
-    // new Trigger (() -> pilot.rightTrigger().getAsBoolean() && 
-    //       !copilot.leftTrigger().getAsBoolean() && 
-    //       !copilot.rightTrigger().getAsBoolean())
-    //       .whileTrue(shooter.shootAt("Hub"));
+    pilot.rightTrigger().whileTrue(shooter.shoot());
 
-    // change so that shooter just shoots at field "desired location" and operator binding changes what that is? 
-    
     // copilot controlls
+    copilot.leftTrigger().onTrue(Commands.run(() -> pilot.setRumble(RumbleType.kBothRumble, 1000000.0)));
 
   }
 }
