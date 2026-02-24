@@ -14,10 +14,12 @@ public class Spindexer extends SubsystemBase {
   private final DutyCycleOut m_openLoopRequest = new DutyCycleOut(0);
   private final CachedDouble cachedVoltage;
   private final TalonFX spindexMotor;
+  private final TalonFX towerMotor;
 
   public Spindexer() {
     cachedVoltage = new CachedDouble(this::getVoltage);
     spindexMotor = new TalonFX(1); // add actual CAN ID
+    towerMotor = new TalonFX(2); // add actual CAN ID
 
     // motor config
     TalonFXConfiguration spindexMotorConfig = new TalonFXConfiguration();
@@ -31,6 +33,9 @@ public class Spindexer extends SubsystemBase {
   // runs spindexer
   public Command spindex() {
     return Commands.run(() -> spindexMotor.setControl(m_openLoopRequest.withOutput(1)), this);
+  }
+  public Command towerIndex() {
+    return Commands.run(() -> towerMotor.setControl(m_openLoopRequest.withOutput(1)), this);
   }
 
   @Logged
