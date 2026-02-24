@@ -5,10 +5,10 @@ import static edu.wpi.first.units.Units.Degrees;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import frc.robot.subsystems.Turret.Turret;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.shooter.trajectoryCalculator.ShotCalculator;
+import frc.robot.subsystems.turret.Turret;
 
 public class ShooterCommand {
 
@@ -29,9 +29,8 @@ public class ShooterCommand {
           double flywheelRPM = shotCalculations[1];
           hood.goToSetpointAngle(() -> Degrees.of(shotCalculations[2]));
           flywheel.setVelocity(Units.RPM.of(flywheelRPM));
-          // turret.setAngle(Degrees.of(shotCalculations[3]));
         },
         hood,
-        flywheel /*, turret*/);
+        flywheel);
   }
 }
