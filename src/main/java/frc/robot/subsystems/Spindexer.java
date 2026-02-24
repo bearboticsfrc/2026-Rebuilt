@@ -34,6 +34,7 @@ public class Spindexer extends SubsystemBase {
   public Command spindex() {
     return Commands.run(() -> spindexMotor.setControl(m_openLoopRequest.withOutput(1)), this);
   }
+
   public Command towerIndex() {
     return Commands.run(() -> towerMotor.setControl(m_openLoopRequest.withOutput(1)), this);
   }

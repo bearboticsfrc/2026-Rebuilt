@@ -80,51 +80,6 @@ public class Intake extends SubsystemBase {
         : Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
-  // activate
-  public Command activate() {
-    return Commands.run(
-        () -> {
-          extenderOut().schedule();
-          runIntake().schedule();
-        });
-  }
-
-  // deactivate
-  public Command deactivate() {
-    return Commands.run(
-        () -> {
-          stopIntake().schedule();
-          extenderIn().schedule();
-        });
-  }
-
-  // extend run intake
-  public Command extendRun() {
-    return Commands.run(
-        () -> {
-          extenderOut().schedule();
-          runIntake().schedule();
-        });
-  }
-
-  // retract stop intake
-  public Command retractStop() {
-    return Commands.run(
-        () -> {
-          stopIntake().schedule();
-          extenderIn().schedule();
-        });
-  }
-
-  // run reverse
-  public Command extendReverse() {
-    return Commands.run(
-        () -> {
-          reverseIntake().schedule();
-          extenderOut().schedule();
-        });
-  }
-
   public void initSendable(NTSendableBuilder builder) {
     builder.addDoubleProperty("setPoint", this::getSetpointRotations, null);
     builder.addDoubleProperty("Velocity RPM", this::getVelocityRPM, null);

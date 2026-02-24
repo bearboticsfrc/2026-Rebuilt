@@ -23,8 +23,8 @@ import frc.robot.commands.ShooterCommand;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
-import frc.robot.subsystems.TrajectoryCalculator.ShotCalculator;
 import frc.robot.subsystems.Turret.Turret;
+import frc.robot.subsystems.shooter.trajectoryCalculator.ShotCalculator;
 
 public class Robot extends TimedRobot {
   private final Importance MINIMUM_IMPORTANCE = Importance.CRITICAL;
@@ -123,13 +123,13 @@ public class Robot extends TimedRobot {
   public void configureBindings() {
 
     // pilot controlls
-    pilot.rightBumper().whileTrue(intake.extendReverse());
+    // pilot.rightBumper().whileTrue(intake.extendReverse());
 
-    pilot.leftTrigger().whileTrue(intake.extendRun());
+    // pilot.leftTrigger().whileTrue(intake.extendRun());
 
-    pilot.y().onTrue(climber.climb());
+    // pilot.y().onTrue(climber.climb());
 
-    pilot.x().onTrue(climber.descend());
+    // pilot.x().onTrue(climber.descend());
 
     pilot.rightTrigger().whileTrue(shooter.shoot());
 

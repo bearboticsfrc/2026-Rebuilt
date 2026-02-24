@@ -39,5 +39,4 @@ public class Climber extends SubsystemBase {
         ? Commands.run(() -> extension.setControl(m_positionRequest.withPosition(extendedIn)))
         : Commands.run(() -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
   }
-
 }
