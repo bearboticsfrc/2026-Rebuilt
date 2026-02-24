@@ -27,7 +27,7 @@ public class ShootHood extends SubsystemBase{
     shooterHoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     shooterHoodConfig.Slot0.kP = 0;
     shooterHoodConfig.Slot0.kI = 0;
-    shooterHoodConfig.Slot0.kD = 0;
+    shooterHoodConfig.Slot0.kD = 0; 
 
     //apply config
     shootHood.getConfigurator().apply(shooterHoodConfig);

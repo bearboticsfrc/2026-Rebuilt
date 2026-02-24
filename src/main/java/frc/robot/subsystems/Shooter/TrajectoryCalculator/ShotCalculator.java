@@ -179,7 +179,7 @@ public class ShotCalculator {
     return chassisSpeedsSupplier.get();
   }
 
-  // calculates trajectory. returns time, speed(f/s), angle of launch, where turret needs to face,
+  // calculates trajectory. returns time, speed(rpm), angle of launch, where turret needs to face,
   // will need to correct angle variance
   public double[] ShootOnMoveSolver(String targetLocation) {
     double[] trajectorySolution;
@@ -204,13 +204,13 @@ public class ShotCalculator {
     }
     return new double[] {
       trajectorySolution[0],
-      trajectorySolution[1],
+      flywheelRPMFromVelocity(trajectorySolution[1]),
       trajectorySolution[2],
       futureTurretRotation.getDegrees()
     };
   }
 
-  public double flywheelRPMFromVelocity(double velocityFPS) {
+  private double flywheelRPMFromVelocity(double velocityFPS) {
     // Convert velocity from feet per second to meters per second
     double velocityMPS = velocityFPS * 0.3048;
     // Calculate the required flywheel RPM using the formula: RPM = (velocity * 60) / (2 * π * radius)

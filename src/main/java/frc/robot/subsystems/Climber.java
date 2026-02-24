@@ -79,7 +79,7 @@ public class Climber extends SubsystemBase {
   }
 
   // Descend
-  public Command decend() {
+  public Command descend() {
     return Commands.runOnce(
         () -> {
           extendClimb().schedule();

@@ -23,7 +23,7 @@ public class ShooterCommand {
     public Command shoot() {
         return new InstantCommand(() -> {
             double[] shotCalculations = shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
-            double flywheelRPM = shotCalculator.flywheelRPMFromVelocity(shotCalculations[1]);
+            double flywheelRPM = shotCalculations[1];
             shootHood.setHoodAngle(Degrees.of(shotCalculations[2]));
             flywheel.runFlywheel(flywheelRPM);
             // turret.setAngle(Degrees.of(shotCalculations[3]));

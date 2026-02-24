@@ -131,7 +131,7 @@ public class Robot extends TimedRobot {
     
     pilot.y().onTrue(climber.climb());
     
-    pilot.x().onTrue(climber.decend());
+    pilot.x().onTrue(climber.descend());
 
     pilot.rightTrigger().whileTrue(shooter.shoot());
 
