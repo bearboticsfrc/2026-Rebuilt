@@ -12,15 +12,13 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ShooterCommand;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Intake;
@@ -50,7 +48,8 @@ public class Robot extends TimedRobot {
 
   private final Climber climber = new Climber();
 
-  private final ShotCalculator shotCalculator = new ShotCalculator(drivetrain.getPose(), drivetrain.getChassisSpeeds());
+  private final ShotCalculator shotCalculator =
+      new ShotCalculator(drivetrain.getPose(), drivetrain.getChassisSpeeds());
 
   public Robot() {
     m_robotContainer = new RobotContainer();
@@ -115,28 +114,28 @@ public class Robot extends TimedRobot {
     return DriverStation.getMatchTime();
   }
 
-  public void configureDefaultCommands(){
-    //set default turret rotation
+  public void configureDefaultCommands() {
+    // set default turret rotation
     double[] shotCalculations = shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
     turret.setAngle(Degrees.of(shotCalculations[3]));
   }
-
 
   public void configureBindings() {
 
     // pilot controlls
     pilot.rightBumper().whileTrue(intake.extendReverse());
-    
+
     pilot.leftTrigger().whileTrue(intake.extendRun());
-    
+
     pilot.y().onTrue(climber.climb());
-    
+
     pilot.x().onTrue(climber.descend());
 
     pilot.rightTrigger().whileTrue(shooter.shoot());
 
     // copilot controlls
-    copilot.leftTrigger().onTrue(Commands.run(() -> pilot.setRumble(RumbleType.kBothRumble, 1000000.0)));
-
+    copilot
+        .leftTrigger()
+        .onTrue(Commands.run(() -> pilot.setRumble(RumbleType.kBothRumble, 1000000.0)));
   }
 }

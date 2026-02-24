@@ -57,7 +57,7 @@ public class Intake extends SubsystemBase {
     return Commands.run(() -> flywheelMotor.setControl(m_openLoopRequest.withOutput(0.0)), this);
   }
 
-  // runs intake motor in reverse 
+  // runs intake motor in reverse
   public Command reverseIntake() {
     return Commands.run(() -> flywheelMotor.setControl(m_openLoopRequest.withOutput(-0.4)), this);
   }
@@ -115,7 +115,7 @@ public class Intake extends SubsystemBase {
           extenderIn().schedule();
         });
   }
-  
+
   // run reverse
   public Command extendReverse() {
     return Commands.run(
@@ -144,5 +144,4 @@ public class Intake extends SubsystemBase {
   public double getVelocityRPM() {
     return flywheelMotor.getVelocity().getValueAsDouble() * 60; // Convert to RPM
   }
-
 }

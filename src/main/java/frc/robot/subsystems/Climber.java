@@ -36,8 +36,7 @@ public class Climber extends SubsystemBase {
 
     return (currentPosition > rotatedIn)
         ? Commands.run(() -> extension.setControl(m_positionRequest.withPosition(rotatedIn)))
-        : Commands.run(
-            () -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
+        : Commands.run(() -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
   // stops the climber
@@ -51,10 +50,8 @@ public class Climber extends SubsystemBase {
     double currentPosition = extension.getPosition().getValueAsDouble();
 
     return (currentPosition < extendedOut)
-        ? Commands.run(
-            () -> extension.setControl(m_positionRequest.withPosition(extendedOut)))
-        : Commands.run(
-            () -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
+        ? Commands.run(() -> extension.setControl(m_positionRequest.withPosition(extendedOut)))
+        : Commands.run(() -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
   // retracts the climber
@@ -63,8 +60,7 @@ public class Climber extends SubsystemBase {
 
     return (currentPosition > extendedIn)
         ? Commands.run(() -> extension.setControl(m_positionRequest.withPosition(extendedIn)))
-        : Commands.run(
-            () -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
+        : Commands.run(() -> extension.setControl(m_positionRequest.withPosition(currentPosition)));
   }
 
   // Climb

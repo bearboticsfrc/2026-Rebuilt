@@ -1,4 +1,4 @@
-package frc.robot.subsystems.TrajectoryCalculator;
+package frc.robot.subsystems.shooter.trajectoryCalculator;
 
 import java.util.ArrayList;
 import java.util.List;

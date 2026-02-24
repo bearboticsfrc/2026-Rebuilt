@@ -1,10 +1,9 @@
-package frc.robot.subsystems.TrajectoryCalculator;
+package frc.robot.subsystems.shooter.trajectoryCalculator;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
-import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -12,9 +11,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.field.Field;
-
 import java.util.function.Supplier;
 
 public class ShotCalculator {
@@ -24,7 +21,7 @@ public class ShotCalculator {
   private final Translation2d blueHub = Field.getMyHub();
   private final Translation2d blueOutpost = Field.getMyOutpost();
   private final Translation2d blueDepot = Field.getMyLeft();
-  
+
   public ShotCalculator(
       Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
     this.poseSupplier = poseSupplier;
@@ -62,7 +59,6 @@ public class ShotCalculator {
     return ((poseSupplier.get().getTranslation()).getDistance(getDepot()));
   }
 
-  
   public String targetLocation() {
     String location = "Hub";
     if (poseSupplier.get().getTranslation().getX() < Field.getMyAllianceLine().getX()) {
@@ -148,7 +144,7 @@ public class ShotCalculator {
     return currentPose.plus(transform);
   }
 
-  // calculates trajectory, returns time, velocity, and angle of launch, 
+  // calculates trajectory, returns time, velocity, and angle of launch,
   // will need to correct angle variance
   // Hood will need to be perpindicular to the returned angle
   private double[] getHubTrajectorySolutions() {
@@ -213,10 +209,10 @@ public class ShotCalculator {
   private double flywheelRPMFromVelocity(double velocityFPS) {
     // Convert velocity from feet per second to meters per second
     double velocityMPS = velocityFPS * 0.3048;
-    // Calculate the required flywheel RPM using the formula: RPM = (velocity * 60) / (2 * π * radius)
+    // Calculate the required flywheel RPM using the formula: RPM = (velocity * 60) / (2 * π *
+    // radius)
     // Flywheel diameter of 0.1007 meters (3.965 inches)
     double flywheelDiameter = 0.1007;
     return (velocityMPS * 60) / (Math.PI * flywheelDiameter);
   }
-  
 }
