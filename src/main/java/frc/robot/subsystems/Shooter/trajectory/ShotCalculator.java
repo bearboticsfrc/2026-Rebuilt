@@ -1,4 +1,4 @@
-package frc.robot.subsystems.shooter.trajectoryCalculator;
+package frc.robot.subsystems.shooter.trajectory;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static java.lang.Math.cos;
@@ -45,17 +45,17 @@ public class ShotCalculator {
   }
 
   @Logged
-  private double getHubDistance() {
+  public double getHubDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getHub()));
   }
 
   @Logged
-  private double getOutpostDistance() {
+  public double getOutpostDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getOutpost()));
   }
 
   @Logged
-  private double getDepotDistance() {
+  public double getDepotDistance() {
     return ((poseSupplier.get().getTranslation()).getDistance(getDepot()));
   }
 
@@ -71,18 +71,15 @@ public class ShotCalculator {
     return location;
   }
 
-  @Logged
-  private double getHubDistance(Pose2d location) {
+  public double getHubDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getHub()));
   }
 
-  @Logged
-  private double getOutpostDistance(Pose2d location) {
+  public double getOutpostDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getOutpost()));
   }
 
-  @Logged
-  private double getDepotDistance(Pose2d location) {
+  public double getDepotDistance(Pose2d location) {
     return ((location.getTranslation()).getDistance(getDepot()));
   }
 

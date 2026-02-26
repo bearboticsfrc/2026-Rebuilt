@@ -20,10 +20,14 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.ShooterCommand;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
-import frc.robot.subsystems.shooter.trajectoryCalculator.ShotCalculator;
+import frc.robot.subsystems.shooter.Flywheel;
+import frc.robot.subsystems.shooter.Hood;
+import frc.robot.subsystems.shooter.trajectory.ShotCalculator;
 import frc.robot.subsystems.turret.Turret;
 
 public class Robot extends TimedRobot {
@@ -40,19 +44,25 @@ public class Robot extends TimedRobot {
 
   private final Intake intake = new Intake();
 
-  private final ShooterCommand shooter = new ShooterCommand();
-
   private final Spindexer spindexer = new Spindexer();
 
   private final Turret turret = new Turret();
+  private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
+  private final Flywheel flywheel = new Flywheel();
+  private final Hood hood = new Hood();
   private final Climber climber = new Climber();
 
-  private final ShotCalculator shotCalculator =
-      new ShotCalculator(drivetrain.getPose(), drivetrain.getChassisSpeeds());
+  private final ShotCalculator shotCalculator;
+
+  private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, turret, drivetrain);
 
   public Robot() {
     m_robotContainer = new RobotContainer();
+
+    shotCalculator =
+        new ShotCalculator(() -> drivetrain.getPose(), () -> drivetrain.getChassisSpeeds());
+
     configureLogging();
   }
 

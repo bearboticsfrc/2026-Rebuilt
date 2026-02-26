@@ -187,9 +187,9 @@ public class DriveToPoseCommand extends Command {
     isFinishedDebouncer.calculate(false);
 
     // Reset drivetrain debug flags
-    drivetrain.xTranslationAtSetpoint = false;
-    drivetrain.yTranslationAtSetpoint = false;
-    drivetrain.headingAtSetpoint = false;
+    // drivetrain.xTranslationAtSetpoint = false;
+    // drivetrain.yTranslationAtSetpoint = false;
+    // drivetrain.headingAtSetpoint = false;
   }
 
   /**
@@ -237,9 +237,9 @@ public class DriveToPoseCommand extends Command {
 
     // Update drivetrain status flags (useful for logging/debugging)
     // Note: atSetpoint() checks position only, atGoal() checks position and velocity
-    drivetrain.xTranslationAtSetpoint = xTranslationController.atSetpoint();
-    drivetrain.yTranslationAtSetpoint = yTranslationController.atSetpoint();
-    drivetrain.headingAtSetpoint = rotationReached;
+    // drivetrain.xTranslationAtSetpoint = xTranslationController.atSetpoint();
+    // drivetrain.yTranslationAtSetpoint = yTranslationController.atSetpoint();
+    // drivetrain.headingAtSetpoint = rotationReached;
 
     // Use the debouncer to ensure the robot has settled at the target pose
     return isFinishedDebouncer.calculate(translationReached && rotationReached);
@@ -257,9 +257,9 @@ public class DriveToPoseCommand extends Command {
   public void end(boolean interrupted) {
     drivetrain.setControl(new SwerveRequest.Idle());
 
-    drivetrain.xTranslationAtSetpoint = false;
-    drivetrain.yTranslationAtSetpoint = false;
-    drivetrain.headingAtSetpoint = false;
+    // drivetrain.xTranslationAtSetpoint = false;
+    // drivetrain.yTranslationAtSetpoint = false;
+    // drivetrain.headingAtSetpoint = false;
   }
 
   /**
