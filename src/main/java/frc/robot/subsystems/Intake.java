@@ -64,20 +64,12 @@ public class Intake extends SubsystemBase {
 
   // intake arm out
   public Command extenderOut() {
-    double currentPosition = armMotor.getPosition().getValueAsDouble();
-
-    return (currentPosition < extendedPos)
-        ? Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(extendedPos)))
-        : Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(currentPosition)));
+     return Commands.run(()-> armMotor.setControl(m_positionRequest.withPosition(extendedPos)), this);
   }
 
   // retract intake arm
   public Command extenderIn() {
-    double currentPosition = armMotor.getPosition().getValueAsDouble();
-
-    return (currentPosition < extendedPos)
-        ? Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(retractedPos)))
-        : Commands.run(() -> armMotor.setControl(m_positionRequest.withPosition(currentPosition)));
+    return Commands.run(()-> armMotor.setControl(m_positionRequest.withPosition(retractedPos)), this);
   }
 
   public void initSendable(NTSendableBuilder builder) {
