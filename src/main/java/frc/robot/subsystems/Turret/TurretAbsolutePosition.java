@@ -12,8 +12,8 @@ import yams.units.EasyCRTConfig;
 public class TurretAbsolutePosition {
   CANBus canbus = new CANBus("drive");
 
-  private final CANcoder turretCANcoderMain = new CANcoder(31, canbus); // 10 tooth
-  private final CANcoder turretCANcoderAux = new CANcoder(32, canbus); // 11 tooth
+  private final CANcoder turretCANcoderMain = new CANcoder(21, canbus); // 10 tooth
+  private final CANcoder turretCANcoderAux = new CANcoder(20, canbus); // 11 tooth
 
   private EasyCRT absoluteEncoder = new EasyCRT(getEasyCRTConfig());
 
