@@ -61,7 +61,7 @@ public class Robot extends TimedRobot {
     m_robotContainer = new RobotContainer();
 
     shotCalculator =
-        new ShotCalculator(() -> drivetrain.getPose(), () -> drivetrain.getChassisSpeeds());
+        new TargetingSolver(() -> drivetrain.getPose(), () -> drivetrain.getChassisSpeeds());
 
     configureLogging();
   }

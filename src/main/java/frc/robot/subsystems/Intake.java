@@ -1,96 +1,125 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.networktables.NTSendableBuilder;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.spectrumLib.CachedDouble;
+
 
 public class Intake extends SubsystemBase {
-  private final DutyCycleOut m_openLoopRequest = new DutyCycleOut(0);
-  private final CachedDouble cachedVoltage;
-  private final double retractedPos = 0.0; // Replace with actual retracted position
-  private final double extendedPos = 1.0; // Replace with actual extended position
-  private final PositionVoltage m_positionRequest = new PositionVoltage(0);
-  private final TalonFX flywheelMotor;
-  private final TalonFX armMotor;
+  
+  private final CANBus canivore = new CANBus("drive");
+
+  private final TalonFX flywheel = new TalonFX(0, canivore);
+  private final TalonFX arm = new TalonFX(0, canivore);
+
+  private final double extended = 0.0;
+  private final double retratcted = 0.0;
+
+  private final VoltageOut m_voltReq = new VoltageOut(0.0);
+  private final PositionVoltage m_posReq = new PositionVoltage(0.0);
 
   public Intake() {
-    cachedVoltage = new CachedDouble(this::getVoltage);
-    flywheelMotor = new TalonFX(1); // Replace 1 with actual CAN ID
-    armMotor = new TalonFX(2); // Replace 2 with actual CAN ID
 
-    // arm config
+    TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
     TalonFXConfiguration armConfig = new TalonFXConfiguration();
 
+    flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    flywheelConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    flywheelConfig.Slot0.kS = 0;
+    flywheelConfig.Slot0.kV = 0;
+    flywheelConfig.Slot0.kA = 0;
+    flywheelConfig.Slot0.kP = 0;
+
     armConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    armConfig.Slot0.kP = 2.0; // Replace 2.0 with actual kP value
-    armConfig.Slot0.kI = 0;
-    armConfig.Slot0.kD = 0.1;
-
-    // flywheel config
-    TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
-
-    flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    flywheelConfig.Slot0.kP = 2.0; // Replace 2.0 with actual kP value
+    flywheelConfig.Slot0.kP = 0;
     flywheelConfig.Slot0.kI = 0;
-    flywheelConfig.Slot0.kD = 0.1;
+    flywheelConfig.Slot0.kD = 0;
+    flywheelConfig.Slot0.kG = 0;
 
-    // apply configs
-    armMotor.getConfigurator().apply(armConfig);
-    flywheelMotor.getConfigurator().apply(flywheelConfig);
+    for (int i = 0; i < 2; ++i) {
+      var status = flywheel.getConfigurator().apply(flywheelConfig);
+      if (status.isOK()) break;
+    }
+  
+    for (int i = 0; i < 2; ++i) {
+      var status = arm.getConfigurator().apply(armConfig);
+      if (status.isOK()) break;
+    }
   }
 
-  // runs the intake motor
-  public Command runIntake() {
-    return Commands.run(() -> flywheelMotor.setControl(m_openLoopRequest.withOutput(0.4)), this);
+  public void setOutput(double output){
+    flywheel.setControl(m_voltReq.withOutput(output));
   }
 
-  // stops intake motor
-  public Command stopIntake() {
-    return Commands.run(() -> flywheelMotor.setControl(m_openLoopRequest.withOutput(0.0)), this);
+  public void setPosistion(double posistion){
+    arm.setControl(m_posReq.withPosition(posistion));
   }
 
-  // runs intake motor in reverse
-  public Command reverseIntake() {
-    return Commands.run(() -> flywheelMotor.setControl(m_openLoopRequest.withOutput(-0.4)), this);
+  public void stopFlywheel(){
+    flywheel.stopMotor();
   }
 
-  // intake arm out
-  public Command extenderOut() {
-    return Commands.run(
-        () -> armMotor.setControl(m_positionRequest.withPosition(extendedPos)), this);
+  public Command runFlywheel(){
+    return runOnce(()-> setOutput(0));
   }
 
-  // retract intake arm
-  public Command extenderIn() {
-    return Commands.run(
-        () -> armMotor.setControl(m_positionRequest.withPosition(retractedPos)), this);
+  public Command extendArm(){
+    return runOnce(()-> setPosistion(extended));
   }
 
-  public void initSendable(NTSendableBuilder builder) {
-    builder.addDoubleProperty("setPoint", this::getSetpointRotations, null);
-    builder.addDoubleProperty("Velocity RPM", this::getVelocityRPM, null);
+  public Command retractArm(){
+    return runOnce(()-> setPosistion(retratcted));
+  }
+
+  public Command stopFlywheelCommand(){
+    return runOnce(()-> stopFlywheel());
+  }
+
+  public Command intakeOut(){
+    return runOnce(()-> extendArm().andThen(runFlywheel()));
+  }
+
+  public Command intakeIn(){
+    return runOnce(()-> stopFlywheelCommand().andThen(retractArm()));
   }
 
   @Logged
-  public double getVoltage() {
-    return cachedVoltage.getAsDouble();
+  public double getFlywheelVelocityInRPM() {
+    return flywheel.getVelocity().getValue().in(RPM);
   }
 
   @Logged
-  public double getSetpointRotations() {
-    return armMotor.getPosition().getValueAsDouble();
+  public AngularVelocity getFlywheelVelocity() {
+    // Get the current velocity of the flywheel
+    return flywheel.getVelocity().getValue();
   }
 
   @Logged
-  public double getVelocityRPM() {
-    return flywheelMotor.getVelocity().getValueAsDouble() * 60; // Convert to RPM
+  public Angle getArmPosistion(){
+    return arm.getPosition().getValue();
+  }
+
+  public Angle getTargetPose() {
+    return m_posReq.getPositionMeasure();
+  }
+
+  @Logged
+  public boolean isAtTargetPose(){
+    return getArmPosistion().equals(getArmPosistion());
   }
 }
+  

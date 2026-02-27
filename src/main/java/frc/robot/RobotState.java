@@ -16,27 +16,22 @@ public class RobotState {
     return instance;
   }
 
+  //(DriverStation.getAlliance().get() == Alliance.Blue)
+  //(DriverStation.getAlliance().get() == Alliance.Blue)
+
+  public String getMyAlliance(){
+    if (DriverStation.getAlliance().get() == Alliance.Blue) return "BLUE";
+    if (DriverStation.getAlliance().get() == Alliance.Red) return "RED";
+    else{return null;}
+    }
+
   @Getter @Setter public Pose2d robotPose = new Pose2d();
   @Getter @Setter public ChassisSpeeds robotVelocity = new ChassisSpeeds();
 
-  public int getMyAlliance() {
-    if (DriverStation.getAlliance().get() == Alliance.Blue) {
-      return 1;
-    } else if (DriverStation.getAlliance().get() == Alliance.Red) {
-    return -1;
-  } else {
-    return 0;
-  }
-}
   public boolean isInAllianceZone() {
-   if (getMyAlliance() == 1 && robotPose.getTranslation().getY() < Field.getMyAllianceLine().getY()) {
-    return true;
-   } else if (getMyAlliance() == -1  && robotPose.getY() > Field.getMyAllianceLine().getY()) {
-    return true;
-   } else {
-    return false;
-   }
-
+   if (getMyAlliance().equals("BLUE") && robotPose.getY() < Field.getMyAllianceLine().getY()) return true;
+   if (getMyAlliance().equals("RED") && robotPose.getY() > Field.getMyAllianceLine().getY()) return true; 
+   else{return false;}
   }
 }
 
