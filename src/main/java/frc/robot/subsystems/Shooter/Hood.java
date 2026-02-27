@@ -63,7 +63,7 @@ public class Hood extends SubsystemBase {
 
   /* leader and follower motors */
   private final CANBus kCANBus = new CANBus("drive");
-  private final TalonFX motor_id_0 = new TalonFX(0, kCANBus);
+  private final TalonFX motor_id_0 = new TalonFX(25, kCANBus);
 
   /* device status signals */
   private final StatusSignal<Angle> motor_id_0Position = motor_id_0.getPosition(false);

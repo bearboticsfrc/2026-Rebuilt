@@ -31,7 +31,7 @@ public class Flywheel extends SubsystemBase {
   private final CANBus canivore = new CANBus("drive");
 
   // Create the leader and follower TalonFX motors
-  private final TalonFX leader = new TalonFX(60, canivore);
+  private final TalonFX leader = new TalonFX(26, canivore);
 
   // private final TalonFX follower = new TalonFX(22, canivore);
 

@@ -23,8 +23,8 @@ public class Intake extends SubsystemBase {
   
   private final CANBus canivore = new CANBus("drive");
 
-  private final TalonFX flywheel = new TalonFX(0, canivore);
-  private final TalonFX arm = new TalonFX(0, canivore);
+  private final TalonFX flywheel = new TalonFX(14, canivore);
+  private final TalonFX arm = new TalonFX(10, canivore);
 
   private final double extended = 0.0;
   private final double retratcted = 0.0;

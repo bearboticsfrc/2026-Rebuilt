@@ -16,9 +16,6 @@ public class RobotState {
     return instance;
   }
 
-  //(DriverStation.getAlliance().get() == Alliance.Blue)
-  //(DriverStation.getAlliance().get() == Alliance.Blue)
-
   public String getMyAlliance(){
     if (DriverStation.getAlliance().get() == Alliance.Blue) return "BLUE";
     if (DriverStation.getAlliance().get() == Alliance.Red) return "RED";

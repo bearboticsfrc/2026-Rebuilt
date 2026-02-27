@@ -19,8 +19,8 @@ public class Spindexer extends SubsystemBase {
 
   private final CANBus canivore = new CANBus("drive");
 
-  private final TalonFX spindexer = new TalonFX(0, canivore);
-  private final TalonFX tower = new TalonFX(0, canivore);
+  private final TalonFX spindexer = new TalonFX(7, canivore);
+  private final TalonFX tower = new TalonFX(23, canivore);
 
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
