@@ -107,8 +107,7 @@ public class Hood extends SubsystemBase {
       mech2d
           .getRoot("motor_id_0 Root", 0.500, 0)
           .append(
-              new MechanismLigament2d(
-                  "motor_id_0", hoodSim_motor_id_0.getPositionMeters(), 90));
+              new MechanismLigament2d("motor_id_0", hoodSim_motor_id_0.getPositionMeters(), 90));
 
   /** Configs common across all motors. */
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
@@ -252,8 +251,8 @@ public class Hood extends SubsystemBase {
   }
 
   /**
-   * Recalibrates the hood zero point. This slowly drives the hood down until we see a drop
-   * in velocity and a spike in stator current, indicating that we've hit a hard stop.
+   * Recalibrates the hood zero point. This slowly drives the hood down until we see a drop in
+   * velocity and a spike in stator current, indicating that we've hit a hard stop.
    *
    * @return Command to run
    */

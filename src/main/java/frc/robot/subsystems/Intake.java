@@ -64,12 +64,14 @@ public class Intake extends SubsystemBase {
 
   // intake arm out
   public Command extenderOut() {
-     return Commands.run(()-> armMotor.setControl(m_positionRequest.withPosition(extendedPos)), this);
+    return Commands.run(
+        () -> armMotor.setControl(m_positionRequest.withPosition(extendedPos)), this);
   }
 
   // retract intake arm
   public Command extenderIn() {
-    return Commands.run(()-> armMotor.setControl(m_positionRequest.withPosition(retractedPos)), this);
+    return Commands.run(
+        () -> armMotor.setControl(m_positionRequest.withPosition(retractedPos)), this);
   }
 
   public void initSendable(NTSendableBuilder builder) {
