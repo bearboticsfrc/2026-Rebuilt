@@ -32,7 +32,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class Hood extends SubsystemBase {
-  /** Position setpoints for the elevator. */
+  /** Position setpoints for the hood. */
   public enum Setpoint {
     Ground(Rotations.of(0)),
     Middle(Rotations.of(0.7)),
@@ -76,7 +76,7 @@ public class Hood extends SubsystemBase {
   private final DutyCycleOut calibrationRequest =
       new DutyCycleOut(-0.1).withIgnoreHardwareLimits(true).withIgnoreSoftwareLimits(true);
 
-  /** Trigger to detect when the elevator drives into a hard stop. */
+  /** Trigger to detect when the hood drives into a hard stop. */
   public final Trigger isHardStop =
       new Trigger(
               () -> {
@@ -86,7 +86,7 @@ public class Hood extends SubsystemBase {
           .debounce(0.1);
 
   /* simulation */
-  private final ElevatorSim elevatorSim_motor_id_0 =
+  private final ElevatorSim hoodSim_motor_id_0 =
       new ElevatorSim(
           DCMotor.getKrakenX60Foc(1),
           kGearRatio,
@@ -101,14 +101,14 @@ public class Hood extends SubsystemBase {
   private Notifier simNotifier = null;
   private double lastSimTime = 0.0;
 
-  /* Mechanism2d visualization of the elevator */
+  /* Mechanism2d visualization of the hood */
   private final Mechanism2d mech2d = new Mechanism2d(1, kMaxHeight.in(Meters));
   private final MechanismLigament2d motor_id_0Mech2d =
       mech2d
           .getRoot("motor_id_0 Root", 0.500, 0)
           .append(
               new MechanismLigament2d(
-                  "motor_id_0", elevatorSim_motor_id_0.getPositionMeters(), 90));
+                  "motor_id_0", hoodSim_motor_id_0.getPositionMeters(), 90));
 
   /** Configs common across all motors. */
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
@@ -154,7 +154,7 @@ public class Hood extends SubsystemBase {
                   .withMotionMagicCruiseVelocity(RotationsPerSecond.of(66))
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300)));
 
-  public void Elevator() {
+  public void Hood() {
     for (int i = 0; i < kNumConfigAttempts; ++i) {
       var status = motor_id_0.getConfigurator().apply(motor_id_0Configs);
       if (status.isOK()) break;
@@ -165,7 +165,7 @@ public class Hood extends SubsystemBase {
     /* alternatively, the default command can hold position */
     // setDefaultCommand(holdPosition());
 
-    SmartDashboard.putData("Elevator", mech2d);
+    SmartDashboard.putData("Hood", mech2d);
 
     if (Utils.isSimulation()) {
       startSimThread();
@@ -175,7 +175,7 @@ public class Hood extends SubsystemBase {
   }
 
   /**
-   * @return The Position of the elevator
+   * @return The Position of the hood
    */
   @Logged
   public Angle getPosition() {
@@ -183,14 +183,14 @@ public class Hood extends SubsystemBase {
   }
 
   /**
-   * @return The Velocity of the elevator
+   * @return The Velocity of the hood
    */
   public AngularVelocity getVelocity() {
     return motor_id_0Velocity.getValue();
   }
 
   /**
-   * @return The TorqueCurrent of the elevator
+   * @return The TorqueCurrent of the hood
    */
   public Current getTorqueCurrent() {
     return motor_id_0TorqueCurrent.getValue();
@@ -202,7 +202,7 @@ public class Hood extends SubsystemBase {
   }
 
   /**
-   * Holds the elevator at the current position using PID.
+   * Holds the hood at the current position using PID.
    *
    * @return Command to run
    */
@@ -216,7 +216,7 @@ public class Hood extends SubsystemBase {
   }
 
   /**
-   * Drives the elevator to the provided position setpoint.
+   * Drives the hood to the provided position setpoint.
    *
    * @param setpoint Function returning the setpoint to apply
    * @return Command to run
@@ -238,7 +238,7 @@ public class Hood extends SubsystemBase {
   }
 
   /**
-   * Manually drives the elevator with the provided duty cycle output.
+   * Manually drives the hood with the provided duty cycle output.
    *
    * @param manualOutput Function returning the duty cycle to apply
    * @return Command to run
@@ -252,7 +252,7 @@ public class Hood extends SubsystemBase {
   }
 
   /**
-   * Recalibrates the elevator zero point. This slowly drives the elevator down until we see a drop
+   * Recalibrates the hood zero point. This slowly drives the hood down until we see a drop
    * in velocity and a spike in stator current, indicating that we've hit a hard stop.
    *
    * @return Command to run
@@ -300,19 +300,19 @@ public class Hood extends SubsystemBase {
               /* First set the supply voltage of all the devices */
               motor_id_0Sim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
-              /* Then calculate the new position and velocity of the simulated elevator */
-              elevatorSim_motor_id_0.setInputVoltage(motor_id_0Sim.getMotorVoltage());
-              elevatorSim_motor_id_0.update(deltaTime);
+              /* Then calculate the new position and velocity of the simulated hood */
+              hoodSim_motor_id_0.setInputVoltage(motor_id_0Sim.getMotorVoltage());
+              hoodSim_motor_id_0.update(deltaTime);
 
               /* Apply the new rotor position and velocity to the motors (before gear ratio) */
               motor_id_0Sim.setRawRotorPosition(
                   Radians.of(
-                      elevatorSim_motor_id_0.getPositionMeters()
+                      hoodSim_motor_id_0.getPositionMeters()
                           / kDrumRadius.in(Meters)
                           * kGearRatio));
               motor_id_0Sim.setRotorVelocity(
                   RadiansPerSecond.of(
-                      elevatorSim_motor_id_0.getVelocityMetersPerSecond()
+                      hoodSim_motor_id_0.getVelocityMetersPerSecond()
                           / kDrumRadius.in(Meters)
                           * kGearRatio));
             });
