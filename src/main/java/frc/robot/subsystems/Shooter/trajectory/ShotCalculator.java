@@ -125,9 +125,9 @@ public class ShotCalculator {
 
     botVx = chassisSpeeds.vxMetersPerSecond; // velocity of the robot in the y direction
     botVy = chassisSpeeds.vyMetersPerSecond; // velocity of the robot in the x direction
-    turretVx = turretAngularVelocity * cos(botYaw.getRadians() - (3 / 4 * Math.PI));
+    turretVx = turretAngularVelocity * cos(botYaw.getRadians() - (7 / 4 * Math.PI));
     // finds velocity of the turret in the y direction
-    turretVy = turretAngularVelocity * sin(botYaw.getRadians() - (3 / 4 * Math.PI));
+    turretVy = turretAngularVelocity * sin(botYaw.getRadians() - (7 / 4 * Math.PI));
     // finds velocity of the turret in the x direction
     dx = (botVx + turretVx) * deltaTimeSeconds;
     dy = (botVy + turretVy) * deltaTimeSeconds;
