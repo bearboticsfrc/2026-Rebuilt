@@ -18,28 +18,20 @@ public class VisionConstants {
 
   public static final double CULLING_AMBIGUITY = 0.4;
 
-  private static final String FRONT_LEFT_CAMERA_NAME = "OV9281FrontLeft";
-  private static final String LUMAP1_CAMERA_NAME = "LUMAP1_OV9281";
+  private static final String FRONT_CAMERA_NAME = "ThriftyFront";
 
-  public static final Transform3d ROBOT_TO_FRONT_LEFT_CAMERA =
+  public static final Transform3d ROBOT_TO_FRONT_CAMERA =
       new Transform3d(
-          new Translation3d(-.272, 0.172, 0.711),
-          new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.zero()));
+          new Translation3d(Inches.of(12.53), Inches.of(7.5), Inches.of(22.8)),
+          new Rotation3d(Radians.zero(), Degrees.of(-15), Degrees.zero()));
 
-  public static final Transform3d ROBOT_TO_LUMAP1 =
-      new Transform3d(
-          new Translation3d(-.20, -0.075, 0.65),
-          new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.zero()));
-
-  public static final VisionCamera FRONT_LEFT_CAMERA =
-      new VisionCamera(FRONT_LEFT_CAMERA_NAME, ROBOT_TO_FRONT_LEFT_CAMERA);
-  public static final VisionCamera LUMAP1_CAMERA =
-      new VisionCamera(LUMAP1_CAMERA_NAME, ROBOT_TO_LUMAP1);
+  public static final VisionCamera FRONT_CAMERA =
+      new VisionCamera(FRONT_CAMERA_NAME, ROBOT_TO_FRONT_CAMERA);
 
   // The standard deviations of our vision estimated poses, which affect correction rate
-  public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(0.001, 0.001, 0.001);
-  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS =
-      VecBuilder.fill(0.1, 0.1, Math.toRadians(20));
+  public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS =
+      VecBuilder.fill(0.00001, 0.00001, 0.00001);
+  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(0.001, 0.001, 0.001);
 
   public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
