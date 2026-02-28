@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,8 +32,9 @@ public class ShooterCommand {
           double[] shotCalculations =
               shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
           double flywheelRPM = shotCalculations[1];
-          hood.goToSetpointAngle(() -> Degrees.of(shotCalculations[2]));
-          flywheel.setVelocity(Units.RPM.of(flywheelRPM));
+          double hoodAngle = (shotCalculations[2] - 32) / 37.5 * 1.4;
+          hood.goToSetpointAngle(() -> Rotations.of(hoodAngle));
+          flywheel.runAtSpeed(flywheelRPM);
         },
         hood,
         flywheel);
