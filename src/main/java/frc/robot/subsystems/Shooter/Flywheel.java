@@ -5,7 +5,6 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import bearlib.util.TunableNumber;
@@ -14,6 +13,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -46,7 +46,7 @@ public class Flywheel extends SubsystemBase {
   }
 
   // Tolerance for the flywheel velocity
-  private final AngularVelocity tolerance = RotationsPerSecond.of(0.25);
+  private final double tolerance = 750; // RPM
 
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
@@ -69,13 +69,24 @@ public class Flywheel extends SubsystemBase {
     // Put's the motor in Coast mode to make it easier to move by hand
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     // Configure the motor to make sure positive voltage is counter clockwise
+    // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    // config.Slot0.kS = 0.31576; // Static gain
+    // config.Slot0.kV = 0.11631; // Velocity gain
+    // config.Slot0.kA = 0.015927;
+    // config.Slot0.kP = .094744; // Proportional gain
+    // config.MotionMagic.MotionMagicCruiseVelocity = 9000; // Max velocity
+    // config.MotionMagic.MotionMagicAcceleration = 9000; // Max acceleration allowed
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    config.Slot0.kS = 0.31576; // Static gain
-    config.Slot0.kV = 0.11631; // Velocity gain
-    config.Slot0.kA = 0.015927;
-    config.Slot0.kP = .094744; // Proportional gain
+    config.Slot0.kS = 0.18342; // Static gain
+    config.Slot0.kV = 0.11941; // Velocity gain
+    config.Slot0.kA = 0.015595;
+    config.Slot0.kP = 99999.0; // 0.18224; // Proportional gain
     config.MotionMagic.MotionMagicCruiseVelocity = 9000; // Max velocity
     config.MotionMagic.MotionMagicAcceleration = 9000; // Max acceleration allowed
+    config.TorqueCurrent.PeakForwardTorqueCurrent = 100;
+    config.TorqueCurrent.PeakReverseTorqueCurrent = 0;
+    config.MotorOutput.PeakForwardDutyCycle = 1;
+    config.MotorOutput.PeakReverseDutyCycle = 0;
     // Try to apply config multiple time. Break after successfully applying
     for (int i = 0; i < 2; ++i) {
       var status = leader.getConfigurator().apply(config);
@@ -106,6 +117,11 @@ public class Flywheel extends SubsystemBase {
     leader.setControl(velocityOut.withVelocity(velocity));
   }
 
+  public void setRunVelocity(AngularVelocity velocity) {
+    // leader.setControl(new VelocityDutyCycle(velocity));
+    leader.setControl(new VelocityTorqueCurrentFOC(velocity));
+  }
+
   /**
    * Sets the percent for the flywheel.
    *
@@ -133,7 +149,7 @@ public class Flywheel extends SubsystemBase {
    */
   public Command runFast() {
     // Command to run the flywheel at a fast speed
-    return runOnce(() -> setVelocity(RPM.of(3000)));
+    return runOnce(() -> setRunVelocity(RPM.of(3000)));
   }
 
   /**
@@ -152,10 +168,8 @@ public class Flywheel extends SubsystemBase {
    */
   @Logged
   public boolean isAtTarget() {
-    return getVelocity()
-        .isNear(
-            getTargetVelocity(),
-            tolerance); // Check if the current velocity is near the target velocity
+    return Math.abs(getVelocity() - getTargetVelocity())
+        < tolerance; // Check if the current velocity is near the target velocity
   }
 
   /**
@@ -164,9 +178,9 @@ public class Flywheel extends SubsystemBase {
    * @return The current velocity of the flywheel.
    */
   @Logged
-  public AngularVelocity getVelocity() {
+  public double getVelocity() {
     // Get the current velocity of the flywheel
-    return leader.getVelocity().getValue();
+    return leader.getVelocity().getValue().in(RPM);
   }
 
   /**
@@ -175,9 +189,9 @@ public class Flywheel extends SubsystemBase {
    * @return The target velocity of the flywheel.
    */
   @Logged
-  public AngularVelocity getTargetVelocity() {
+  public double getTargetVelocity() {
     // Return the target velocity
-    return velocityOut.getVelocityMeasure();
+    return velocityOut.getVelocityMeasure().in(RPM);
   }
 
   @Logged

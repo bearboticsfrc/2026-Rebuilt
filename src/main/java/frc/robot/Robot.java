@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
@@ -20,12 +21,15 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
+import frc.robot.subsystems.shooter.Hood;
 
 public class Robot extends TimedRobot {
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
@@ -37,7 +41,7 @@ public class Robot extends TimedRobot {
 
   private final CommandXboxController pilot = new CommandXboxController(0);
 
-  private final CommandXboxController copilot = new CommandXboxController(1);
+  private final CommandPS5Controller copilot = new CommandPS5Controller(1);
 
   @Logged private final Intake intake = new Intake();
 
@@ -47,15 +51,15 @@ public class Robot extends TimedRobot {
 
   private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-  private final Flywheel flywheel = new Flywheel();
+  @Logged private final Flywheel flywheel = new Flywheel();
 
-  // private final Hood hood = new Hood();
-  
+  @Logged private final Hood hood = new Hood();
+
   // private final Climber climber = new Climber();
 
-  // private final ShotCalculator shotCalculator;
+  private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
 
-  // private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, turret, drivetrain);
+  // private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, drivetrain);
 
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -166,6 +170,9 @@ public class Robot extends TimedRobot {
     pilot.rightTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
     pilot.leftTrigger().onTrue(spindexer.index()).onFalse(spindexer.stopMotorsCommand());
     pilot.rightBumper().onTrue(flywheel.runFast()).onFalse(flywheel.stopCommand());
+    pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
+    pilot.y().onTrue(hood.goToSetpointAngle(() -> Rotations.of(1.4)));
+    pilot.b().onTrue(hood.goToSetpointAngle(() -> Rotations.of(0)));
 
     // copilot controlls
 

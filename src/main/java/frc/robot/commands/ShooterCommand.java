@@ -9,21 +9,17 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.shooter.trajectory.ShotCalculator;
-import frc.robot.subsystems.turret.Turret;
 
 public class ShooterCommand {
 
   private final Hood hood;
   private final Flywheel flywheel;
-  private final Turret turret;
   private final CommandSwerveDrivetrain drivetrain;
   private final ShotCalculator shotCalculator;
 
-  public ShooterCommand(
-      Hood hood, Flywheel flywheel, Turret turret, CommandSwerveDrivetrain drivetrain) {
+  public ShooterCommand(Hood hood, Flywheel flywheel, CommandSwerveDrivetrain drivetrain) {
     this.hood = hood;
     this.flywheel = flywheel;
-    this.turret = turret;
     this.drivetrain = drivetrain;
     shotCalculator =
         new ShotCalculator(() -> drivetrain.getPose(), () -> drivetrain.getChassisSpeeds());

@@ -31,7 +31,8 @@ public class Intake extends SubsystemBase {
   private final Angle retratcted = Degrees.of(78);
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
   private final PositionVoltage m_posReq = new PositionVoltage(0.0);
-  private final double MOUTH_SPEED = 0.3;
+  private final double MOUTH_SPEED = -0.3;
+  private final double MOUTH_SLOW_SPEED = -0.15;
   public final double ROLLER_SPEED = 0.5;
   public final double GEAR_RATIO = 12;
 
@@ -99,6 +100,10 @@ public class Intake extends SubsystemBase {
 
   public Command runMouth() {
     return runOnce(() -> setMouthOutput(MOUTH_SPEED));
+  }
+
+  public Command runMouthSlow() {
+    return runOnce(() -> setMouthOutput(MOUTH_SLOW_SPEED));
   }
 
   public Command stopMouthCommand() {

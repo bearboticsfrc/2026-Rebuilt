@@ -60,6 +60,8 @@ public class Hood extends SubsystemBase {
   private static final double kGearRatio = 1.2;
   private static final Distance kDrumRadius = Meters.of(0.028575);
   private static final Distance kMaxHeight = Meters.of(0);
+  private final Angle MIN_ANGLE = Degrees.of(32);
+  private final Angle MAX_ANGLE = Degrees.of(69.5);
 
   /* leader and follower motors */
   private final CANBus kCANBus = new CANBus("Default Name");
@@ -144,7 +146,7 @@ public class Hood extends SubsystemBase {
               new SoftwareLimitSwitchConfigs()
                   .withForwardSoftLimitThreshold(1.4)
                   .withForwardSoftLimitEnable(true)
-                  .withReverseSoftLimitThreshold(0)
+                  .withReverseSoftLimitThreshold(0.0)
                   .withReverseSoftLimitEnable(true))
           .withMotionMagic(
               leaderInitialConfigs
@@ -153,7 +155,7 @@ public class Hood extends SubsystemBase {
                   .withMotionMagicCruiseVelocity(RotationsPerSecond.of(66))
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300)));
 
-  public void Hood() {
+  public Hood() {
     for (int i = 0; i < kNumConfigAttempts; ++i) {
       var status = motor_id_0.getConfigurator().apply(motor_id_0Configs);
       if (status.isOK()) break;
@@ -170,15 +172,20 @@ public class Hood extends SubsystemBase {
       startSimThread();
     }
 
-    motor_id_0.setPosition(Degrees.of(0));
+    motor_id_0.setPosition(Rotations.of(0.0));
   }
 
   /**
    * @return The Position of the hood
    */
   @Logged
-  public Angle getPosition() {
+  public Angle getHoodPosition() {
     return motor_id_0Position.getValue();
+  }
+
+  @Logged
+  public double getRotations() {
+    return motor_id_0Position.getValue().in(Rotations);
   }
 
   /**
@@ -198,6 +205,11 @@ public class Hood extends SubsystemBase {
   @Logged
   public Angle getSetpoint() {
     return setpointRequest.getPositionMeasure();
+  }
+
+  @Logged
+  public boolean isAtSetpoint() {
+    return getHoodPosition().isNear(getSetpoint(), 0.5);
   }
 
   /**

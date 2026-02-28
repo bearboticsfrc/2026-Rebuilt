@@ -23,7 +23,7 @@ public class Spindexer extends SubsystemBase {
 
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
   private final double TOWER_OUTPUT = 1;
-  private final double SPINDEXER_OUTPUT = 0.4;
+  private final double SPINDEXER_OUTPUT = 0.7;
 
   public Spindexer() {
 
