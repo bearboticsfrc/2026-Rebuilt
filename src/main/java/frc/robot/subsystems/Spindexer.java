@@ -22,8 +22,8 @@ public class Spindexer extends SubsystemBase {
   private final TalonFX tower = new TalonFX(23, canivore);
 
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
-  private final double towerOutput = 1;
-  private final double spindexerOutput = 0.4;
+  private final double TOWER_OUTPUT = 1;
+  private final double SPINDEXER_OUTPUT = 0.4;
 
   public Spindexer() {
 
@@ -35,12 +35,12 @@ public class Spindexer extends SubsystemBase {
 
     towerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     towerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs();
-    currentLimitsConfigs.StatorCurrentLimit = 240;
-    currentLimitsConfigs.SupplyCurrentLimit = 140;
-    currentLimitsConfigs.StatorCurrentLimitEnable = true;
-    currentLimitsConfigs.SupplyCurrentLimitEnable = true;
-    towerConfig.withCurrentLimits(currentLimitsConfigs);
+    CurrentLimitsConfigs towerCurrentLimitsConfigs = new CurrentLimitsConfigs();
+    towerCurrentLimitsConfigs.StatorCurrentLimit = 240;
+    towerCurrentLimitsConfigs.SupplyCurrentLimit = 140;
+    towerCurrentLimitsConfigs.StatorCurrentLimitEnable = true;
+    towerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
+    towerConfig.withCurrentLimits(towerCurrentLimitsConfigs);
 
     for (int i = 0; i < 2; ++i) {
       var status = spindexer.getConfigurator().apply(spindexerConfig);
@@ -67,11 +67,11 @@ public class Spindexer extends SubsystemBase {
   }
 
   public Command runSpindexer() {
-    return runOnce(() -> setSpindexerOutput(spindexerOutput));
+    return runOnce(() -> setSpindexerOutput(SPINDEXER_OUTPUT));
   }
 
   public Command runTower() {
-    return runOnce(() -> setTowerOutput(towerOutput));
+    return runOnce(() -> setTowerOutput(TOWER_OUTPUT));
   }
 
   public Command index() {
@@ -89,7 +89,6 @@ public class Spindexer extends SubsystemBase {
 
   @Logged
   public AngularVelocity getSpindexerVelocity() {
-    // Get the current velocity of the spindexer
     return spindexer.getVelocity().getValue();
   }
 
@@ -100,7 +99,6 @@ public class Spindexer extends SubsystemBase {
 
   @Logged
   public AngularVelocity getTowerVelocity() {
-    // Get the current velocity of the spindexer
     return tower.getVelocity().getValue();
   }
 }
