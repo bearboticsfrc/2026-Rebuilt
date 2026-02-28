@@ -7,7 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "HubRTower"
+            "pathName": "L- Outpost"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Outpost  - L Climb"
           }
         }
       ]
