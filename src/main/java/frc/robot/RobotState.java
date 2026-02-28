@@ -2,9 +2,11 @@ package frc.robot;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
 import lombok.*;
 
@@ -57,5 +59,9 @@ public class RobotState {
         && isInNeutralZone()
         && robotPose.getX() > Field.getMyAllianceLine().getX()) return "R";
     else return null;
+  }
+
+  public Rotation2d getAngleToHub() {
+    return AllianceFlipUtil.apply((Field.getMyHub().minus(robotPose.getTranslation())).getAngle());
   }
 }

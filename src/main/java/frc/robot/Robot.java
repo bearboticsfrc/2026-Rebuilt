@@ -74,14 +74,21 @@ public class Robot extends TimedRobot {
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
+  private final SwerveRequest.FieldCentricFacingAngle driveFacingAngle =
+      new SwerveRequest.FieldCentricFacingAngle()
+          .withDeadband(MaxSpeed * 0.1)
+          .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+          .withDriveRequestType(
+              DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+  private final Telemetry telemetry = new Telemetry(MaxSpeed);
+
   public Robot() {
     m_robotContainer = new RobotContainer();
 
-    // shotCalculator =
-    //     new ShotCalculator(() -> drivetrain.getPose(), () -> drivetrain.getChassisSpeeds());
-
     configureLogging();
     configureBindings();
+    configureDefaultCommands();
   }
 
   public void configureLogging() {
@@ -143,17 +150,8 @@ public class Robot extends TimedRobot {
   }
 
   public void configureDefaultCommands() {
-    // set default turret rotation
-    // double[] shotCalculations =
-    // shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
-    // turret.setAngle(Degrees.of(shotCalculations[3]));
-  }
 
-  public void configureBindings() {
-
-    // pilot controlls
-    // pilot.rightTrigger().whileTrue(shooter.shoot());
-
+    // default drive request
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(
             () ->
@@ -167,6 +165,13 @@ public class Robot extends TimedRobot {
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
+    drivetrain.registerTelemetry(telemetry::telemeterize);
+  }
+
+  public void configureBindings() {
+
+    // pilot controlls
+
     pilot.rightTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
     pilot.leftTrigger().onTrue(spindexer.index()).onFalse(spindexer.stopMotorsCommand());
     pilot.rightBumper().onTrue(flywheel.runFast()).onFalse(flywheel.stopCommand());
@@ -175,6 +180,15 @@ public class Robot extends TimedRobot {
     pilot.b().onTrue(hood.goToSetpointAngle(() -> Rotations.of(0)));
 
     // copilot controlls
-
+    copilot
+        .L2()
+        .whileTrue(
+            drivetrain.applyRequest(
+                () ->
+                    driveFacingAngle
+                        .withVelocityX(-pilot.getLeftY() * MaxSpeed)
+                        .withVelocityY(-pilot.getLeftX() * MaxSpeed)
+                        .withHeadingPID(18, 0, .1)
+                        .withTargetDirection(RobotState.getInstance().getAngleToHub())));
   }
 }
