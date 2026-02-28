@@ -44,10 +44,13 @@ public class Robot extends TimedRobot {
   @Logged private final Spindexer spindexer = new Spindexer();
 
   // private final Turret turret = new Turret();
+
   private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   private final Flywheel flywheel = new Flywheel();
+
   // private final Hood hood = new Hood();
+  
   // private final Climber climber = new Climber();
 
   // private final ShotCalculator shotCalculator;
@@ -148,7 +151,6 @@ public class Robot extends TimedRobot {
     // pilot.rightTrigger().whileTrue(shooter.shoot());
 
     drivetrain.setDefaultCommand(
-        // Drivetrain will execute this command periodically
         drivetrain.applyRequest(
             () ->
                 drive
@@ -166,5 +168,6 @@ public class Robot extends TimedRobot {
     pilot.rightBumper().onTrue(flywheel.runFast()).onFalse(flywheel.stopCommand());
 
     // copilot controlls
+
   }
 }
