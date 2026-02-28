@@ -4,34 +4,29 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.commands.ShooterCommand;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Spindexer;
-import frc.robot.subsystems.shooter.Flywheel;
-import frc.robot.subsystems.shooter.Hood;
-import frc.robot.subsystems.shooter.trajectory.ShotCalculator;
-import frc.robot.subsystems.turret.Turret;
 
 public class Robot extends TimedRobot {
-  private final Importance MINIMUM_IMPORTANCE = Importance.CRITICAL;
+  private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
 
   private Command m_autonomousCommand;
 
@@ -40,30 +35,44 @@ public class Robot extends TimedRobot {
 
   private final CommandXboxController pilot = new CommandXboxController(0);
 
-  private final CommandXboxController copilot = new CommandXboxController(0);
+  private final CommandXboxController copilot = new CommandXboxController(1);
 
-  private final Intake intake = new Intake();
+  @Logged private final Intake intake = new Intake();
 
-  private final Spindexer spindexer = new Spindexer();
+  // private final Spindexer spindexer = new Spindexer();
 
-  private final Turret turret = new Turret();
+  // private final Turret turret = new Turret();
   private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-  private final Flywheel flywheel = new Flywheel();
-  private final Hood hood = new Hood();
-  private final Climber climber = new Climber();
+  // private final Flywheel flywheel = new Flywheel();
+  // private final Hood hood = new Hood();
+  // private final Climber climber = new Climber();
 
-  private final ShotCalculator shotCalculator;
+  // private final ShotCalculator shotCalculator;
 
-  private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, turret, drivetrain);
+  // private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, turret, drivetrain);
+
+  private double MaxSpeed =
+      TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+  private double MaxAngularRate =
+      RotationsPerSecond.of(0.75)
+          .in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
+  private final SwerveRequest.FieldCentric drive =
+      new SwerveRequest.FieldCentric()
+          .withDeadband(MaxSpeed * 0.1)
+          .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+          .withDriveRequestType(
+              DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
   public Robot() {
     m_robotContainer = new RobotContainer();
 
-    shotCalculator =
-        new ShotCalculator(() -> drivetrain.getPose(), () -> drivetrain.getChassisSpeeds());
+    // shotCalculator =
+    //     new ShotCalculator(() -> drivetrain.getPose(), () -> drivetrain.getChassisSpeeds());
 
     configureLogging();
+    configureBindings();
   }
 
   public void configureLogging() {
@@ -126,18 +135,32 @@ public class Robot extends TimedRobot {
 
   public void configureDefaultCommands() {
     // set default turret rotation
-    double[] shotCalculations = shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
-    turret.setAngle(Degrees.of(shotCalculations[3]));
+    // double[] shotCalculations =
+    // shotCalculator.ShootOnMoveSolver(shotCalculator.targetLocation());
+    // turret.setAngle(Degrees.of(shotCalculations[3]));
   }
 
   public void configureBindings() {
 
     // pilot controlls
-    pilot.rightTrigger().whileTrue(shooter.shoot());
+    // pilot.rightTrigger().whileTrue(shooter.shoot());
+
+    drivetrain.setDefaultCommand(
+        // Drivetrain will execute this command periodically
+        drivetrain.applyRequest(
+            () ->
+                drive
+                    .withVelocityX(
+                        -pilot.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(
+                        -pilot.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(
+                        -pilot.getRightX()
+                            * MaxAngularRate) // Drive counterclockwise with negative X (left)
+            ));
+
+    pilot.rightTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
 
     // copilot controlls
-    copilot
-        .leftTrigger()
-        .onTrue(Commands.run(() -> pilot.setRumble(RumbleType.kBothRumble, 1000000.0)));
   }
 }

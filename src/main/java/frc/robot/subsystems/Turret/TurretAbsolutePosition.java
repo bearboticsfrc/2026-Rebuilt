@@ -10,7 +10,7 @@ import yams.units.EasyCRT;
 import yams.units.EasyCRTConfig;
 
 public class TurretAbsolutePosition {
-  CANBus canbus = new CANBus("drive");
+  CANBus canbus = new CANBus("Default Name");
 
   private final CANcoder turretCANcoderMain = new CANcoder(21, canbus); // 10 tooth
   private final CANcoder turretCANcoderAux = new CANcoder(20, canbus); // 11 tooth

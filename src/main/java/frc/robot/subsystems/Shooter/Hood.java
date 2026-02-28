@@ -62,7 +62,7 @@ public class Hood extends SubsystemBase {
   private static final Distance kMaxHeight = Meters.of(0);
 
   /* leader and follower motors */
-  private final CANBus kCANBus = new CANBus("drive");
+  private final CANBus kCANBus = new CANBus("Default Name");
   private final TalonFX motor_id_0 = new TalonFX(25, kCANBus);
 
   /* device status signals */

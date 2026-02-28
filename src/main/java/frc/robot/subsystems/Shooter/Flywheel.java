@@ -28,7 +28,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 public class Flywheel extends SubsystemBase {
   /** Creates a new Flywheel. */
   // Create a new CANBus with name canivore
-  private final CANBus canivore = new CANBus("drive");
+  private final CANBus canivore = new CANBus("Default Name");
 
   // Create the leader and follower TalonFX motors
   private final TalonFX leader = new TalonFX(26, canivore);

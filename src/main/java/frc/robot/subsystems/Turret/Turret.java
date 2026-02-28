@@ -24,7 +24,7 @@ import lombok.Setter;
 
 public class Turret extends SubsystemBase implements NTSendable {
 
-  private final CANBus canivore = new CANBus("drive");
+  private final CANBus canivore = new CANBus("Default Name");
 
   private final TalonFX motor = new TalonFX(22, canivore);
 

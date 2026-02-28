@@ -10,7 +10,7 @@ public class CanDeviceId {
 
   public CanDeviceId(int deviceNumber, String bus) {
     mDeviceNumber = deviceNumber;
-    mBus = new CANBus(bus);
+    mBus = new CANBus("Default Name");
   }
 
   // Use the default bus name (empty string).
