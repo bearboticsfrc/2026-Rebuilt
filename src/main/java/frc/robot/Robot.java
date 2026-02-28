@@ -24,6 +24,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Spindexer;
+import frc.robot.subsystems.shooter.Flywheel;
 
 public class Robot extends TimedRobot {
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
@@ -39,12 +41,12 @@ public class Robot extends TimedRobot {
 
   @Logged private final Intake intake = new Intake();
 
-  // private final Spindexer spindexer = new Spindexer();
+  @Logged private final Spindexer spindexer = new Spindexer();
 
   // private final Turret turret = new Turret();
   private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-  // private final Flywheel flywheel = new Flywheel();
+  private final Flywheel flywheel = new Flywheel();
   // private final Hood hood = new Hood();
   // private final Climber climber = new Climber();
 
@@ -160,6 +162,8 @@ public class Robot extends TimedRobot {
             ));
 
     pilot.rightTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
+    pilot.leftTrigger().onTrue(spindexer.index()).onFalse(spindexer.stopMotorsCommand());
+    pilot.rightBumper().onTrue(flywheel.runFast()).onFalse(flywheel.stopCommand());
 
     // copilot controlls
   }

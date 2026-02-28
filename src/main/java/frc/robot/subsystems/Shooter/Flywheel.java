@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems.shooter;
 
-import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
@@ -134,7 +133,7 @@ public class Flywheel extends SubsystemBase {
    */
   public Command runFast() {
     // Command to run the flywheel at a fast speed
-    return runOnce(() -> setVelocity(DegreesPerSecond.of(1500)));
+    return runOnce(() -> setVelocity(RPM.of(3000)));
   }
 
   /**

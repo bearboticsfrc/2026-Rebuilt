@@ -4,7 +4,7 @@ import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -20,7 +20,9 @@ public class Spindexer extends SubsystemBase {
   private final TalonFX spindexer = new TalonFX(7, canivore);
   private final TalonFX tower = new TalonFX(23, canivore);
 
-  private final VoltageOut m_voltReq = new VoltageOut(0.0);
+  private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
+  private final double towerOutput = 0.7;
+  private final double spindexerOutput = 0.4;
 
   public Spindexer() {
 
@@ -29,17 +31,9 @@ public class Spindexer extends SubsystemBase {
 
     spindexerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     spindexerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    spindexerConfig.Slot0.kS = 0;
-    spindexerConfig.Slot0.kV = 0;
-    spindexerConfig.Slot0.kA = 0;
-    spindexerConfig.Slot0.kP = 0;
 
     towerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    towerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    towerConfig.Slot0.kS = 0;
-    towerConfig.Slot0.kV = 0;
-    towerConfig.Slot0.kA = 0;
-    towerConfig.Slot0.kP = 0;
+    towerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     for (int i = 0; i < 2; ++i) {
       var status = spindexer.getConfigurator().apply(spindexerConfig);
@@ -53,11 +47,11 @@ public class Spindexer extends SubsystemBase {
   }
 
   public void setSpindexerOutput(double output) {
-    spindexer.setControl(m_voltReq.withOutput(output));
+    spindexer.setControl(m_dutyReq.withOutput(output));
   }
 
   public void setTowerOutput(double output) {
-    tower.setControl(m_voltReq.withOutput(output));
+    tower.setControl(m_dutyReq.withOutput(output));
   }
 
   public void stopMotors() {
@@ -66,15 +60,15 @@ public class Spindexer extends SubsystemBase {
   }
 
   public Command runSpindexer() {
-    return runOnce(() -> setSpindexerOutput(0));
+    return runOnce(() -> setSpindexerOutput(spindexerOutput));
   }
 
   public Command runTower() {
-    return runOnce(() -> setTowerOutput(0));
+    return runOnce(() -> setTowerOutput(towerOutput));
   }
 
   public Command index() {
-    return runOnce(() -> runSpindexer().alongWith(runTower()));
+    return runSpindexer().andThen(runTower());
   }
 
   public Command stopMotorsCommand() {
