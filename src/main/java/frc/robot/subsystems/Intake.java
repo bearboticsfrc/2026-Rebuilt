@@ -35,6 +35,7 @@ public class Intake extends SubsystemBase {
   private final double MOUTH_SLOW_SPEED = -0.15;
   public final double ROLLER_SPEED = 0.5;
   public final double GEAR_RATIO = 12;
+  private Angle latestPosistion = retratcted;
 
   public Intake() {
 
@@ -84,6 +85,7 @@ public class Intake extends SubsystemBase {
 
   public void setPosistion(Angle posistion) {
     arm.setControl(m_posReq.withPosition(posistion));
+    latestPosistion = posistion;
   }
 
   public void stopRoller() {
@@ -170,5 +172,10 @@ public class Intake extends SubsystemBase {
   @Logged
   public boolean armIsExtended() {
     return arm.getPosition().getValue().lt(extended.plus(Degrees.of(20)));
+  }
+
+  @Override
+  public void periodic() {
+    arm.setControl(m_posReq.withPosition(latestPosistion));
   }
 }

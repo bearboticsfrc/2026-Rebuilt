@@ -13,6 +13,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -36,6 +37,10 @@ public class Flywheel extends SubsystemBase {
 
   // Velocity output control for the flywheel
   private final MotionMagicVelocityVoltage velocityOut = new MotionMagicVelocityVoltage(0);
+
+  private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
+
+  private final VelocityDutyCycle velocityDutyCycle = new VelocityDutyCycle(0);
 
   private final DutyCycleOut output = new DutyCycleOut(0);
 
@@ -119,7 +124,7 @@ public class Flywheel extends SubsystemBase {
 
   public void setRunVelocity(AngularVelocity velocity) {
     // leader.setControl(new VelocityDutyCycle(velocity));
-    leader.setControl(new VelocityTorqueCurrentFOC(velocity));
+    leader.setControl(velocityTorqueCurrentFOC.withVelocity(velocity));
   }
 
   /**
@@ -191,7 +196,9 @@ public class Flywheel extends SubsystemBase {
   @Logged
   public double getTargetVelocity() {
     // Return the target velocity
-    return velocityOut.getVelocityMeasure().in(RPM);
+    // return velocityOut.getVelocityMeasure().in(RPM);
+    return velocityTorqueCurrentFOC.getVelocityMeasure().in(RPM);
+    // return velocityDutyCycle.getVelocityMeasure().in(RPM);
   }
 
   @Logged
