@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -21,7 +22,7 @@ public class Spindexer extends SubsystemBase {
   private final TalonFX tower = new TalonFX(23, canivore);
 
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
-  private final double towerOutput = 0.7;
+  private final double towerOutput = 1;
   private final double spindexerOutput = 0.4;
 
   public Spindexer() {
@@ -34,6 +35,12 @@ public class Spindexer extends SubsystemBase {
 
     towerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     towerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    CurrentLimitsConfigs currentLimitsConfigs = new CurrentLimitsConfigs();
+    currentLimitsConfigs.StatorCurrentLimit = 240;
+    currentLimitsConfigs.SupplyCurrentLimit = 140;
+    currentLimitsConfigs.StatorCurrentLimitEnable = true;
+    currentLimitsConfigs.SupplyCurrentLimitEnable = true;
+    towerConfig.withCurrentLimits(currentLimitsConfigs);
 
     for (int i = 0; i < 2; ++i) {
       var status = spindexer.getConfigurator().apply(spindexerConfig);
