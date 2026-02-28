@@ -23,40 +23,40 @@ public class Intake extends SubsystemBase {
   private final CANBus canivore = new CANBus("Default Name");
   private final CANBus rio = new CANBus("rio");
 
-  private final TalonFX roller = new TalonFX(25, rio);
+  private final TalonFX rollers = new TalonFX(25, rio);
   private final TalonFX arm = new TalonFX(10, canivore);
   private final TalonFX mouth = new TalonFX(14, canivore);
 
-  private final Angle extended = Degrees.of(20);
+  private final Angle extended = Degrees.of(20); // -1.8
   private final Angle retratcted = Degrees.of(78);
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
   private final PositionVoltage m_posReq = new PositionVoltage(0.0);
-  private final double MOUTH_SPEED = 0.3;
-  public final double ROLLER_SPEED = 0.5;
-  public final double GEAR_RATIO = 12;
+  private final double MOUTHSPEED = -0.3;
+  public final double ROLLERSPEED = 0.5;
+  public final double gearRatio = 12;
 
   public Intake() {
 
-    TalonFXConfiguration rotationConfig = new TalonFXConfiguration();
+    TalonFXConfiguration rollersConfig = new TalonFXConfiguration();
     TalonFXConfiguration armConfig = new TalonFXConfiguration();
 
-    rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    rotationConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    rotationConfig.Slot0.kS = 0;
-    rotationConfig.Slot0.kV = 0;
-    rotationConfig.Slot0.kA = 0;
-    rotationConfig.Slot0.kP = 0;
+    rollersConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    rollersConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    rollersConfig.Slot0.kS = 0;
+    rollersConfig.Slot0.kV = 0;
+    rollersConfig.Slot0.kA = 0;
+    rollersConfig.Slot0.kP = 0;
 
     armConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     armConfig.Slot0.kP = 20;
     armConfig.Slot0.kG = 0;
     armConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-    armConfig.Feedback.SensorToMechanismRatio = GEAR_RATIO;
+    armConfig.Feedback.SensorToMechanismRatio = gearRatio;
     armConfig.Feedback.RotorToSensorRatio = 1.0;
     armConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     for (int i = 0; i < 2; ++i) {
-      var status = roller.getConfigurator().apply(rotationConfig);
+      var status = rollers.getConfigurator().apply(rollersConfig);
       if (status.isOK()) break;
     }
 
@@ -66,15 +66,15 @@ public class Intake extends SubsystemBase {
     }
 
     for (int i = 0; i < 2; ++i) {
-      var status = mouth.getConfigurator().apply(rotationConfig);
+      var status = mouth.getConfigurator().apply(rollersConfig);
       if (status.isOK()) break;
     }
 
     arm.setPosition(retratcted.plus(Degrees.of(2)));
   }
 
-  public void setRollerOutput(double output) {
-    roller.setControl(m_dutyReq.withOutput(output));
+  public void setOutput(double output) {
+    rollers.setControl(m_dutyReq.withOutput(output));
   }
 
   public void setMouthOutput(double output) {
@@ -85,20 +85,25 @@ public class Intake extends SubsystemBase {
     arm.setControl(m_posReq.withPosition(posistion));
   }
 
-  public void stopRoller() {
-    roller.stopMotor();
+  public void stopRollers() {
+    rollers.stopMotor();
   }
 
   public void stopMouth() {
     mouth.stopMotor();
   }
 
-  public Command runRoller() {
-    return runOnce(() -> setRollerOutput(ROLLER_SPEED));
+  @Logged
+  public boolean armIsExtended() {
+    return arm.getPosition().getValue().lt(extended.plus(Degrees.of(20)));
+  }
+
+  public Command runRollers() {
+    return runOnce(() -> setOutput(ROLLERSPEED));
   }
 
   public Command runMouth() {
-    return runOnce(() -> setMouthOutput(MOUTH_SPEED));
+    return runOnce(() -> setMouthOutput(MOUTHSPEED));
   }
 
   public Command stopMouthCommand() {
@@ -113,38 +118,29 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> setPosistion(retratcted));
   }
 
-  public Command stopRollerCommand() {
-    return runOnce(() -> stopRoller());
+  public Command stopRollersCommand() {
+    return runOnce(() -> stopRollers());
   }
 
   public Command intakeOut() {
     return extendArm()
         .andThen(
-            Commands.waitUntil(() -> armIsExtended()).andThen(runRoller()).andThen(runMouth()));
+            Commands.waitUntil(() -> armIsExtended()).andThen(runRollers()).andThen(runMouth()));
   }
 
   public Command intakeIn() {
-    return stopMouthCommand().andThen(stopRollerCommand()).andThen(retractArm());
+    return stopMouthCommand().andThen(stopRollersCommand()).andThen(retractArm());
   }
 
   @Logged
-  public double getRollerVelocityInRPM() {
-    return roller.getVelocity().getValue().in(RPM);
+  public double getRollersyInRPM() {
+    return rollers.getVelocity().getValue().in(RPM);
   }
 
   @Logged
-  public double getMouthVelocityInRPM() {
-    return roller.getVelocity().getValue().in(RPM);
-  }
-
-  @Logged
-  public AngularVelocity getRollerVelocity() {
-    return roller.getVelocity().getValue();
-  }
-
-  @Logged
-  public AngularVelocity getMouthVelocity() {
-    return mouth.getVelocity().getValue();
+  public AngularVelocity getFlywheelVelocity() {
+    // Get the current velocity of the flywheel
+    return rollers.getVelocity().getValue();
   }
 
   @Logged
@@ -160,10 +156,5 @@ public class Intake extends SubsystemBase {
   @Logged
   public double getArmSetpoint() {
     return m_posReq.getPositionMeasure().in(Degrees);
-  }
-
-  @Logged
-  public boolean armIsExtended() {
-    return arm.getPosition().getValue().lt(extended.plus(Degrees.of(20)));
   }
 }
