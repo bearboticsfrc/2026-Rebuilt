@@ -59,7 +59,6 @@ public class Robot extends TimedRobot {
 
   private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
 
-  @Logged
   private final DynamicShootingCommand dynamicShootingCommand =
       new DynamicShootingCommand(hood, flywheel, spindexer, intake, drivetrain);
 
@@ -93,6 +92,8 @@ public class Robot extends TimedRobot {
     configureLogging();
     configureBindings();
     configureDefaultCommands();
+
+    DriverStation.silenceJoystickConnectionWarning(true);
   }
 
   public void configureLogging() {
@@ -108,6 +109,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotPeriodic() {
     DriverStation.getAlliance().ifPresent(AllianceColor::setAllianceColor);
+    RobotState.getInstance().updatePose();
     CommandScheduler.getInstance().run();
   }
 

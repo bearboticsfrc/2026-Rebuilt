@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter.trajectory;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Rotations;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
@@ -13,6 +14,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import frc.robot.field.Field;
 import java.util.function.Supplier;
+import lombok.Getter;
 
 public class ShotCalculator {
 
@@ -21,6 +23,9 @@ public class ShotCalculator {
   private final Translation2d blueHub = Field.getMyHub();
   private final Translation2d blueOutpost = Field.getMyOutpost();
   private final Translation2d blueDepot = Field.getMyLeft();
+
+  @Getter private double flywheelRPM = 0;
+  @Getter private Angle hoodAngle = Rotations.zero();
 
   public ShotCalculator(
       Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier) {
@@ -196,6 +201,8 @@ public class ShotCalculator {
       updateFutureTurretRotation(futurePose);
       trajectorySolution = getHubTrajectorySolutions(futurePose);
     }
+    flywheelRPM = flywheelRPMFromVelocity(trajectorySolution[1]);
+    hoodAngle = Rotations.of((trajectorySolution[2] - 32) / 37.5 * 1.4);
     return new double[] {
       trajectorySolution[0],
       flywheelRPMFromVelocity(trajectorySolution[1]),

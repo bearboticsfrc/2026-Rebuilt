@@ -73,11 +73,12 @@ public class RobotState {
     else return null;
   }
 
-  public Rotation2d getAngleToHub() {
-
+  public void updatePose() {
     turretPose = robotPose.transformBy(turretToRobot);
     turretTranslation = (robotPose.transformBy(turretToRobot).getTranslation());
+  }
 
+  public Rotation2d getAngleToHub() {
     return AllianceFlipUtil.apply(
         Field.getMyHub().minus((robotPose.transformBy(turretToRobot).getTranslation())).getAngle());
   }

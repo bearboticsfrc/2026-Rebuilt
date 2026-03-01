@@ -1,7 +1,5 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Rotations;
-
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -41,20 +39,18 @@ public class DynamicShootingCommand extends Command {
   }
 
   public Command shoot() {
-
-    double[] shotCalculations = shotCalculator.ShootOnMoveSolver("Hub");
-
-    double flywheelRPM = shotCalculations[1];
-    double hoodAngle = (shotCalculations[2] - 32) / 37.5 * 1.4;
-
-    return flywheel
-        .runAtSpeed(flywheelRPM)
-        .alongWith(hood.goToSetpointAngle(() -> Rotations.of(hoodAngle)))
-        .alongWith(
-            Commands.waitUntil(() -> flywheel.isAtTarget())
-                .andThen(spindexer.runSpindexer())
-                .andThen(spindexer.runTower())
-                .andThen(intake.runMouthSlow()));
+    return Commands.runOnce(() -> shotCalculator.ShootOnMoveSolver("Hub"))
+        .andThen(
+            new LogShootParamsCommand(shotCalculator::getFlywheelRPM, shotCalculator::getHoodAngle))
+        .andThen(
+            flywheel
+                .runAtSpeed(shotCalculator::getFlywheelRPM)
+                .alongWith(hood.goToSetpointAngle(shotCalculator::getHoodAngle))
+                .alongWith(
+                    Commands.waitUntil(() -> flywheel.isAtTarget())
+                        .andThen(spindexer.runSpindexer())
+                        .andThen(spindexer.runTower())
+                        .andThen(intake.runMouthSlow())));
   }
 
   public Command stop() {
