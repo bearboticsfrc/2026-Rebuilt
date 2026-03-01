@@ -1,8 +1,13 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
+
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -13,6 +18,13 @@ import lombok.*;
 public class RobotState {
 
   private static RobotState instance = new RobotState();
+
+  @Logged public Translation2d turretTranslation;
+
+  @Logged public Pose2d turretPose;
+
+  private final Transform2d turretToRobot =
+      new Transform2d(Inches.of(-3.25), Inches.of(-3.25), new Rotation2d(Degrees.zero()));
 
   public static RobotState getInstance() {
     if (instance == null) instance = new RobotState();
@@ -62,6 +74,11 @@ public class RobotState {
   }
 
   public Rotation2d getAngleToHub() {
-    return AllianceFlipUtil.apply((Field.getMyHub().minus(robotPose.getTranslation())).getAngle());
+
+    turretPose = robotPose.transformBy(turretToRobot);
+    turretTranslation = (robotPose.transformBy(turretToRobot).getTranslation());
+
+    return AllianceFlipUtil.apply(
+        Field.getMyHub().minus((robotPose.transformBy(turretToRobot).getTranslation())).getAngle());
   }
 }

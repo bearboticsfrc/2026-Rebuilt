@@ -6,7 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
@@ -23,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -58,6 +58,10 @@ public class Robot extends TimedRobot {
   // private final Climber climber = new Climber();
 
   private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
+
+  @Logged
+  private final DynamicShootingCommand dynamicShootingCommand =
+      new DynamicShootingCommand(hood, flywheel, spindexer, intake, drivetrain);
 
   // private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, drivetrain);
 
@@ -172,12 +176,18 @@ public class Robot extends TimedRobot {
 
     // pilot controlls
 
-    pilot.rightTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
-    pilot.leftTrigger().onTrue(spindexer.index()).onFalse(spindexer.stopMotorsCommand());
-    pilot.rightBumper().onTrue(flywheel.runFast()).onFalse(flywheel.stopCommand());
+    pilot.leftTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
+
+    pilot
+        .rightTrigger()
+        .onTrue(dynamicShootingCommand.shoot())
+        .onFalse(dynamicShootingCommand.stop());
+
     pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
-    pilot.y().onTrue(hood.goToSetpointAngle(() -> Rotations.of(1.4)));
-    pilot.b().onTrue(hood.goToSetpointAngle(() -> Rotations.of(0)));
+
+    // pilot.y().onTrue(hood.goToSetpointAngle(() -> Rotations.of(1.4)));
+
+    // pilot.b().onTrue(hood.goToSetpointAngle(() -> Rotations.of(0)));
 
     // copilot controlls
     copilot

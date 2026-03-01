@@ -12,8 +12,6 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -33,14 +31,9 @@ public class Flywheel extends SubsystemBase {
   // Create the leader and follower TalonFX motors
   private final TalonFX leader = new TalonFX(26, canivore);
 
-  // private final TalonFX follower = new TalonFX(22, canivore);
-
   // Velocity output control for the flywheel
-  private final MotionMagicVelocityVoltage velocityOut = new MotionMagicVelocityVoltage(0);
 
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
-
-  private final VelocityDutyCycle velocityDutyCycle = new VelocityDutyCycle(0);
 
   private final DutyCycleOut output = new DutyCycleOut(0);
 
@@ -112,17 +105,7 @@ public class Flywheel extends SubsystemBase {
     }
   }
 
-  /**
-   * Sets the velocity for the flywheel.
-   *
-   * @param velocity The velocity to set.
-   */
   public void setVelocity(AngularVelocity velocity) {
-    // Apply the velocity output to the leader motor
-    leader.setControl(velocityOut.withVelocity(velocity));
-  }
-
-  public void setRunVelocity(AngularVelocity velocity) {
     // leader.setControl(new VelocityDutyCycle(velocity));
     leader.setControl(velocityTorqueCurrentFOC.withVelocity(velocity));
   }
@@ -138,32 +121,13 @@ public class Flywheel extends SubsystemBase {
   }
 
   /**
-   * Command to run the flywheel at a slow speed.
-   *
-   * @return The command to run the flywheel slowly.
-   */
-  public Command runSlow() {
-    // Command to run the flywheel at a slow speed
-    return runOnce(() -> setVelocity(RPM.of(rpm.get())));
-  }
-
-  /**
-   * Command to run the flywheel at a fast speed.
-   *
-   * @return The command to run the flywheel fast.
-   */
-  public Command runFast() {
-    // Command to run the flywheel at a fast speed
-    return runOnce(() -> setRunVelocity(RPM.of(3000)));
-  }
-  /**
    * Command to run the flywheel at a given speed.
    *
    * @return The command to run the flywheel at the given speed.
    */
   public Command runAtSpeed(double rpm) {
     // Command to run the flywheel at a given speed
-    return runOnce(() -> setRunVelocity(RPM.of(rpm)));
+    return runOnce(() -> setVelocity(RPM.of(rpm)));
   }
 
   /**
@@ -205,9 +169,7 @@ public class Flywheel extends SubsystemBase {
   @Logged
   public double getTargetVelocity() {
     // Return the target velocity
-    // return velocityOut.getVelocityMeasure().in(RPM);
     return velocityTorqueCurrentFOC.getVelocityMeasure().in(RPM);
-    // return velocityDutyCycle.getVelocityMeasure().in(RPM);
   }
 
   @Logged
@@ -250,6 +212,6 @@ public class Flywheel extends SubsystemBase {
 
   @Logged
   public double getTargetVelocityInRPM() {
-    return velocityOut.getVelocityMeasure().in(RPM);
+    return velocityTorqueCurrentFOC.getVelocityMeasure().in(RPM);
   }
 }

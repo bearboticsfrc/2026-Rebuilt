@@ -8,7 +8,7 @@ public class TargetingSolver {
 
   private static final double SPHERE_DIAMETER_INCHES = 6;
   private static final double SPHERE_MASS_LBS = 0.5;
-  private static final double DEFAULT_INITIAL_HEIGHT = 2; // feet
+  private static final double DEFAULT_INITIAL_HEIGHT = 1.8; // feet
 
   private static final double MIN_VELOCITY = 10; // ft/s
   private static final double MAX_VELOCITY = 500; // ft/s
@@ -64,7 +64,7 @@ public class TargetingSolver {
         6.0,
         0.5 /* potentially an issue that needs to be made positive instead of negative */,
         2.5,
-        0.5,
+        1,
         true);
   }
 

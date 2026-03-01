@@ -61,6 +61,7 @@ public class ShotCalculator {
 
   public String targetLocation() {
     String location = "Hub";
+    if (poseSupplier.get() == null) return location;
     if (poseSupplier.get().getTranslation().getX() < Field.getMyAllianceLine().getX()) {
       location = "Hub";
     } else if (poseSupplier.get().getTranslation().getY() < Field.getMyAllianceLine().getY()) {
