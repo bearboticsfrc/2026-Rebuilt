@@ -110,12 +110,8 @@ public class Intake extends SubsystemBase {
     TalonFXConfiguration rotationConfig = new TalonFXConfiguration();
     //  TalonFXConfiguration armConfig = new TalonFXConfiguration();
 
-    rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    rotationConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    rotationConfig.Slot0.kS = 0;
-    rotationConfig.Slot0.kV = 0;
-    rotationConfig.Slot0.kA = 0;
-    rotationConfig.Slot0.kP = 0;
+    rollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    rollerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     // armConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     // armConfig.Slot0.kP = 20;
@@ -126,7 +122,7 @@ public class Intake extends SubsystemBase {
     // armConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     for (int i = 0; i < 2; ++i) {
-      var status = roller.getConfigurator().apply(rotationConfig);
+      var status = roller.getConfigurator().apply(rollerConfig);
       if (status.isOK()) break;
     }
 
@@ -136,7 +132,7 @@ public class Intake extends SubsystemBase {
     }
 
     for (int i = 0; i < 2; ++i) {
-      var status = mouth.getConfigurator().apply(rotationConfig);
+      var status = mouth.getConfigurator().apply(mouthConfig);
       if (status.isOK()) break;
     }
 
@@ -180,6 +176,10 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> stopMouth());
   }
 
+    public Command stopRollerCommand() {
+    return runOnce(() -> stopRoller());
+  }
+
   public Command extendArm() {
     return goToSetpoint(() -> Setpoint.Extended);
     // return runOnce(() -> setPosistion(Setpoint.Extended));
@@ -191,8 +191,8 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> setPosistion(Setpoint.Retracted));
   }
 
-  public Command stopRollerCommand() {
-    return runOnce(() -> stopRoller());
+  public Command setArm(Angle angle) {
+    return runOnce(() -> setPosistion(angle));
   }
 
   public Command intakeOut() {
@@ -202,6 +202,12 @@ public class Intake extends SubsystemBase {
   public Command intakeIn() {
     return retractArm().andThen(stopRollerCommand()).andThen(stopMouthCommand());
     // return stopMouthCommand().andThen(stopRollerCommand()).andThen(retractArm());
+  }
+
+  public Command armOscillate(){
+    return setArm(oscillateMin)
+    .andThen(Commands.waitSeconds(.75))
+    .andThen(setArm(oscillateMax));
   }
 
   @Logged
@@ -215,18 +221,13 @@ public class Intake extends SubsystemBase {
   }
 
   @Logged
-  public AngularVelocity getRollerVelocity() {
-    return roller.getVelocity().getValue();
-  }
-
-  @Logged
-  public AngularVelocity getMouthVelocity() {
-    return mouth.getVelocity().getValue();
-  }
-
-  @Logged
   public double getArmPosistion() {
     return arm.getPosition().getValue().in(Degrees);
+  }
+
+  @Logged
+  public double getArmSetpoint() {
+    return m_posReq.getPositionMeasure().in(Degrees);
   }
 
   @Logged

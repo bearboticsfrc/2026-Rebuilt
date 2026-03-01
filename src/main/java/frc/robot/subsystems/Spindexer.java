@@ -88,17 +88,7 @@ public class Spindexer extends SubsystemBase {
   }
 
   @Logged
-  public AngularVelocity getSpindexerVelocity() {
-    return spindexer.getVelocity().getValue();
-  }
-
-  @Logged
   public double getTowerVelocityInRPM() {
     return tower.getVelocity().getValue().in(RPM);
-  }
-
-  @Logged
-  public AngularVelocity getTowerVelocity() {
-    return tower.getVelocity().getValue();
   }
 }

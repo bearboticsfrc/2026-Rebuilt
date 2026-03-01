@@ -67,19 +67,11 @@ public class Flywheel extends SubsystemBase {
     TalonFXConfiguration config = new TalonFXConfiguration();
     // Put's the motor in Coast mode to make it easier to move by hand
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    // Configure the motor to make sure positive voltage is counter clockwise
-    // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    // config.Slot0.kS = 0.31576; // Static gain
-    // config.Slot0.kV = 0.11631; // Velocity gain
-    // config.Slot0.kA = 0.015927;
-    // config.Slot0.kP = .094744; // Proportional gain
-    // config.MotionMagic.MotionMagicCruiseVelocity = 9000; // Max velocity
-    // config.MotionMagic.MotionMagicAcceleration = 9000; // Max acceleration allowed
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     config.Slot0.kS = 0.18342; // Static gain
     config.Slot0.kV = 0.11941; // Velocity gain
     config.Slot0.kA = 0.015595;
-    config.Slot0.kP = 99999.0; // 0.18224; // Proportional gain
+    config.Slot0.kP = 99999.0;  // Proportional gain
     config.MotionMagic.MotionMagicCruiseVelocity = 9000; // Max velocity
     config.MotionMagic.MotionMagicAcceleration = 9000; // Max acceleration allowed
     config.TorqueCurrent.PeakForwardTorqueCurrent = 100;
