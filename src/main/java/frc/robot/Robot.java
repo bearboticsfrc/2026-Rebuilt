@@ -6,7 +6,6 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
@@ -185,25 +184,16 @@ public class Robot extends TimedRobot {
 
     // pilot controlls
 
-    pilot
-        .leftTrigger()
-        .onTrue(intake.intakeOut())
-        .onFalse(intake.intakeIn());
+    pilot.leftTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
 
     pilot
         .rightTrigger()
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
-    pilot
-        .a()
-        .onTrue(shootCommand.shoot())
-        .onFalse(shootCommand.stop());
+    pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
-    pilot
-        .x()
-        .onTrue(intake.armOscillate())
-        .onFalse(intake.retractArm());
+    pilot.x().onTrue(intake.armOscillate()).onFalse(intake.retractArm());
 
     // pilot
     //     .y()
@@ -225,12 +215,9 @@ public class Robot extends TimedRobot {
                         .withHeadingPID(18, 0, .1)
                         .withTargetDirection(RobotState.getInstance().getAngleToHub())));
 
-   
     copilot.povUp().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Top));
     copilot.povDown().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Bottom));
     copilot.povLeft().onTrue(Commands.runOnce(() -> climber.getCurrentCommand().cancel()));
     copilot.povRight().onTrue(climber.calibrateZero());
-
-
   }
 }

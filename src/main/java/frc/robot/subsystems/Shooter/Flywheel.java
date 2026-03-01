@@ -71,7 +71,7 @@ public class Flywheel extends SubsystemBase {
     config.Slot0.kS = 0.18342; // Static gain
     config.Slot0.kV = 0.11941; // Velocity gain
     config.Slot0.kA = 0.015595;
-    config.Slot0.kP = 99999.0;  // Proportional gain
+    config.Slot0.kP = 99999.0; // Proportional gain
     config.MotionMagic.MotionMagicCruiseVelocity = 9000; // Max velocity
     config.MotionMagic.MotionMagicAcceleration = 9000; // Max acceleration allowed
     config.TorqueCurrent.PeakForwardTorqueCurrent = 100;

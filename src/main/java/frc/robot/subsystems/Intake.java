@@ -22,6 +22,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.Supplier;
 
@@ -31,6 +32,9 @@ public class Intake extends SubsystemBase {
     Initial(Degrees.of(80)),
 
     Retracted(Degrees.of(78)),
+    OscillateMin(Degrees.of(60)),
+    OscillateMax(Degrees.of(30)),
+
     AlmostExtended(Degrees.of(40)),
     Extended(Degrees.of(22));
 
@@ -58,8 +62,8 @@ public class Intake extends SubsystemBase {
   private final StatusSignal<AngularVelocity> armVelocity = arm.getVelocity(false);
   private final StatusSignal<Current> armTorqueCurrent = arm.getTorqueCurrent(false);
 
-  private final double MOUTH_SPEED = -0.3;
-  private final double MOUTH_SLOW_SPEED = -0.15;
+  private final double MOUTH_SPEED = 0.3;
+  private final double MOUTH_SLOW_SPEED = 0.15;
   public final double ROLLER_SPEED = 0.5;
   public final double ARM_GEAR_RATIO = 12;
   private Angle latestPosistion = Setpoint.Retracted.target;
@@ -106,20 +110,13 @@ public class Intake extends SubsystemBase {
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(600)));
 
   public Intake() {
-
-    TalonFXConfiguration rotationConfig = new TalonFXConfiguration();
-    //  TalonFXConfiguration armConfig = new TalonFXConfiguration();
+    TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
+    TalonFXConfiguration mouthConfig = new TalonFXConfiguration();
 
     rollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     rollerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-    // armConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    // armConfig.Slot0.kP = 20;
-    // armConfig.Slot0.kG = 0;
-    // armConfig.Slot0.GravityType = GravityTypeValue.Arm_Cosine;
-    // armConfig.Feedback.SensorToMechanismRatio = GEAR_RATIO;
-    // armConfig.Feedback.RotorToSensorRatio = 1.0;
-    // armConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    mouthConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    mouthConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     for (int i = 0; i < 2; ++i) {
       var status = roller.getConfigurator().apply(rollerConfig);
@@ -176,7 +173,7 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> stopMouth());
   }
 
-    public Command stopRollerCommand() {
+  public Command stopRollerCommand() {
     return runOnce(() -> stopRoller());
   }
 
@@ -191,8 +188,8 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> setPosistion(Setpoint.Retracted));
   }
 
-  public Command setArm(Angle angle) {
-    return runOnce(() -> setPosistion(angle));
+  public Command setArm(Setpoint setpoint) {
+    return runOnce(() -> setPosistion(setpoint));
   }
 
   public Command intakeOut() {
@@ -204,10 +201,10 @@ public class Intake extends SubsystemBase {
     // return stopMouthCommand().andThen(stopRollerCommand()).andThen(retractArm());
   }
 
-  public Command armOscillate(){
-    return setArm(oscillateMin)
-    .andThen(Commands.waitSeconds(.75))
-    .andThen(setArm(oscillateMax));
+  public Command armOscillate() {
+    return setArm(Setpoint.OscillateMin)
+        .andThen(Commands.waitSeconds(.75))
+        .andThen(setArm(Setpoint.OscillateMax));
   }
 
   @Logged
@@ -227,18 +224,12 @@ public class Intake extends SubsystemBase {
 
   @Logged
   public double getArmSetpoint() {
-    return m_posReq.getPositionMeasure().in(Degrees);
+    return posReq.getPositionMeasure().in(Degrees);
   }
 
   @Logged
   public double getArmVoltage() {
     return arm.getMotorVoltage().getValueAsDouble();
-  }
-
-  @Logged
-  public double getArmSetpoint() {
-    return motionMagicVoltageRequest.getPositionMeasure().in(Degrees);
-    // return posReq.getPositionMeasure().in(Degrees);
   }
 
   @Logged
@@ -269,6 +260,7 @@ public class Intake extends SubsystemBase {
   public Command goToSetpoint(Supplier<Setpoint> setpoint) {
     return run(
         () -> {
+          posReq.withPosition(setpoint.get().target); // just for unified logging
           motionMagicVoltageRequest.withPosition(setpoint.get().target);
           arm.setControl(motionMagicVoltageRequest);
         });
