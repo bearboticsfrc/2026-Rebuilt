@@ -29,25 +29,29 @@ public class Intake extends SubsystemBase {
 
   private final Angle extended = Degrees.of(20);
   private final Angle retratcted = Degrees.of(78);
+  private Angle latestPosistion = retratcted;
+  private final Angle oscillateMax = Degrees.of(60);
+  private final Angle oscillateMin = Degrees.of(49);
+
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
   private final PositionVoltage m_posReq = new PositionVoltage(0.0);
-  private final double MOUTH_SPEED = -0.3;
-  private final double MOUTH_SLOW_SPEED = -0.15;
+
+  private final double MOUTH_SPEED = 0.3;
+  private final double MOUTH_SLOW_SPEED = 0.15;
   public final double ROLLER_SPEED = 0.5;
   public final double GEAR_RATIO = 12;
-  private Angle latestPosistion = retratcted;
 
   public Intake() {
 
-    TalonFXConfiguration rotationConfig = new TalonFXConfiguration();
+    TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
+    TalonFXConfiguration mouthConfig = new TalonFXConfiguration();
     TalonFXConfiguration armConfig = new TalonFXConfiguration();
 
-    rotationConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    rotationConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    rotationConfig.Slot0.kS = 0;
-    rotationConfig.Slot0.kV = 0;
-    rotationConfig.Slot0.kA = 0;
-    rotationConfig.Slot0.kP = 0;
+    rollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    rollerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+
+    mouthConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    mouthConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     armConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     armConfig.Slot0.kP = 20;
@@ -58,7 +62,7 @@ public class Intake extends SubsystemBase {
     armConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
     for (int i = 0; i < 2; ++i) {
-      var status = roller.getConfigurator().apply(rotationConfig);
+      var status = roller.getConfigurator().apply(rollerConfig);
       if (status.isOK()) break;
     }
 
@@ -68,7 +72,7 @@ public class Intake extends SubsystemBase {
     }
 
     for (int i = 0; i < 2; ++i) {
-      var status = mouth.getConfigurator().apply(rotationConfig);
+      var status = mouth.getConfigurator().apply(mouthConfig);
       if (status.isOK()) break;
     }
 
@@ -112,6 +116,10 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> stopMouth());
   }
 
+    public Command stopRollerCommand() {
+    return runOnce(() -> stopRoller());
+  }
+
   public Command extendArm() {
     return runOnce(() -> setPosistion(extended));
   }
@@ -120,18 +128,28 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> setPosistion(retratcted));
   }
 
-  public Command stopRollerCommand() {
-    return runOnce(() -> stopRoller());
+  public Command setArm(Angle angle) {
+    return runOnce(() -> setPosistion(angle));
   }
 
   public Command intakeOut() {
     return extendArm()
         .andThen(
-            Commands.waitUntil(() -> armIsExtended()).andThen(runRoller()).andThen(runMouth()));
+            Commands.waitUntil(() -> armIsExtended())
+            .andThen(runRoller())
+            .andThen(runMouth()));
   }
 
   public Command intakeIn() {
-    return stopMouthCommand().andThen(stopRollerCommand()).andThen(retractArm());
+    return stopMouthCommand()
+    .andThen(stopRollerCommand())
+    .andThen(retractArm());
+  }
+
+  public Command armOscillate(){
+    return setArm(oscillateMin)
+    .andThen(Commands.waitSeconds(.75))
+    .andThen(setArm(oscillateMax));
   }
 
   @Logged
@@ -145,23 +163,8 @@ public class Intake extends SubsystemBase {
   }
 
   @Logged
-  public AngularVelocity getRollerVelocity() {
-    return roller.getVelocity().getValue();
-  }
-
-  @Logged
-  public AngularVelocity getMouthVelocity() {
-    return mouth.getVelocity().getValue();
-  }
-
-  @Logged
   public double getArmPosistion() {
     return arm.getPosition().getValue().in(Degrees);
-  }
-
-  @Logged
-  public double getArmVoltage() {
-    return arm.getMotorVoltage().getValueAsDouble();
   }
 
   @Logged
@@ -170,8 +173,15 @@ public class Intake extends SubsystemBase {
   }
 
   @Logged
+  public double getArmVoltage() {
+    return arm.getMotorVoltage().getValueAsDouble();
+  }
+
+  @Logged
   public boolean armIsExtended() {
-    return arm.getPosition().getValue().lt(extended.plus(Degrees.of(20)));
+    return arm.getPosition()
+    .getValue()
+    .lt(extended.plus(Degrees.of(20)));
   }
 
   @Override

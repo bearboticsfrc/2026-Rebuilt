@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
@@ -176,18 +177,33 @@ public class Robot extends TimedRobot {
 
     // pilot controlls
 
-    pilot.leftTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
+    pilot
+        .leftTrigger()
+        .onTrue(intake.intakeOut())
+        .onFalse(intake.intakeIn());
 
     pilot
         .rightTrigger()
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
-    pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
+    pilot
+        .a()
+        .onTrue(shootCommand.shoot())
+        .onFalse(shootCommand.stop());
 
-    // pilot.y().onTrue(hood.goToSetpointAngle(() -> Rotations.of(1.4)));
+    pilot
+        .x()
+        .onTrue(intake.armOscillate())
+        .onFalse(intake.retractArm());
 
-    // pilot.b().onTrue(hood.goToSetpointAngle(() -> Rotations.of(0)));
+    // pilot
+    //     .y()
+    //     .onTrue(hood.goToSetpointAngle(()-> Rotations.of(1.4)));
+
+    // pilot
+    //     .b()
+    //     .onTrue(hood.goToSetpointAngle(() -> Rotations.of(0)));
 
     // copilot controlls
     copilot
