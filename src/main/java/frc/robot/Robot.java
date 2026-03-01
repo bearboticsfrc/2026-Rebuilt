@@ -15,13 +15,13 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.ShootCommand;
@@ -57,7 +57,7 @@ public class Robot extends TimedRobot {
 
   @Logged private final Hood hood = new Hood();
 
-  private final Elevator elevator = new Elevator();
+  @Logged private final Elevator elevator = new Elevator();
 
   private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
 
@@ -117,6 +117,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     m_robotContainer.autonomousInit();
+    CommandScheduler.getInstance().schedule(elevator.calibrateZero());
 
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
@@ -128,6 +129,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     CommandScheduler.getInstance().cancelAll();
+    CommandScheduler.getInstance().schedule(elevator.calibrateZero());
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
@@ -167,8 +169,12 @@ public class Robot extends TimedRobot {
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
-    elevator.setDefaultCommand(
-        elevator.manualDrive(() -> -MathUtil.applyDeadband(copilot.getRightY() / 10.0, 0.1)));
+    // elevator.setDefaultCommand(
+    //    elevator.manualDrive(() -> -MathUtil.applyDeadband(copilot.getRightY() / 2.0, 0.1)));
+
+    copilot.circle().onTrue(elevator.goToSetpoint(() -> Elevator.Setpoint.Top));
+    copilot.square().onTrue(elevator.goToSetpoint(() -> Elevator.Setpoint.Bottom));
+    copilot.triangle().onTrue(Commands.runOnce(() -> elevator.getCurrentCommand().cancel()));
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
   }

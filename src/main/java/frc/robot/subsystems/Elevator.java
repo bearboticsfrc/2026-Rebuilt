@@ -21,6 +21,7 @@ import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
 import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
@@ -28,7 +29,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -38,9 +38,9 @@ import java.util.function.Supplier;
 public class Elevator extends SubsystemBase {
   /** Position setpoints for the elevator. */
   public enum Setpoint {
-    Ground(Rotations.of(0)),
-    Middle(Rotations.of(5)),
-    Top(Rotations.of(10));
+    Bottom(Rotations.of(0)),
+    Middle(Inches.of(3.5)),
+    Top(Inches.of(7.5)); // 16.5 rotations
 
     /** The position target of the setpoint in angular units. */
     public final Angle target;
@@ -75,6 +75,10 @@ public class Elevator extends SubsystemBase {
   private final StatusSignal<AngularVelocity> motor_id_15Velocity = motor_id_15.getVelocity(false);
   private final StatusSignal<Current> motor_id_15TorqueCurrent =
       motor_id_15.getTorqueCurrent(false);
+  private final StatusSignal<Temperature> motor_id_15Temperature = motor_id_15.getDeviceTemp(false);
+  private final StatusSignal<Current> motor_id_19TorqueCurrent =
+      motor_id_19.getTorqueCurrent(false);
+  private final StatusSignal<Temperature> motor_id_19Temperature = motor_id_19.getDeviceTemp(false);
 
   /* controls used by the leader motors */
   private final MotionMagicVoltage setpointRequest = new MotionMagicVoltage(0);
@@ -127,7 +131,7 @@ public class Elevator extends SubsystemBase {
       motorInitialConfigs
           .clone()
           .withMotorOutput(
-              motorInitialConfigs.MotorOutput.clone().withNeutralMode(NeutralModeValue.Coast))
+              motorInitialConfigs.MotorOutput.clone().withNeutralMode(NeutralModeValue.Brake))
           .withCurrentLimits(
               motorInitialConfigs
                   .CurrentLimits
@@ -227,11 +231,11 @@ public class Elevator extends SubsystemBase {
     motor_id_19.setControl(new Follower(motor_id_15.getDeviceID(), MotorAlignmentValue.Aligned));
 
     /* set the default command to neutral output */
-    setDefaultCommand(manualDrive(() -> 0.0));
+    // setDefaultCommand(manualDrive(() -> 0.0));
     /* alternatively, the default command can hold position */
     // setDefaultCommand(holdPosition());
 
-    SmartDashboard.putData("Elevator", mech2d);
+    // SmartDashboard.putData("Elevator", mech2d);
 
     if (Utils.isSimulation()) {
       startSimThread();
@@ -241,13 +245,25 @@ public class Elevator extends SubsystemBase {
   /**
    * @return The Position of the elevator
    */
+  @Logged
   public Angle getPosition() {
     return motor_id_15Position.getValue();
+  }
+
+  @Logged
+  public Distance getPositionDistance() {
+    return kDrumRadius.times(motor_id_15Position.getValue().in(Radians));
+  }
+
+  @Logged
+  public double getPositionInches() {
+    return kDrumRadius.times(motor_id_15Position.getValue().in(Radians)).in(Inches);
   }
 
   /**
    * @return The Velocity of the elevator
    */
+  @Logged
   public AngularVelocity getVelocity() {
     return motor_id_15Velocity.getValue();
   }
@@ -255,8 +271,33 @@ public class Elevator extends SubsystemBase {
   /**
    * @return The TorqueCurrent of the elevator
    */
-  public Current getTorqueCurrent() {
+  @Logged
+  public Current getTorqueCurrentA() {
     return motor_id_15TorqueCurrent.getValue();
+  }
+
+  /**
+   * @return The TorqueCurrent of the elevator
+   */
+  @Logged
+  public Current getTorqueCurrentB() {
+    return motor_id_19TorqueCurrent.getValue();
+  }
+
+  /**
+   * @return The Temperature of the elevator
+   */
+  @Logged
+  public double getTempuratureAFahrenheit() {
+    return motor_id_15Temperature.getValue().in(Fahrenheit);
+  }
+
+  /**
+   * @return The Temperature of the elevator
+   */
+  @Logged
+  public double getTempuratureBAFahrenheit() {
+    return motor_id_19Temperature.getValue().in(Fahrenheit);
   }
 
   /**
@@ -325,10 +366,16 @@ public class Elevator extends SubsystemBase {
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(motor_id_15Position, motor_id_15Velocity, motor_id_15TorqueCurrent);
+    BaseStatusSignal.refreshAll(
+        motor_id_15Position,
+        motor_id_15Velocity,
+        motor_id_15TorqueCurrent,
+        motor_id_15Temperature,
+        motor_id_19TorqueCurrent,
+        motor_id_19Temperature);
 
-    motor_id_15Mech2d.setLength(
-        motor_id_15Position.getValueAsDouble() * kDrumRadius.in(Meters) * 2 * Math.PI);
+    // motor_id_15Mech2d.setLength(
+    //    motor_id_15Position.getValueAsDouble() * kDrumRadius.in(Meters) * 2 * Math.PI);
   }
 
   private void startSimThread() {
