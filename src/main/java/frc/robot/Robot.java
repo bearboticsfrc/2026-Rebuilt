@@ -15,6 +15,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -26,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
@@ -55,7 +57,7 @@ public class Robot extends TimedRobot {
 
   @Logged private final Hood hood = new Hood();
 
-  // private final Climber climber = new Climber();
+  private final Elevator elevator = new Elevator();
 
   private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
 
@@ -164,6 +166,9 @@ public class Robot extends TimedRobot {
                         -pilot.getRightX()
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
+
+    elevator.setDefaultCommand(
+        elevator.manualDrive(() -> -MathUtil.applyDeadband(copilot.getRightY() / 10.0, 0.1)));
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
   }

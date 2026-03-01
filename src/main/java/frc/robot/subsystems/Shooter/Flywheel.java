@@ -156,6 +156,7 @@ public class Flywheel extends SubsystemBase {
     // Command to run the flywheel at a fast speed
     return runOnce(() -> setRunVelocity(RPM.of(3000)));
   }
+
   /**
    * Command to run the flywheel at a given speed.
    *
