@@ -156,6 +156,7 @@ public class Hood extends SubsystemBase {
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300)));
 
   public Hood() {
+    super("Hood");
     for (int i = 0; i < kNumConfigAttempts; ++i) {
       var status = motor_id_0.getConfigurator().apply(motor_id_0Configs);
       if (status.isOK()) break;

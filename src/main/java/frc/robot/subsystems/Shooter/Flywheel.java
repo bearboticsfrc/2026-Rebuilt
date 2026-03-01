@@ -61,6 +61,7 @@ public class Flywheel extends SubsystemBase {
               (volts) -> leader.setControl(m_voltReq.withOutput(volts.in(Volts))), null, this));
 
   public Flywheel() {
+    super("Flywheel");
     // Set the follower to follow the leader motor
     // follower.setControl(new Follower(leader.getDeviceID(), true));
     // Create and apply the configuration for the leader motor

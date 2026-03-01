@@ -1,5 +1,8 @@
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Rotations;
+
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -9,15 +12,17 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotState;
+import frc.robot.field.AllianceFlipUtil;
 import frc.spectrumLib.CachedDouble;
 import frc.spectrumLib.util.Conversions;
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,22 +38,21 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   /* Turret config values */
   @Getter private double currentLimit = 44;
-  @Getter private double torqueCurrentLimit = 200;
-  @Getter private double velocityKp = 23.221;
-  @Getter private double velocityKi = 0.4; // try lowering this
-  @Getter private double velocityKd = 0.8981;
+  @Getter private double torqueCurrentLimit = 400;
+  @Getter private double velocityKp = 25; // 31.931;
+  @Getter private double velocityKi = 0;
+  @Getter private double velocityKd = 1.5; // 0.8981;
 
-  @Getter private double velocityKs = .38778 * 2.0;
-  @Getter private double velocityKv = 2.3767;
-  @Getter private double velocityKa = .077265;
+  @Getter private double velocityKs = .38778 * 2.0; // * 2.0;
+  @Getter private double velocityKv = 0; // 2.3767;
+  @Getter private double velocityKa = 0; // .077265;
 
   @Getter private double gearRatio = 4.35;
 
-  @Getter private double statorLimit = 40;
+  @Getter private double statorLimit = 200;
 
   private final CachedDouble cachedRotations;
   private final CachedDouble cachedVoltage;
-  private final CachedDouble cachedDegrees;
   private final CachedDouble cachedVelocity;
   private final CachedDouble cachedCurrent;
 
@@ -67,9 +71,14 @@ public class Turret extends SubsystemBase implements NTSendable {
   //   }
   // }
 
+  // set these small to start
+  @Getter public Angle minRotations = Rotations.of(-.25);
+  @Getter public Angle maxRotations = Rotations.of(.5);
+
   @Setter @Getter private boolean active;
 
   public Turret() {
+    super("Turret");
 
     TalonFXConfiguration config = new TalonFXConfiguration();
 
@@ -86,16 +95,23 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.Slot0.kV = velocityKv;
 
     var motionMagicConfigs = config.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = 10; // 80; // Target cruise velocity of 80 rps
+    motionMagicConfigs.MotionMagicCruiseVelocity = 320; // 80; // Target cruise velocity of 80 rps
     motionMagicConfigs.MotionMagicAcceleration =
-        60; //  320; // Target acceleration of 160 rps/s (0.5 seconds)
-    motionMagicConfigs.MotionMagicJerk = 1280; // Target jerk of 1600 rps/s/s (0.1 seconds)
+        480; // Target acceleration of 160 rps/s (0.5 seconds)
+    motionMagicConfigs.MotionMagicJerk = 1600; // Target jerk of 1600 rps/s/s (0.1 seconds)
 
     config.Feedback.RotorToSensorRatio = 1.0;
     config.Feedback.SensorToMechanismRatio = gearRatio;
 
     config.CurrentLimits.StatorCurrentLimit = statorLimit;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
+
+    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .5;
+    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.26;
+
+    // motionMagicVoltage.withFeedForward(Volts.of(1));
 
     StatusCode status = motor.getConfigurator().apply(config);
 
@@ -104,10 +120,11 @@ public class Turret extends SubsystemBase implements NTSendable {
       status = motor.getConfigurator().apply(config);
     }
 
+    motor.setPosition(0);
+
     cachedCurrent = new CachedDouble(this::updateCurrent);
     cachedVoltage = new CachedDouble(this::updateVoltage);
     cachedRotations = new CachedDouble(this::updatePositionRotations);
-    cachedDegrees = new CachedDouble(this::updatePositionDegrees);
     cachedVelocity = new CachedDouble(this::updateVelocityRPM);
 
     if (!status.isOK()) {
@@ -119,11 +136,31 @@ public class Turret extends SubsystemBase implements NTSendable {
     System.out.println("MotionMagic:" + motionMagicVoltage);
   }
 
+  private Angle wrapDegreesToSoftLimits(Angle targetAngle) {
+    Angle currentAngle = getAngle();
+
+    // Solve for integer n such that minRotations <= targetDegrees + 360*n <= maxRotations
+    int nMin = (int) Math.ceil(minRotations.minus(targetAngle).in(Degrees) / 360.0);
+    int nMax = (int) Math.floor(maxRotations.minus(targetAngle).in(Degrees) / 360.0);
+
+    if (nMin <= nMax) {
+      // At least one equivalent fits in soft limits.
+      int nClosest = (int) Math.round((currentAngle.minus(targetAngle).in(Degrees)) / 360.0);
+      int n =
+          Math.max(nMin, Math.min(nClosest, nMax)); // clamp the closest candidate to allowed range
+      return Degrees.of(targetAngle.in(Degrees) + n * 360.0);
+    } else {
+      // No equivalent fits in soft limits -> clamp to nearest soft limit endpoint.
+      double toMin = Math.abs(currentAngle.minus(minRotations).in(Degrees));
+      double toMax = Math.abs(currentAngle.minus(maxRotations).in(Degrees));
+      return (toMin < toMax) ? minRotations : maxRotations;
+    }
+  }
+
   @Override
   public void periodic() {
     if (isActive()) {}
     updateCurrent();
-    updatePositionDegrees();
     updatePositionRotations();
     updateVelocityRPM();
     updateVelocityRPS();
@@ -178,7 +215,12 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   @Logged
   public double getPositionRotations() {
-    return cachedRotations.getAsDouble() * 360.0;
+    return cachedRotations.getAsDouble();
+  }
+
+  @Logged
+  public Angle getAngle() {
+    return motor.getPosition().getValue();
   }
 
   public double getVelocityRPM() {
@@ -191,11 +233,6 @@ public class Turret extends SubsystemBase implements NTSendable {
   }
 
   @Logged
-  public double updatePositionDegrees() {
-    return rotationsToDegrees(this::getPositionRotations);
-  }
-
-  @Logged
   public double getSetpoint() {
     return motionMagicVoltage.Position * 360.0;
   }
@@ -203,16 +240,6 @@ public class Turret extends SubsystemBase implements NTSendable {
   @Logged
   public double getSetpointRotations() {
     return motionMagicVoltage.Position;
-  }
-
-  /**
-   * Rotations to Degrees
-   *
-   * @param rotations
-   * @return degrees
-   */
-  public double rotationsToDegrees(DoubleSupplier rotations) {
-    return 360 * rotations.getAsDouble();
   }
 
   // Get Velocity in RPM
@@ -230,12 +257,28 @@ public class Turret extends SubsystemBase implements NTSendable {
   }
 
   public Command setAngle(Angle angle) {
-    return Commands.run(() -> motor.setControl(motionMagicVoltage.withPosition(angle)), this)
+    return Commands.run(
+            () -> motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle))),
+            this)
         .withName(this.getName() + " SetAngle");
   }
 
   public Command setAngle(Supplier<Angle> angle) {
-    return Commands.run(() -> motor.setControl(motionMagicVoltage.withPosition(angle.get())), this)
+    return Commands.run(
+            () ->
+                motor.setControl(
+                    motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle.get()))),
+            this)
         .withName(this.getName() + " SetAngleSupplier");
+  }
+
+  // set angle for turret relative to field element
+  public Angle getAngleTo(Translation2d position) {
+    return (AllianceFlipUtil.apply(
+            position.minus(RobotState.getInstance().getRobotPose().getTranslation()).getAngle())
+        .getMeasure()
+        .minus(
+            AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())
+                .getMeasure()));
   }
 }

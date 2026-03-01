@@ -25,6 +25,7 @@ public class Spindexer extends SubsystemBase {
   private final double SPINDEXER_OUTPUT = 0.7;
 
   public Spindexer() {
+    super("Spindexer");
 
     TalonFXConfiguration spindexerConfig = new TalonFXConfiguration();
     TalonFXConfiguration towerConfig = new TalonFXConfiguration();

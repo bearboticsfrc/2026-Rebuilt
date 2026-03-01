@@ -110,6 +110,7 @@ public class Intake extends SubsystemBase {
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(600)));
 
   public Intake() {
+    super("Intake");
     TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
     TalonFXConfiguration mouthConfig = new TalonFXConfiguration();
 

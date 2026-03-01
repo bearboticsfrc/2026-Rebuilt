@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
@@ -32,6 +33,7 @@ import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
+import frc.robot.subsystems.turret.Turret;
 
 public class Robot extends TimedRobot {
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
@@ -49,7 +51,7 @@ public class Robot extends TimedRobot {
 
   @Logged private final Spindexer spindexer = new Spindexer();
 
-  // private final Turret turret = new Turret();
+  @Logged private final Turret turret = new Turret();
 
   private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -217,7 +219,17 @@ public class Robot extends TimedRobot {
 
     copilot.povUp().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Top));
     copilot.povDown().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Bottom));
-    copilot.povLeft().onTrue(Commands.runOnce(() -> climber.getCurrentCommand().cancel()));
+    copilot
+        .povLeft()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  if (climber.getCurrentCommand() != null) climber.getCurrentCommand().cancel();
+                }));
     copilot.povRight().onTrue(climber.calibrateZero());
+
+    copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
+    copilot.circle().onTrue(turret.setAngle(Rotations.of(-.25)));
+    copilot.square().onTrue(turret.setAngle(Rotations.of(.50)));
   }
 }

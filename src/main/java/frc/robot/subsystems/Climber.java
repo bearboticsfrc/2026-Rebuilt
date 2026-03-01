@@ -177,7 +177,7 @@ public class Climber extends SubsystemBase {
       leaderInitialConfigs
           .clone()
           .withMotorOutput(
-              leaderInitialConfigs.MotorOutput.clone().withNeutralMode(NeutralModeValue.Coast))
+              leaderInitialConfigs.MotorOutput.clone().withNeutralMode(NeutralModeValue.Brake))
           .withCurrentLimits(
               leaderInitialConfigs
                   .CurrentLimits
@@ -219,6 +219,7 @@ public class Climber extends SubsystemBase {
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(16.260162601626014)));
 
   public Climber() {
+    super("Climber");
     for (int i = 0; i < kNumConfigAttempts; ++i) {
       var status = motor_id_19.getConfigurator().apply(motor_id_19Configs);
       if (status.isOK()) break;
