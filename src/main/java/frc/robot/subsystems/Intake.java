@@ -152,8 +152,7 @@ public class Intake extends SubsystemBase {
   }
 
   public void setPosistion(Setpoint setpoint) {
-    arm.setControl(motionMagicVoltageRequest.withPosition(setpoint.target));
-    // arm.setControl(posReq.withPosition(posistion));
+    arm.setControl(posReq.withPosition(setpoint.target));
     latestPosistion = setpoint.target;
   }
 
@@ -187,9 +186,9 @@ public class Intake extends SubsystemBase {
   }
 
   public Command retractArm() {
-    return goToSetpoint(() -> Setpoint.Retracted);
+    // return goToSetpoint(() -> Setpoint.Retracted);
 
-    // return runOnce(() -> setPosistion(Setpoint.Retracted));
+    return runOnce(() -> setPosistion(Setpoint.Retracted));
   }
 
   public Command stopRollerCommand() {
@@ -197,13 +196,12 @@ public class Intake extends SubsystemBase {
   }
 
   public Command intakeOut() {
-    return extendArm();
-    //    .alongWith(
-    //        Commands.waitUntil(() -> armIsExtended()).andThen(runRoller()).andThen(runMouth()));
+    return runRoller().andThen(runMouth()).andThen(extendArm());
   }
 
   public Command intakeIn() {
-    return stopMouthCommand().andThen(stopRollerCommand()).andThen(retractArm());
+    return retractArm().andThen(stopRollerCommand()).andThen(stopMouthCommand());
+    // return stopMouthCommand().andThen(stopRollerCommand()).andThen(retractArm());
   }
 
   @Logged
@@ -270,9 +268,7 @@ public class Intake extends SubsystemBase {
   public Command goToSetpoint(Supplier<Setpoint> setpoint) {
     return run(
         () -> {
-          int slot = 0;
-          // if (setpoint.get() == Setpoint.Retracted) slot = 1;
-          motionMagicVoltageRequest.withPosition(setpoint.get().target).withSlot(0);
+          motionMagicVoltageRequest.withPosition(setpoint.get().target);
           arm.setControl(motionMagicVoltageRequest);
         });
   }

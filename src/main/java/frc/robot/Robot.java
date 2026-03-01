@@ -135,7 +135,6 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     CommandScheduler.getInstance().cancelAll();
-    CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
@@ -178,10 +177,6 @@ public class Robot extends TimedRobot {
     // climber.setDefaultCommand(
     //    climber.manualDrive(() -> -MathUtil.applyDeadband(copilot.getRightY() / 2.0, 0.1)));
 
-    copilot.circle().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Top));
-    copilot.square().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Bottom));
-    copilot.triangle().onTrue(Commands.runOnce(() -> climber.getCurrentCommand().cancel()));
-
     drivetrain.registerTelemetry(telemetry::telemeterize);
   }
 
@@ -213,5 +208,13 @@ public class Robot extends TimedRobot {
                         .withVelocityY(-pilot.getLeftX() * MaxSpeed)
                         .withHeadingPID(18, 0, .1)
                         .withTargetDirection(RobotState.getInstance().getAngleToHub())));
+
+   
+    copilot.povUp().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Top));
+    copilot.povDown().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Bottom));
+    copilot.povLeft().onTrue(Commands.runOnce(() -> climber.getCurrentCommand().cancel()));
+    copilot.povRight().onTrue(climber.calibrateZero());
+
+
   }
 }

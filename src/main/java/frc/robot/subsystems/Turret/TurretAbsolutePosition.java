@@ -21,8 +21,8 @@ public class TurretAbsolutePosition {
     return new EasyCRTConfig(
             turretCANcoderMain.getAbsolutePosition().asSupplier(),
             turretCANcoderAux.getAbsolutePosition().asSupplier())
-        .withCommonDriveGear(1, 93, 10, 11)
-        .withCrtGearRecommendationInputs(93, 1.0)
+        .withCommonDriveGear(1, 87, 20, 21)
+        .withCrtGearRecommendationInputs(87, 1.0)
         .withMechanismRange(Rotations.of(0.0), Rotations.of(1.0))
         .withMatchTolerance(Degrees.of(20))
         .withAbsoluteEncoder1Inverted(true)

@@ -42,7 +42,7 @@ public class Turret extends SubsystemBase implements NTSendable {
   @Getter private double velocityKv = 2.3767;
   @Getter private double velocityKa = .077265;
 
-  @Getter private double gearRatio = 23.25;
+  @Getter private double gearRatio = 4.35;
 
   @Getter private double statorLimit = 40;
 
@@ -86,9 +86,9 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.Slot0.kV = velocityKv;
 
     var motionMagicConfigs = config.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = 80; // Target cruise velocity of 80 rps
+    motionMagicConfigs.MotionMagicCruiseVelocity = 10; // 80; // Target cruise velocity of 80 rps
     motionMagicConfigs.MotionMagicAcceleration =
-        320; // Target acceleration of 160 rps/s (0.5 seconds)
+        60; //  320; // Target acceleration of 160 rps/s (0.5 seconds)
     motionMagicConfigs.MotionMagicJerk = 1280; // Target jerk of 1600 rps/s/s (0.1 seconds)
 
     config.Feedback.RotorToSensorRatio = 1.0;
