@@ -26,8 +26,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.ShootCommand;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
@@ -57,7 +57,7 @@ public class Robot extends TimedRobot {
 
   @Logged private final Hood hood = new Hood();
 
-  @Logged private final Elevator elevator = new Elevator();
+  @Logged private final Climber climber = new Climber();
 
   private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
 
@@ -117,7 +117,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     m_robotContainer.autonomousInit();
-    CommandScheduler.getInstance().schedule(elevator.calibrateZero());
+    CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
@@ -129,7 +129,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     CommandScheduler.getInstance().cancelAll();
-    CommandScheduler.getInstance().schedule(elevator.calibrateZero());
+    CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
@@ -169,12 +169,12 @@ public class Robot extends TimedRobot {
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
-    // elevator.setDefaultCommand(
-    //    elevator.manualDrive(() -> -MathUtil.applyDeadband(copilot.getRightY() / 2.0, 0.1)));
+    // climber.setDefaultCommand(
+    //    climber.manualDrive(() -> -MathUtil.applyDeadband(copilot.getRightY() / 2.0, 0.1)));
 
-    copilot.circle().onTrue(elevator.goToSetpoint(() -> Elevator.Setpoint.Top));
-    copilot.square().onTrue(elevator.goToSetpoint(() -> Elevator.Setpoint.Bottom));
-    copilot.triangle().onTrue(Commands.runOnce(() -> elevator.getCurrentCommand().cancel()));
+    copilot.circle().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Top));
+    copilot.square().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Bottom));
+    copilot.triangle().onTrue(Commands.runOnce(() -> climber.getCurrentCommand().cancel()));
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
   }
