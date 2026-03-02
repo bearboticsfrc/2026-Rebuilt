@@ -239,7 +239,7 @@ public class Intake extends SubsystemBase {
   }
 
   /**
-   * Holds the hood at the current position using PID.
+   * Holds the arm at the current position using PID.
    *
    * @return Command to run
    */
@@ -253,7 +253,7 @@ public class Intake extends SubsystemBase {
   }
 
   /**
-   * Drives the hood to the provided position setpoint.
+   * Drives the arm to the provided position setpoint.
    *
    * @param setpoint Function returning the setpoint to apply
    * @return Command to run

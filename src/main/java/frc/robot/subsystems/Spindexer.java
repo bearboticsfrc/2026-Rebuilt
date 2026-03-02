@@ -6,6 +6,7 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -21,6 +22,7 @@ public class Spindexer extends SubsystemBase {
   private final TalonFX tower = new TalonFX(23, canivore);
 
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
+  private final VelocityTorqueCurrentFOC m_vtcfReq = new VelocityTorqueCurrentFOC(0.0);
   private final double TOWER_OUTPUT = 1;
   private final double SPINDEXER_OUTPUT = 0.7;
 
@@ -55,10 +57,12 @@ public class Spindexer extends SubsystemBase {
 
   public void setSpindexerOutput(double output) {
     spindexer.setControl(m_dutyReq.withOutput(output));
+    //spindexer.setControl(m_vtcfReq.withOutput(output));
   }
 
   public void setTowerOutput(double output) {
     tower.setControl(m_dutyReq.withOutput(output));
+    //tower.setControl(m_vtcfReq.withOutput(output));
   }
 
   public void stopMotors() {
