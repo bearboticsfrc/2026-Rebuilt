@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
+import bearlib.util.TunableNumber;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.epilogue.Epilogue;
@@ -26,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.ShootCommand;
+import frc.robot.commands.StaticShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -66,6 +68,13 @@ public class Robot extends TimedRobot {
   private final DynamicShootingCommand dynamicShootingCommand =
       new DynamicShootingCommand(hood, flywheel, spindexer, intake, drivetrain);
 
+  private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
+
+  private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
+
+  private final StaticShootCommand staticShootCommand =
+      new StaticShootCommand(hood, flywheel, spindexer, intake, rpm, angle);
+
   // private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, drivetrain);
 
   private double MaxSpeed =
@@ -98,6 +107,10 @@ public class Robot extends TimedRobot {
     configureDefaultCommands();
 
     DriverStation.silenceJoystickConnectionWarning(true);
+  }
+
+  private boolean getTuningMode() {
+    return true;
   }
 
   public void configureLogging() {
@@ -178,6 +191,7 @@ public class Robot extends TimedRobot {
 
     // climber.setDefaultCommand(
     //    climber.manualDrive(() -> -MathUtil.applyDeadband(copilot.getRightY() / 2.0, 0.1)));
+    // turret.setDefaultCommand(turret.setAngle(() -> turret.getAngleTo(Field.getMyHub())));
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
   }
@@ -188,10 +202,12 @@ public class Robot extends TimedRobot {
 
     pilot.leftTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
 
-    pilot
-        .rightTrigger()
-        .onTrue(dynamicShootingCommand.shoot())
-        .onFalse(dynamicShootingCommand.stop());
+    // pilot
+    //     .rightTrigger()
+    //     .onTrue(dynamicShootingCommand.shoot())
+    //     .onFalse(dynamicShootingCommand.stop());
+
+    pilot.rightTrigger().onTrue(staticShootCommand.shoot()).onFalse(staticShootCommand.stop());
 
     pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
@@ -230,6 +246,6 @@ public class Robot extends TimedRobot {
 
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
     copilot.circle().onTrue(turret.setAngle(Rotations.of(-.25)));
-    copilot.square().onTrue(turret.setAngle(Rotations.of(.50)));
+    copilot.square().onTrue(turret.setAngle(Rotations.of(.40)));
   }
 }

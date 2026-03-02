@@ -249,6 +249,14 @@ public class Hood extends SubsystemBase {
         });
   }
 
+  public Command goToSetpointRotationsDouble(DoubleSupplier value) {
+    return run(
+        () -> {
+          setpointRequest.withPosition(Rotations.of(value.getAsDouble()));
+          motor_id_0.setControl(setpointRequest);
+        });
+  }
+
   /**
    * Manually drives the hood with the provided duty cycle output.
    *

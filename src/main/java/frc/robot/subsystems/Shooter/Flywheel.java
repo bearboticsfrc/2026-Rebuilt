@@ -22,7 +22,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 
 public class Flywheel extends SubsystemBase {
   /** Creates a new Flywheel. */
@@ -129,9 +129,9 @@ public class Flywheel extends SubsystemBase {
    *
    * @return The command to run the flywheel at the given speed.
    */
-  public Command runAtSpeed(Supplier<Double> rpm) {
+  public Command runAtSpeed(DoubleSupplier rpm) {
     // Command to run the flywheel at a given speed
-    return runOnce(() -> setVelocity(RPM.of(rpm.get())));
+    return runOnce(() -> setVelocity(RPM.of(rpm.getAsDouble())));
   }
 
   /**
