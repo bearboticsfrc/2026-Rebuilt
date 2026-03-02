@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -44,25 +45,51 @@ public class Spindexer extends SubsystemBase {
     towerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
     towerConfig.withCurrentLimits(towerCurrentLimitsConfigs);
 
+    StatusCode status = spindexer.getConfigurator().apply(spindexerConfig);
+
     for (int i = 0; i < 2; ++i) {
-      var status = spindexer.getConfigurator().apply(spindexerConfig);
       if (status.isOK()) break;
+      status = spindexer.getConfigurator().apply(spindexerConfig);
+    }
+    if (!status.isOK()) {
+      System.out.println("ERROR Configuring Spindexer spindexer motor: " + status);
     }
 
     for (int i = 0; i < 2; ++i) {
-      var status = tower.getConfigurator().apply(towerConfig);
       if (status.isOK()) break;
+      status = tower.getConfigurator().apply(towerConfig);
     }
+    if (!status.isOK()) {
+      System.out.println("ERROR Configuring Spindexer tower motor: " + status);
+    }
+
+    optimizeCAN();
+  }
+
+  private void optimizeCAN() {
+    spindexer.getPosition().setUpdateFrequency(50);
+    spindexer.getVelocity().setUpdateFrequency(50);
+    spindexer.getSupplyCurrent().setUpdateFrequency(50);
+    spindexer.getDeviceTemp().setUpdateFrequency(10);
+
+    spindexer.optimizeBusUtilization();
+
+    tower.getPosition().setUpdateFrequency(50);
+    tower.getVelocity().setUpdateFrequency(50);
+    tower.getSupplyCurrent().setUpdateFrequency(50);
+    tower.getDeviceTemp().setUpdateFrequency(10);
+
+    tower.optimizeBusUtilization();
   }
 
   public void setSpindexerOutput(double output) {
     spindexer.setControl(m_dutyReq.withOutput(output));
-    //spindexer.setControl(m_vtcfReq.withOutput(output));
+    // spindexer.setControl(m_vtcfReq.withOutput(output));
   }
 
   public void setTowerOutput(double output) {
     tower.setControl(m_dutyReq.withOutput(output));
-    //tower.setControl(m_vtcfReq.withOutput(output));
+    // tower.setControl(m_vtcfReq.withOutput(output));
   }
 
   public void stopMotors() {

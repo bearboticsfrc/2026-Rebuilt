@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -29,6 +30,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -67,8 +69,8 @@ public class Climber extends SubsystemBase {
 
   /* leader and follower motors */
   private final CANBus kCANBus = new CANBus("Default Name");
-  private final TalonFX motor_id_19 = new TalonFX(19, kCANBus);
-  private final TalonFX motor_id_15 = new TalonFX(15, kCANBus);
+  private final TalonFX motor_id_19 = new TalonFX(19, kCANBus); // follower
+  private final TalonFX motor_id_15 = new TalonFX(15, kCANBus); // leader
 
   /* device status signals */
   private final StatusSignal<Angle> motor_id_15Position = motor_id_15.getPosition(false);
@@ -220,27 +222,48 @@ public class Climber extends SubsystemBase {
 
   public Climber() {
     super("Climber");
+    StatusCode status = motor_id_19.getConfigurator().apply(motor_id_19Configs);
+
     for (int i = 0; i < kNumConfigAttempts; ++i) {
-      var status = motor_id_19.getConfigurator().apply(motor_id_19Configs);
       if (status.isOK()) break;
+      status = motor_id_19.getConfigurator().apply(motor_id_19Configs);
     }
+    if (!status.isOK()) {
+      System.out.println("ERROR Configuring Climber follower motor: " + status);
+    }
+
+    status = motor_id_15.getConfigurator().apply(motor_id_15Configs);
     for (int i = 0; i < kNumConfigAttempts; ++i) {
-      var status = motor_id_15.getConfigurator().apply(motor_id_15Configs);
       if (status.isOK()) break;
+      status = motor_id_15.getConfigurator().apply(motor_id_15Configs);
+    }
+    if (!status.isOK()) {
+      System.out.println("ERROR Configuring Climber leader motor: " + status);
     }
 
     motor_id_19.setControl(new Follower(motor_id_15.getDeviceID(), MotorAlignmentValue.Aligned));
 
-    /* set the default command to neutral output */
-    // setDefaultCommand(manualDrive(() -> 0.0));
-    /* alternatively, the default command can hold position */
-    // setDefaultCommand(holdPosition());
-
-    // SmartDashboard.putData("climber", mech2d);
-
     if (Utils.isSimulation()) {
+      SmartDashboard.putData("climber", mech2d);
       startSimThread();
     }
+
+    optimizeCAN();
+    System.out.println("Climber Subsystem Initialized");
+  }
+
+  private void optimizeCAN() {
+    motor_id_15.getPosition().setUpdateFrequency(100);
+    motor_id_15.getVelocity().setUpdateFrequency(100);
+    motor_id_15.getSupplyCurrent().setUpdateFrequency(50);
+    motor_id_15.getDeviceTemp().setUpdateFrequency(4);
+
+    motor_id_15.optimizeBusUtilization();
+
+    motor_id_19.getSupplyCurrent().setUpdateFrequency(10);
+    motor_id_19.getDeviceTemp().setUpdateFrequency(4);
+
+    motor_id_19.optimizeBusUtilization();
   }
 
   /**

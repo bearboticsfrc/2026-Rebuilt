@@ -7,9 +7,9 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 
-import bearlib.util.TunableNumber;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -29,16 +29,13 @@ public class Flywheel extends SubsystemBase {
   // Create a new CANBus with name canivore
   private final CANBus canivore = new CANBus("Default Name");
 
-  // Create the leader and follower TalonFX motors
-  private final TalonFX leader = new TalonFX(26, canivore);
+  private final TalonFX motor = new TalonFX(26, canivore);
 
   // Velocity output control for the flywheel
 
   private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
 
   private final DutyCycleOut output = new DutyCycleOut(0);
-
-  private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
 
   private boolean getTuningMode() {
     return true;
@@ -58,13 +55,11 @@ public class Flywheel extends SubsystemBase {
               // Log state with Phoenix SignalLogger class
               (state) -> SignalLogger.writeString("state", state.toString())),
           new SysIdRoutine.Mechanism(
-              (volts) -> leader.setControl(m_voltReq.withOutput(volts.in(Volts))), null, this));
+              (volts) -> motor.setControl(m_voltReq.withOutput(volts.in(Volts))), null, this));
 
   public Flywheel() {
     super("Flywheel");
-    // Set the follower to follow the leader motor
-    // follower.setControl(new Follower(leader.getDeviceID(), true));
-    // Create and apply the configuration for the leader motor
+
     TalonFXConfiguration config = new TalonFXConfiguration();
     // Put's the motor in Coast mode to make it easier to move by hand
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -80,28 +75,38 @@ public class Flywheel extends SubsystemBase {
     config.MotorOutput.PeakForwardDutyCycle = 1;
     config.MotorOutput.PeakReverseDutyCycle = 0;
     // Try to apply config multiple time. Break after successfully applying
+    StatusCode status = motor.getConfigurator().apply(config);
+
     for (int i = 0; i < 2; ++i) {
-      var status = leader.getConfigurator().apply(config);
       if (status.isOK()) break;
+
+      status = motor.getConfigurator().apply(config);
     }
+
+    if (!status.isOK()) {
+      System.out.println("ERROR Configuring Flywheel motor: " + status);
+    }
+
+    System.out.println("Flywheel Subsystem Initialized");
+
+    optimizeCAN();
   }
 
-  @Logged(name = "Target Angular Velocity")
-  private AngularVelocity angularVelocity = RPM.of(rpm.get());
+  private void optimizeCAN() {
+    motor.getPosition().setUpdateFrequency(50);
+    motor.getVelocity().setUpdateFrequency(50);
+    motor.getSupplyCurrent().setUpdateFrequency(50);
+    motor.getDeviceTemp().setUpdateFrequency(10);
+
+    motor.optimizeBusUtilization();
+  }
 
   @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-    // System.out.println("value = " + rpm.get());
-    if (rpm.hasChanged()) {
-      angularVelocity = RPM.of(rpm.get());
-      System.out.println("updating velocity to " + angularVelocity);
-    }
-  }
+  public void periodic() {}
 
   public void setVelocity(AngularVelocity velocity) {
-    // leader.setControl(new VelocityDutyCycle(velocity));
-    leader.setControl(velocityTorqueCurrentFOC.withVelocity(velocity));
+    // motor.setControl(new VelocityDutyCycle(velocity));
+    motor.setControl(velocityTorqueCurrentFOC.withVelocity(velocity));
   }
 
   /**
@@ -110,8 +115,8 @@ public class Flywheel extends SubsystemBase {
    * @param percent The percent to set.
    */
   public void setPercent(double value) {
-    // Apply the velocity output to the leader motor
-    leader.setControl(output.withOutput(.1));
+    // Apply the velocity output to the motor motor
+    motor.setControl(output.withOutput(.1));
   }
 
   /**
@@ -150,45 +155,18 @@ public class Flywheel extends SubsystemBase {
    */
   @Logged
   public boolean isAtTarget() {
-    return Math.abs(getVelocity() - getTargetVelocity())
+    return Math.abs(getVelocityInRPM() - getTargetVelocityInRPM())
         < tolerance; // Check if the current velocity is near the target velocity
-  }
-
-  /**
-   * Gets the current velocity of the flywheel.
-   *
-   * @return The current velocity of the flywheel.
-   */
-  @Logged
-  public double getVelocity() {
-    // Get the current velocity of the flywheel
-    return leader.getVelocity().getValue().in(RPM);
-  }
-
-  /**
-   * Gets the target velocity for the flywheel.
-   *
-   * @return The target velocity of the flywheel.
-   */
-  @Logged
-  public double getTargetVelocity() {
-    // Return the target velocity
-    return velocityTorqueCurrentFOC.getVelocityMeasure().in(RPM);
   }
 
   @Logged
   public double getMotorCurrent() {
-    return leader.getSupplyCurrent().refresh().getValueAsDouble();
-  }
-
-  @Logged
-  public double getMotorTemp() {
-    return leader.getDeviceTemp().refresh().getValueAsDouble();
+    return motor.getSupplyCurrent().refresh().getValueAsDouble();
   }
 
   // Stop the flywheel motors
   public void stop() {
-    leader.stopMotor();
+    motor.stopMotor();
   }
 
   /**
@@ -211,7 +189,7 @@ public class Flywheel extends SubsystemBase {
 
   @Logged
   public double getVelocityInRPM() {
-    return leader.getVelocity().getValue().in(RPM);
+    return motor.getVelocity().getValue().in(RPM);
   }
 
   @Logged

@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -119,22 +120,63 @@ public class Intake extends SubsystemBase {
     mouthConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     mouthConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    for (int i = 0; i < 2; ++i) {
-      var status = roller.getConfigurator().apply(rollerConfig);
-      if (status.isOK()) break;
-    }
+    StatusCode status = roller.getConfigurator().apply(rollerConfig);
 
     for (int i = 0; i < 2; ++i) {
-      var status = arm.getConfigurator().apply(armConfig);
       if (status.isOK()) break;
+      status = roller.getConfigurator().apply(rollerConfig);
+    }
+    if (!status.isOK()) {
+      System.out.println("ERROR Configuring Intake roller motor: " + status);
     }
 
+    status = arm.getConfigurator().apply(armConfig);
+
     for (int i = 0; i < 2; ++i) {
-      var status = mouth.getConfigurator().apply(mouthConfig);
       if (status.isOK()) break;
+      status = arm.getConfigurator().apply(armConfig);
+    }
+    if (!status.isOK()) {
+      System.out.println("ERROR Configuring Intake arm motor: " + status);
+    }
+
+    status = mouth.getConfigurator().apply(mouthConfig);
+
+    for (int i = 0; i < 2; ++i) {
+      if (status.isOK()) break;
+      status = mouth.getConfigurator().apply(mouthConfig);
+    }
+    if (!status.isOK()) {
+      System.out.println("ERROR Configuring Intake mouth motor: " + status);
     }
 
     arm.setPosition(Setpoint.Initial.target);
+
+    optimizeCAN();
+    System.out.println("Intake Subsystem Initialized");
+  }
+
+  private void optimizeCAN() {
+    roller.getPosition().setUpdateFrequency(50);
+    roller.getVelocity().setUpdateFrequency(50);
+    roller.getSupplyCurrent().setUpdateFrequency(50);
+    roller.getDeviceTemp().setUpdateFrequency(10);
+
+    roller.optimizeBusUtilization();
+
+    mouth.getPosition().setUpdateFrequency(50);
+    mouth.getVelocity().setUpdateFrequency(50);
+    mouth.getSupplyCurrent().setUpdateFrequency(50);
+    mouth.getDeviceTemp().setUpdateFrequency(10);
+
+    mouth.optimizeBusUtilization();
+
+    arm.getPosition().setUpdateFrequency(100);
+    arm.getVelocity().setUpdateFrequency(100);
+    arm.getSupplyCurrent().setUpdateFrequency(50);
+    arm.getDeviceTemp().setUpdateFrequency(10);
+
+    arm.optimizeBusUtilization();
   }
 
   public void setRollerOutput(double output) {

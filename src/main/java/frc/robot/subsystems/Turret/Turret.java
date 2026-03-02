@@ -25,7 +25,6 @@ import frc.spectrumLib.CachedDouble;
 import frc.spectrumLib.util.Conversions;
 import java.util.function.Supplier;
 import lombok.Getter;
-import lombok.Setter;
 
 public class Turret extends SubsystemBase implements NTSendable {
 
@@ -74,8 +73,6 @@ public class Turret extends SubsystemBase implements NTSendable {
   // set these small to start
   @Getter public Angle minRotations = Rotations.of(-.25);
   @Getter public Angle maxRotations = Rotations.of(.5);
-
-  @Setter @Getter private boolean active;
 
   public Turret() {
     super("Turret");
@@ -131,9 +128,18 @@ public class Turret extends SubsystemBase implements NTSendable {
       System.out.println("ERROR Configuring Turret motor: " + status);
     }
 
-    System.out.println("Turret Subsystem Initialized");
+    optimizeCAN();
 
-    System.out.println("MotionMagic:" + motionMagicVoltage);
+    System.out.println("Turret Subsystem Initialized");
+  }
+
+  private void optimizeCAN() {
+    motor.getPosition().setUpdateFrequency(100);
+    motor.getVelocity().setUpdateFrequency(100);
+    motor.getSupplyCurrent().setUpdateFrequency(50);
+    motor.getDeviceTemp().setUpdateFrequency(4);
+
+    motor.optimizeBusUtilization();
   }
 
   private Angle wrapDegreesToSoftLimits(Angle targetAngle) {
@@ -159,7 +165,6 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   @Override
   public void periodic() {
-    if (isActive()) {}
     updateCurrent();
     updatePositionRotations();
     updateVelocityRPM();

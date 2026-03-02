@@ -19,14 +19,41 @@ public class VisionConstants {
   public static final double CULLING_AMBIGUITY = 0.4;
 
   private static final String FRONT_CAMERA_NAME = "ThriftyFront";
+  private static final String REAR_CAMERA_NAME = "ThriftyRear";
+  private static final String LEFT_CAMERA_NAME = "ThriftyLeft";
+  private static final String RIGHT_CAMERA_NAME = "ThriftyRight";
 
   public static final Transform3d ROBOT_TO_FRONT_CAMERA =
       new Transform3d(
-          new Translation3d(Inches.of(12.53), Inches.of(7.5), Inches.of(22.8)),
+          new Translation3d(Inches.of(12.53), Inches.of(7.5), Inches.of(22.81)),
           new Rotation3d(Radians.zero(), Degrees.of(-15), Degrees.zero()));
+
+  public static final Transform3d ROBOT_TO_REAR_CAMERA =
+      new Transform3d(
+          new Translation3d(Inches.of(-12.53), Inches.of(8.0), Inches.of(16.81)),
+          new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.of(180)));
+
+  public static final Transform3d ROBOT_TO_LEFT_CAMERA =
+      new Transform3d(
+          new Translation3d(Inches.of(6.5), Inches.of(12.53), Inches.of(22.81)),
+          new Rotation3d(Radians.zero(), Degrees.of(-15), Degrees.of(90)));
+
+  public static final Transform3d ROBOT_TO_RIGHT_CAMERA =
+      new Transform3d(
+          new Translation3d(Inches.of(7.5), Inches.of(-12.53), Inches.of(22.81)),
+          new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.of(-90)));
 
   public static final VisionCamera FRONT_CAMERA =
       new VisionCamera(FRONT_CAMERA_NAME, ROBOT_TO_FRONT_CAMERA);
+
+  public static final VisionCamera REAR_CAMERA =
+      new VisionCamera(REAR_CAMERA_NAME, ROBOT_TO_REAR_CAMERA);
+
+  public static final VisionCamera LEFT_CAMERA =
+      new VisionCamera(LEFT_CAMERA_NAME, ROBOT_TO_LEFT_CAMERA);
+
+  public static final VisionCamera RIGHTT_CAMERA =
+      new VisionCamera(RIGHT_CAMERA_NAME, ROBOT_TO_RIGHT_CAMERA);
 
   // The standard deviations of our vision estimated poses, which affect correction rate
   public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS =

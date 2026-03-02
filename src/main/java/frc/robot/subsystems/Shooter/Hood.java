@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
@@ -65,12 +66,12 @@ public class Hood extends SubsystemBase {
 
   /* leader and follower motors */
   private final CANBus kCANBus = new CANBus("Default Name");
-  private final TalonFX motor_id_0 = new TalonFX(25, kCANBus);
+  private final TalonFX motor = new TalonFX(25, kCANBus);
 
   /* device status signals */
-  private final StatusSignal<Angle> motor_id_0Position = motor_id_0.getPosition(false);
-  private final StatusSignal<AngularVelocity> motor_id_0Velocity = motor_id_0.getVelocity(false);
-  private final StatusSignal<Current> motor_id_0TorqueCurrent = motor_id_0.getTorqueCurrent(false);
+  private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
+  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
+  private final StatusSignal<Current> motorTorqueCurrent = motor.getTorqueCurrent(false);
 
   /* controls used by the leader motors */
   private final MotionMagicVoltage setpointRequest = new MotionMagicVoltage(0);
@@ -82,13 +83,13 @@ public class Hood extends SubsystemBase {
   public final Trigger isHardStop =
       new Trigger(
               () -> {
-                return motor_id_0Velocity.getValue().abs(RotationsPerSecond) < 1
-                    && motor_id_0TorqueCurrent.getValue().abs(Amps) > 10;
+                return motorVelocity.getValue().abs(RotationsPerSecond) < 1
+                    && motorTorqueCurrent.getValue().abs(Amps) > 10;
               })
           .debounce(0.1);
 
   /* simulation */
-  private final ElevatorSim hoodSim_motor_id_0 =
+  private final ElevatorSim hoodSim_motor =
       new ElevatorSim(
           DCMotor.getKrakenX60Foc(1),
           kGearRatio,
@@ -105,11 +106,10 @@ public class Hood extends SubsystemBase {
 
   /* Mechanism2d visualization of the hood */
   private final Mechanism2d mech2d = new Mechanism2d(1, kMaxHeight.in(Meters));
-  private final MechanismLigament2d motor_id_0Mech2d =
+  private final MechanismLigament2d motorMech2d =
       mech2d
-          .getRoot("motor_id_0 Root", 0.500, 0)
-          .append(
-              new MechanismLigament2d("motor_id_0", hoodSim_motor_id_0.getPositionMeters(), 90));
+          .getRoot("motor Root", 0.500, 0)
+          .append(new MechanismLigament2d("motor", hoodSim_motor.getPositionMeters(), 90));
 
   /** Configs common across all motors. */
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
@@ -117,8 +117,8 @@ public class Hood extends SubsystemBase {
   /** Configs common across just the leader motors. */
   private static final TalonFXConfiguration leaderInitialConfigs = motorInitialConfigs.clone();
 
-  /** Configs for {@link #motor_id_0}. */
-  private final TalonFXConfiguration motor_id_0Configs =
+  /** Configs for {@link #motor}. */
+  private final TalonFXConfiguration motorConfigs =
       leaderInitialConfigs
           .clone()
           .withMotorOutput(
@@ -157,15 +157,16 @@ public class Hood extends SubsystemBase {
 
   public Hood() {
     super("Hood");
-    for (int i = 0; i < kNumConfigAttempts; ++i) {
-      var status = motor_id_0.getConfigurator().apply(motor_id_0Configs);
-      if (status.isOK()) break;
-    }
+    StatusCode status = motor.getConfigurator().apply(motorConfigs);
 
-    /* set the default command to neutral output */
-    setDefaultCommand(manualDrive(() -> 0.0));
-    /* alternatively, the default command can hold position */
-    // setDefaultCommand(holdPosition());
+    for (int i = 0; i < kNumConfigAttempts; ++i) {
+      if (status.isOK()) break;
+
+      status = motor.getConfigurator().apply(motorConfigs);
+    }
+    if (!status.isOK()) {
+      System.out.println("ERROR Configuring Hood motor: " + status);
+    }
 
     SmartDashboard.putData("Hood", mech2d);
 
@@ -173,7 +174,18 @@ public class Hood extends SubsystemBase {
       startSimThread();
     }
 
-    motor_id_0.setPosition(Rotations.of(0.0));
+    motor.setPosition(Rotations.of(0.0));
+    optimizeCAN();
+    System.out.println("Hood Subsystem Initialized");
+  }
+
+  private void optimizeCAN() {
+    motor.getPosition().setUpdateFrequency(100);
+    motor.getVelocity().setUpdateFrequency(100);
+    motor.getSupplyCurrent().setUpdateFrequency(50);
+    motor.getDeviceTemp().setUpdateFrequency(4);
+
+    motor.optimizeBusUtilization();
   }
 
   /**
@@ -181,26 +193,26 @@ public class Hood extends SubsystemBase {
    */
   @Logged
   public Angle getHoodPosition() {
-    return motor_id_0Position.getValue();
+    return motorPosition.getValue();
   }
 
   @Logged
   public double getRotations() {
-    return motor_id_0Position.getValue().in(Rotations);
+    return motorPosition.getValue().in(Rotations);
   }
 
   /**
    * @return The Velocity of the hood
    */
   public AngularVelocity getVelocity() {
-    return motor_id_0Velocity.getValue();
+    return motorVelocity.getValue();
   }
 
   /**
    * @return The TorqueCurrent of the hood
    */
   public Current getTorqueCurrent() {
-    return motor_id_0TorqueCurrent.getValue();
+    return motorTorqueCurrent.getValue();
   }
 
   @Logged
@@ -219,11 +231,11 @@ public class Hood extends SubsystemBase {
    * @return Command to run
    */
   public Command holdPosition() {
-    return runOnce(() -> setpointRequest.withPosition(motor_id_0Position.getValue()))
+    return runOnce(() -> setpointRequest.withPosition(motorPosition.getValue()))
         .andThen(
             run(
                 () -> {
-                  motor_id_0.setControl(setpointRequest);
+                  motor.setControl(setpointRequest);
                 }));
   }
 
@@ -237,7 +249,7 @@ public class Hood extends SubsystemBase {
     return run(
         () -> {
           setpointRequest.withPosition(setpoint.get().target);
-          motor_id_0.setControl(setpointRequest);
+          motor.setControl(setpointRequest);
         });
   }
 
@@ -245,7 +257,7 @@ public class Hood extends SubsystemBase {
     return run(
         () -> {
           setpointRequest.withPosition(value.get());
-          motor_id_0.setControl(setpointRequest);
+          motor.setControl(setpointRequest);
         });
   }
 
@@ -253,56 +265,21 @@ public class Hood extends SubsystemBase {
     return run(
         () -> {
           setpointRequest.withPosition(Rotations.of(value.getAsDouble()));
-          motor_id_0.setControl(setpointRequest);
+          motor.setControl(setpointRequest);
         });
-  }
-
-  /**
-   * Manually drives the hood with the provided duty cycle output.
-   *
-   * @param manualOutput Function returning the duty cycle to apply
-   * @return Command to run
-   */
-  public Command manualDrive(DoubleSupplier manualOutput) {
-    return run(
-        () -> {
-          manualRequest.withOutput(manualOutput.getAsDouble());
-          motor_id_0.setControl(manualRequest);
-        });
-  }
-
-  /**
-   * Recalibrates the hood zero point. This slowly drives the hood down until we see a drop in
-   * velocity and a spike in stator current, indicating that we've hit a hard stop.
-   *
-   * @return Command to run
-   */
-  public Command calibrateZero() {
-    return run(() -> {
-          motor_id_0.setControl(calibrationRequest);
-        })
-        .until(isHardStop)
-        .andThen(
-            manualDrive(() -> 0.0)
-                .withTimeout(0.25)
-                .finallyDo(
-                    () -> {
-                      motor_id_0.setPosition(Rotations.of(0));
-                    }));
   }
 
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(motor_id_0Position, motor_id_0Velocity, motor_id_0TorqueCurrent);
+    BaseStatusSignal.refreshAll(motorPosition, motorVelocity, motorTorqueCurrent);
 
-    motor_id_0Mech2d.setLength(
-        motor_id_0Position.getValueAsDouble() * kDrumRadius.in(Meters) * 2 * Math.PI);
+    motorMech2d.setLength(motorPosition.getValueAsDouble() * kDrumRadius.in(Meters) * 2 * Math.PI);
   }
 
   private void startSimThread() {
-    motor_id_0.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
-    motor_id_0.getSimState().setMotorType(TalonFXSimState.MotorType.KrakenX60);
+    motor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
+    motor.getSimState().setMotorType(TalonFXSimState.MotorType.KrakenX60);
 
     lastSimTime = Utils.getCurrentTimeSeconds();
 
@@ -315,24 +292,22 @@ public class Hood extends SubsystemBase {
               final double deltaTime = currentTime - lastSimTime;
               lastSimTime = currentTime;
 
-              final var motor_id_0Sim = motor_id_0.getSimState();
+              final var motorSim = motor.getSimState();
 
               /* First set the supply voltage of all the devices */
-              motor_id_0Sim.setSupplyVoltage(RobotController.getBatteryVoltage());
+              motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
               /* Then calculate the new position and velocity of the simulated hood */
-              hoodSim_motor_id_0.setInputVoltage(motor_id_0Sim.getMotorVoltage());
-              hoodSim_motor_id_0.update(deltaTime);
+              hoodSim_motor.setInputVoltage(motorSim.getMotorVoltage());
+              hoodSim_motor.update(deltaTime);
 
               /* Apply the new rotor position and velocity to the motors (before gear ratio) */
-              motor_id_0Sim.setRawRotorPosition(
+              motorSim.setRawRotorPosition(
                   Radians.of(
-                      hoodSim_motor_id_0.getPositionMeters()
-                          / kDrumRadius.in(Meters)
-                          * kGearRatio));
-              motor_id_0Sim.setRotorVelocity(
+                      hoodSim_motor.getPositionMeters() / kDrumRadius.in(Meters) * kGearRatio));
+              motorSim.setRotorVelocity(
                   RadiansPerSecond.of(
-                      hoodSim_motor_id_0.getVelocityMetersPerSecond()
+                      hoodSim_motor.getVelocityMetersPerSecond()
                           / kDrumRadius.in(Meters)
                           * kGearRatio));
             });
