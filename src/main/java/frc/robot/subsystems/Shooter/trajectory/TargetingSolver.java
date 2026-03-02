@@ -16,7 +16,7 @@ public class TargetingSolver {
   private static final double DEFAULT_MIN_ANGLE = 34; // degrees
   private static final double DEFAULT_MAX_ANGLE = 67.5; // degrees
 
-  private static final double ACCEPTABLE_ERROR = 0.25; // feet - convergence threshold
+  private static final double ACCEPTABLE_ERROR = 0.1; // feet - convergence threshold
   private static final int MAX_ITERATIONS = 1000; // maximum iterations for optimization
 
   /** Represents a targeting solution. */
