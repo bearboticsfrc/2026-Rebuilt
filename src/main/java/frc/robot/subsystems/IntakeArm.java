@@ -21,7 +21,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.Supplier;
 
@@ -128,29 +127,18 @@ public class IntakeArm extends SubsystemBase {
     arm.optimizeBusUtilization();
   }
 
-  public void setPosition(Setpoint setpoint) {
-    arm.setControl(posReq.withPosition(setpoint.target));
-  }
-
   public Command extend() {
     return goToSetpoint(() -> Setpoint.Extended);
-    // return runOnce(() -> setPosition(Setpoint.Extended));
   }
 
   public Command retract() {
-    // return goToSetpoint(() -> Setpoint.Retracted);
-
-    return runOnce(() -> setPosition(Setpoint.Retracted));
-  }
-
-  private Command setArm(Setpoint setpoint) {
-    return runOnce(() -> setPosition(setpoint));
+    return goToSetpoint(() -> Setpoint.Retracted);
   }
 
   public Command armOscillate() {
-    return setArm(Setpoint.OscillateMin)
-        .andThen(Commands.waitSeconds(.75))
-        .andThen(setArm(Setpoint.OscillateMax));
+    return goToSetpoint(() -> Setpoint.OscillateMin)
+        .withTimeout(.75)
+        .andThen(goToSetpoint(() -> Setpoint.OscillateMax));
   }
 
   @Logged
@@ -193,7 +181,7 @@ public class IntakeArm extends SubsystemBase {
    * @param setpoint Function returning the setpoint to apply
    * @return Command to run
    */
-  public Command goToSetpoint(Supplier<Setpoint> setpoint) {
+  private Command goToSetpoint(Supplier<Setpoint> setpoint) {
     return run(
         () -> {
           posReq.withPosition(setpoint.get().target); // just for unified logging

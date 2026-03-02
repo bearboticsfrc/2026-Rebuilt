@@ -209,8 +209,8 @@ public class Robot extends TimedRobot {
         .onFalse(
             intakeArm
                 .retract()
-                .andThen(intake.stopRollerCommand())
-                .andThen(intake.stopMouthCommand()));
+                .alongWith(Commands.waitSeconds(2).andThen(intake.stopRollerCommand()))
+                .alongWith(Commands.waitSeconds(5).andThen(intake.stopMouthCommand())));
 
     // pilot
     //     .rightTrigger()
