@@ -32,6 +32,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
@@ -50,6 +51,8 @@ public class Robot extends TimedRobot {
   private final CommandPS5Controller copilot = new CommandPS5Controller(1);
 
   @Logged private final Intake intake = new Intake();
+
+  @Logged private final IntakeArm intakeArm = new IntakeArm();
 
   @Logged private final Spindexer spindexer = new Spindexer();
 
@@ -200,7 +203,14 @@ public class Robot extends TimedRobot {
 
     // pilot controlls
 
-    pilot.leftTrigger().onTrue(intake.intakeOut()).onFalse(intake.intakeIn());
+    pilot
+        .leftTrigger()
+        .onTrue(intake.runRoller().andThen(intake.runMouth()).andThen(intakeArm.extend()))
+        .onFalse(
+            intakeArm
+                .retract()
+                .andThen(intake.stopRollerCommand())
+                .andThen(intake.stopMouthCommand()));
 
     // pilot
     //     .rightTrigger()
@@ -211,7 +221,7 @@ public class Robot extends TimedRobot {
 
     pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
-    pilot.x().onTrue(intake.armOscillate()).onFalse(intake.retractArm());
+    pilot.x().onTrue(intakeArm.armOscillate()).onFalse(intakeArm.retract());
 
     // pilot
     //     .y()

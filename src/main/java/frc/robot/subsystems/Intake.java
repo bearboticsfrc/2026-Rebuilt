@@ -1,10 +1,6 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
@@ -12,102 +8,31 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.Supplier;
 
 public class Intake extends SubsystemBase {
-  /** Position setpoints for the Intake Arm. */
-  public enum Setpoint {
-    Initial(Degrees.of(80)),
-
-    Retracted(Degrees.of(78)),
-    OscillateMin(Degrees.of(60)),
-    OscillateMax(Degrees.of(30)),
-
-    AlmostExtended(Degrees.of(40)),
-    Extended(Degrees.of(22));
-
-    /** The position target of the setpoint in angular units. */
-    public final Angle target;
-
-    private Setpoint(Angle target) {
-      this.target = target;
-    }
-  }
 
   private final CANBus canivore = new CANBus("Default Name");
   private final CANBus rio = new CANBus("rio");
 
   private final TalonFX roller = new TalonFX(25, rio);
-  private final TalonFX arm = new TalonFX(10, canivore);
   private final TalonFX mouth = new TalonFX(14, canivore);
 
   private final DutyCycleOut dutyReq = new DutyCycleOut(0.0);
-  private final PositionVoltage posReq = new PositionVoltage(0.0);
-  private final MotionMagicVoltage motionMagicVoltageRequest = new MotionMagicVoltage(0);
 
   /* device status signals */
-  private final StatusSignal<Angle> armPosition = arm.getPosition(false);
-  private final StatusSignal<AngularVelocity> armVelocity = arm.getVelocity(false);
-  private final StatusSignal<Current> armTorqueCurrent = arm.getTorqueCurrent(false);
+  private final StatusSignal<AngularVelocity> rollerVelocity = roller.getVelocity(false);
+  private final StatusSignal<AngularVelocity> mouthVelocity = mouth.getVelocity(false);
 
   private final double MOUTH_SPEED = 0.3;
   private final double MOUTH_SLOW_SPEED = 0.15;
   public final double ROLLER_SPEED = 0.5;
-  public final double ARM_GEAR_RATIO = 12;
-
-  /** Configs common across all motors. */
-  private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
-
-  /** Configs common across just the leader motors. */
-  private static final TalonFXConfiguration armInitialConfigs = motorInitialConfigs.clone();
-
-  /** Configs for arm */
-  private final TalonFXConfiguration armConfig =
-      armInitialConfigs
-          .clone()
-          .withMotorOutput(
-              armInitialConfigs
-                  .MotorOutput
-                  .clone()
-                  .withNeutralMode(NeutralModeValue.Brake)
-                  .withInverted(InvertedValue.CounterClockwise_Positive))
-          .withCurrentLimits(
-              armInitialConfigs
-                  .CurrentLimits
-                  .clone()
-                  .withStatorCurrentLimit(Amps.of(120))
-                  .withStatorCurrentLimitEnable(true))
-          .withSlot0(
-              armInitialConfigs
-                  .Slot0
-                  .clone()
-                  .withKP(20)
-                  .withKD(0)
-                  .withKS(0)
-                  .withKG(0)
-                  .withGravityType(GravityTypeValue.Arm_Cosine)
-                  .withGravityArmPositionOffset(Degrees.of(20)))
-          .withFeedback(
-              armInitialConfigs.Feedback.clone().withSensorToMechanismRatio(ARM_GEAR_RATIO))
-          .withMotionMagic(
-              armInitialConfigs
-                  .MotionMagic
-                  .clone()
-                  .withMotionMagicCruiseVelocity(RotationsPerSecond.of(200))
-                  .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(600)));
 
   public Intake() {
     super("Intake");
@@ -129,16 +54,6 @@ public class Intake extends SubsystemBase {
       System.out.println("ERROR Configuring Intake roller motor: " + status);
     }
 
-    status = arm.getConfigurator().apply(armConfig);
-
-    for (int i = 0; i < 2; ++i) {
-      if (status.isOK()) break;
-      status = arm.getConfigurator().apply(armConfig);
-    }
-    if (!status.isOK()) {
-      System.out.println("ERROR Configuring Intake arm motor: " + status);
-    }
-
     status = mouth.getConfigurator().apply(mouthConfig);
 
     for (int i = 0; i < 2; ++i) {
@@ -148,8 +63,6 @@ public class Intake extends SubsystemBase {
     if (!status.isOK()) {
       System.out.println("ERROR Configuring Intake mouth motor: " + status);
     }
-
-    arm.setPosition(Setpoint.Initial.target);
 
     optimizeCAN();
     System.out.println("Intake Subsystem Initialized");
@@ -169,13 +82,6 @@ public class Intake extends SubsystemBase {
     mouth.getDeviceTemp().setUpdateFrequency(10);
 
     mouth.optimizeBusUtilization();
-
-    arm.getPosition().setUpdateFrequency(100);
-    arm.getVelocity().setUpdateFrequency(100);
-    arm.getSupplyCurrent().setUpdateFrequency(50);
-    arm.getDeviceTemp().setUpdateFrequency(10);
-
-    arm.optimizeBusUtilization();
   }
 
   public void setRollerOutput(double output) {
@@ -184,10 +90,6 @@ public class Intake extends SubsystemBase {
 
   public void setMouthOutput(double output) {
     mouth.setControl(dutyReq.withOutput(output));
-  }
-
-  public void setPosition(Setpoint setpoint) {
-    arm.setControl(posReq.withPosition(setpoint.target));
   }
 
   public void stopRoller() {
@@ -218,98 +120,19 @@ public class Intake extends SubsystemBase {
     return runOnce(() -> stopRoller());
   }
 
-  public Command extendArm() {
-    return goToSetpoint(() -> Setpoint.Extended);
-    // return runOnce(() -> setPosition(Setpoint.Extended));
-  }
-
-  public Command retractArm() {
-    // return goToSetpoint(() -> Setpoint.Retracted);
-
-    return runOnce(() -> setPosition(Setpoint.Retracted));
-  }
-
-  public Command setArm(Setpoint setpoint) {
-    return runOnce(() -> setPosition(setpoint));
-  }
-
-  public Command intakeOut() {
-    return runRoller().andThen(runMouth()).andThen(extendArm());
-  }
-
-  public Command intakeIn() {
-    return retractArm().andThen(stopRollerCommand()).andThen(stopMouthCommand());
-    // return stopMouthCommand().andThen(stopRollerCommand()).andThen(retractArm());
-  }
-
-  public Command armOscillate() {
-    return setArm(Setpoint.OscillateMin)
-        .andThen(Commands.waitSeconds(.75))
-        .andThen(setArm(Setpoint.OscillateMax));
-  }
-
   @Logged
   public double getRollerVelocityInRPM() {
-    return roller.getVelocity().getValue().in(RPM);
+    return rollerVelocity.getValue().in(RPM);
   }
 
   @Logged
   public double getMouthVelocityInRPM() {
-    return mouth.getVelocity().getValue().in(RPM);
-  }
-
-  @Logged
-  public double getArmPosition() {
-    return armPosition.getValue().in(Degrees);
-  }
-
-  @Logged
-  public double getArmSetpoint() {
-    return posReq.getPositionMeasure().in(Degrees);
-  }
-
-  @Logged
-  public double getArmVoltage() {
-    return arm.getMotorVoltage().getValueAsDouble();
-  }
-
-  @Logged
-  public boolean armIsExtended() {
-    return armPosition.getValue().lt(Setpoint.AlmostExtended.target);
-  }
-
-  /**
-   * Holds the arm at the current position using PID.
-   *
-   * @return Command to run
-   */
-  public Command holdPosition() {
-    return runOnce(() -> motionMagicVoltageRequest.withPosition(armPosition.getValue()))
-        .andThen(
-            run(
-                () -> {
-                  arm.setControl(motionMagicVoltageRequest);
-                }));
-  }
-
-  /**
-   * Drives the arm to the provided position setpoint.
-   *
-   * @param setpoint Function returning the setpoint to apply
-   * @return Command to run
-   */
-  public Command goToSetpoint(Supplier<Setpoint> setpoint) {
-    return run(
-        () -> {
-          posReq.withPosition(setpoint.get().target); // just for unified logging
-          motionMagicVoltageRequest.withPosition(setpoint.get().target);
-          arm.setControl(motionMagicVoltageRequest);
-        });
+    return mouthVelocity.getValue().in(RPM);
   }
 
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(armPosition, armVelocity, armTorqueCurrent);
+    BaseStatusSignal.refreshAll(mouthVelocity, rollerVelocity);
   }
 }
