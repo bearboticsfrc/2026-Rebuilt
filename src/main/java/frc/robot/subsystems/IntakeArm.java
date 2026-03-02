@@ -99,20 +99,19 @@ public class IntakeArm extends SubsystemBase {
                   .withMotionMagicCruiseVelocity(RotationsPerSecond.of(200))
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(600)));
 
-
-                  /*
-                   * try:
-                   * kp=150
-                   * kd=2
-                   * ks=.3
-                   *          .9 sec  / .5 sec / .25 sec
-                   * mm_cruise= 0.3   or 0.5  or 1.0
-                   * mm_accel = 1.0   0r 2.0  or 5.0
-                   * 
-                   * Use jerk = 5.0
-                   * 
-                   * chech stator current limit ... increase from 120 ???
-                   */
+  /*
+   * try:
+   * kp=150
+   * kd=2
+   * ks=.3
+   *          .9 sec  / .5 sec / .25 sec
+   * mm_cruise= 0.3   or 0.5  or 1.0
+   * mm_accel = 1.0   0r 2.0  or 5.0
+   *
+   * Use jerk = 5.0
+   *
+   * chech stator current limit ... increase from 120 ???
+   */
 
   public IntakeArm() {
     super("IntakeArm");

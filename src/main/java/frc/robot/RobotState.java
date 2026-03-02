@@ -82,4 +82,8 @@ public class RobotState {
     return AllianceFlipUtil.apply(
         Field.getMyHub().minus((robotPose.transformBy(turretToRobot).getTranslation())).getAngle());
   }
+
+  public double getDistanceToHub() {
+    return Field.getMyHub().getDistance((robotPose.transformBy(turretToRobot).getTranslation()));
+  }
 }
