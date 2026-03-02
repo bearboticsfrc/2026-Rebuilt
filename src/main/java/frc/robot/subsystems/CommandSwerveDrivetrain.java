@@ -40,11 +40,13 @@ import org.photonvision.EstimatedRobotPose;
  * be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
+
+  private static final double VISION_LOOP_PERIOD = 0.02;
   private static final double kSimLoopPeriod = 0.005; // 5ms
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
-  public static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.01, 0.01, Math.toRadians(1));
+  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.01, 0.01, Math.toRadians(1));
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -167,7 +169,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       startSimThread();
     }
     configureAutoBuilder();
-    poseEstimationNotifier.startPeriodic(0.2);
+    poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
     setStateStdDevs(STD_DEVS);
   }
 
@@ -202,7 +204,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       startSimThread();
     }
     configureAutoBuilder();
-    poseEstimationNotifier.startPeriodic(0.02);
+    poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
     setStateStdDevs(STD_DEVS);
   }
 
@@ -242,7 +244,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
   }
 
-  public void poseEstimationPeriodic() {
+  private void poseEstimationPeriodic() {
     List<EstimatedRobotPose> estimatedPoses = vision.getEstimatedGlobalPoses();
 
     for (EstimatedRobotPose estimatedPose : estimatedPoses) {
@@ -256,7 +258,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
    *
    * @param estimatedRobotPose The estimated robot pose from vision processing.
    */
-  public void addVisionMeasurement(EstimatedRobotPose estimatedRobotPose, Matrix<N3, N1> stdDevs) {
+  private void addVisionMeasurement(EstimatedRobotPose estimatedRobotPose, Matrix<N3, N1> stdDevs) {
     Pose2d estPose = estimatedRobotPose.estimatedPose.toPose2d();
 
     addVisionMeasurement(

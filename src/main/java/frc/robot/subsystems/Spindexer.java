@@ -35,6 +35,12 @@ public class Spindexer extends SubsystemBase {
 
     spindexerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     spindexerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    CurrentLimitsConfigs spindexerCurrentLimitsConfigs = new CurrentLimitsConfigs();
+
+    spindexerCurrentLimitsConfigs.StatorCurrentLimit = 240;
+    spindexerCurrentLimitsConfigs.SupplyCurrentLimit = 140;
+    spindexerCurrentLimitsConfigs.StatorCurrentLimitEnable = true;
+    spindexerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
 
     towerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     towerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -55,6 +61,7 @@ public class Spindexer extends SubsystemBase {
       System.out.println("ERROR Configuring Spindexer spindexer motor: " + status);
     }
 
+    status = tower.getConfigurator().apply(towerConfig);
     for (int i = 0; i < 2; ++i) {
       if (status.isOK()) break;
       status = tower.getConfigurator().apply(towerConfig);

@@ -260,7 +260,7 @@ public class Intake extends SubsystemBase {
 
   @Logged
   public double getArmPosition() {
-    return arm.getPosition().getValue().in(Degrees);
+    return armPosition.getValue().in(Degrees);
   }
 
   @Logged
@@ -275,7 +275,7 @@ public class Intake extends SubsystemBase {
 
   @Logged
   public boolean armIsExtended() {
-    return arm.getPosition().getValue().lt(Setpoint.AlmostExtended.target);
+    return armPosition.getValue().lt(Setpoint.AlmostExtended.target);
   }
 
   /**

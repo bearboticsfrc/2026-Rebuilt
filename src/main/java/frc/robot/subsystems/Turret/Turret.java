@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Turret;
+package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
@@ -6,8 +6,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -32,17 +31,16 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   private final TalonFX motor = new TalonFX(22, canivore);
 
-  PositionVoltage positionVoltage = new PositionVoltage(0).withSlot(0);
-  MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
+  MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC = new MotionMagicTorqueCurrentFOC(0);
 
   /* Turret config values */
   @Getter private double currentLimit = 44;
   @Getter private double torqueCurrentLimit = 400;
-  @Getter private double velocityKp = 25; // 31.931;
+  @Getter private double velocityKp = 5; // 25; // 31.931;
   @Getter private double velocityKi = 0;
-  @Getter private double velocityKd = 1.5; // 0.8981;
+  @Getter private double velocityKd = 0.1; // 1.5; // 0.8981;
 
-  @Getter private double velocityKs = .38778 * 2.0; // * 2.0;
+  @Getter private double velocityKs = 0; // * 2.0;
   @Getter private double velocityKv = 0; // 2.3767;
   @Getter private double velocityKa = 0; // .077265;
 
@@ -102,6 +100,9 @@ public class Turret extends SubsystemBase implements NTSendable {
 
     config.CurrentLimits.StatorCurrentLimit = statorLimit;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
+
+    config.TorqueCurrent.PeakForwardTorqueCurrent = 40; // amps -- tune up from here
+    config.TorqueCurrent.PeakReverseTorqueCurrent = -40;
 
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .5;
@@ -239,12 +240,12 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   @Logged
   public double getSetpoint() {
-    return motionMagicVoltage.Position * 360.0;
+    return motionMagicTorqueCurrentFOC.Position * 360.0;
   }
 
   @Logged
   public double getSetpointRotations() {
-    return motionMagicVoltage.Position;
+    return motionMagicTorqueCurrentFOC.Position;
   }
 
   // Get Velocity in RPM
@@ -263,7 +264,9 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   public Command setAngle(Angle angle) {
     return Commands.run(
-            () -> motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle))),
+            () ->
+                motor.setControl(
+                    motionMagicTorqueCurrentFOC.withPosition(wrapDegreesToSoftLimits(angle))),
             this)
         .withName(this.getName() + " SetAngle");
   }
@@ -272,7 +275,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     return Commands.run(
             () ->
                 motor.setControl(
-                    motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle.get()))),
+                    motionMagicTorqueCurrentFOC.withPosition(wrapDegreesToSoftLimits(angle.get()))),
             this)
         .withName(this.getName() + " SetAngleSupplier");
   }

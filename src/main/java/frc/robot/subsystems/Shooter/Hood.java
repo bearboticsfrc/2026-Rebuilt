@@ -9,7 +9,6 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -18,7 +17,6 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -50,7 +48,6 @@ public class Hood extends SubsystemBase {
 
   private static final double kGearRatio = 1.2;
   private static final Distance kDrumRadius = Meters.of(0.028575);
-  private static final Distance kMaxHeight = Meters.of(0);
   private final Angle MIN_ANGLE = Degrees.of(32);
   private final Angle MAX_ANGLE = Degrees.of(69.5);
 
@@ -62,53 +59,40 @@ public class Hood extends SubsystemBase {
   private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
   private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
   private final StatusSignal<Current> motorTorqueCurrent = motor.getTorqueCurrent(false);
+  private final StatusSignal<Double> motorProfileVelocity =
+      motor.getClosedLoopReferenceSlope(false);
 
   /* controls used by the leader motors */
   private final MotionMagicVoltage setpointRequest = new MotionMagicVoltage(0);
-  private final DutyCycleOut manualRequest = new DutyCycleOut(0);
-  private final DutyCycleOut calibrationRequest =
-      new DutyCycleOut(-0.1).withIgnoreHardwareLimits(true).withIgnoreSoftwareLimits(true);
-
-  /** Trigger to detect when the hood drives into a hard stop. */
-  public final Trigger isHardStop =
-      new Trigger(
-              () -> {
-                return motorVelocity.getValue().abs(RotationsPerSecond) < 1
-                    && motorTorqueCurrent.getValue().abs(Amps) > 10;
-              })
-          .debounce(0.1);
 
   /** Configs common across all motors. */
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
 
-  /** Configs common across just the leader motors. */
-  private static final TalonFXConfiguration leaderInitialConfigs = motorInitialConfigs.clone();
-
   /** Configs for {@link #motor}. */
   private final TalonFXConfiguration motorConfigs =
-      leaderInitialConfigs
+      motorInitialConfigs
           .clone()
           .withMotorOutput(
-              leaderInitialConfigs.MotorOutput.clone().withNeutralMode(NeutralModeValue.Brake))
+              motorInitialConfigs.MotorOutput.clone().withNeutralMode(NeutralModeValue.Brake))
           .withCurrentLimits(
-              leaderInitialConfigs
+              motorInitialConfigs
                   .CurrentLimits
                   .clone()
                   .withStatorCurrentLimit(Amps.of(120))
                   .withStatorCurrentLimitEnable(true))
           .withSlot0(
-              leaderInitialConfigs
+              motorInitialConfigs
                   .Slot0
                   .clone()
                   .withKP(2.4)
                   .withKI(0)
                   .withKD(0)
                   .withKS(0.2)
-                  .withKV(0.0)
+                  .withKV(0.144) // reasonable range is .12 to .20
                   .withKA(0)
                   .withKG(0.28)
                   .withGravityType(GravityTypeValue.Elevator_Static))
-          .withFeedback(leaderInitialConfigs.Feedback.clone().withSensorToMechanismRatio(1.2))
+          .withFeedback(motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(kGearRatio))
           .withSoftwareLimitSwitch(
               new SoftwareLimitSwitchConfigs()
                   .withForwardSoftLimitThreshold(1.4)
@@ -116,7 +100,7 @@ public class Hood extends SubsystemBase {
                   .withReverseSoftLimitThreshold(0.0)
                   .withReverseSoftLimitEnable(true))
           .withMotionMagic(
-              leaderInitialConfigs
+              motorInitialConfigs
                   .MotionMagic
                   .clone()
                   .withMotionMagicCruiseVelocity(RotationsPerSecond.of(66))
@@ -145,6 +129,7 @@ public class Hood extends SubsystemBase {
     motor.getVelocity().setUpdateFrequency(100);
     motor.getSupplyCurrent().setUpdateFrequency(50);
     motor.getDeviceTemp().setUpdateFrequency(4);
+    motor.getClosedLoopReferenceSlope().setUpdateFrequency(100);
 
     motor.optimizeBusUtilization();
   }
@@ -184,6 +169,11 @@ public class Hood extends SubsystemBase {
   @Logged
   public boolean isAtSetpoint() {
     return getHoodPosition().isNear(getSetpoint(), 0.05);
+  }
+
+  @Logged
+  public double getProvileVelocityRPS() {
+    return motorProfileVelocity.getValue();
   }
 
   /**
@@ -233,6 +223,7 @@ public class Hood extends SubsystemBase {
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(motorPosition, motorVelocity, motorTorqueCurrent);
+    BaseStatusSignal.refreshAll(
+        motorPosition, motorVelocity, motorTorqueCurrent, motorProfileVelocity);
   }
 }

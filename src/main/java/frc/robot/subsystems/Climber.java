@@ -7,7 +7,6 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
@@ -20,17 +19,8 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
 import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
-import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -65,22 +55,19 @@ public class Climber extends SubsystemBase {
 
   private static final double kGearRatio = 24.6;
   private static final Distance kDrumRadius = Meters.of(0.009525);
-  private static final Distance kMaxHeight = Meters.of(0);
 
   /* leader and follower motors */
   private final CANBus kCANBus = new CANBus("Default Name");
-  private final TalonFX motor_id_19 = new TalonFX(19, kCANBus); // follower
-  private final TalonFX motor_id_15 = new TalonFX(15, kCANBus); // leader
+  private final TalonFX follower = new TalonFX(19, kCANBus); // follower
+  private final TalonFX leader = new TalonFX(15, kCANBus); // leader
 
   /* device status signals */
-  private final StatusSignal<Angle> motor_id_15Position = motor_id_15.getPosition(false);
-  private final StatusSignal<AngularVelocity> motor_id_15Velocity = motor_id_15.getVelocity(false);
-  private final StatusSignal<Current> motor_id_15TorqueCurrent =
-      motor_id_15.getTorqueCurrent(false);
-  private final StatusSignal<Temperature> motor_id_15Temperature = motor_id_15.getDeviceTemp(false);
-  private final StatusSignal<Current> motor_id_19TorqueCurrent =
-      motor_id_19.getTorqueCurrent(false);
-  private final StatusSignal<Temperature> motor_id_19Temperature = motor_id_19.getDeviceTemp(false);
+  private final StatusSignal<Angle> leaderPosition = leader.getPosition(false);
+  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity(false);
+  private final StatusSignal<Current> leaderTorqueCurrent = leader.getTorqueCurrent(false);
+  private final StatusSignal<Temperature> leaderTemperature = leader.getDeviceTemp(false);
+  private final StatusSignal<Current> followerTorqueCurrent = follower.getTorqueCurrent(false);
+  private final StatusSignal<Temperature> followerTemperature = follower.getDeviceTemp(false);
 
   /* controls used by the leader motors */
   private final MotionMagicVoltage setpointRequest = new MotionMagicVoltage(0);
@@ -92,35 +79,11 @@ public class Climber extends SubsystemBase {
   public final Trigger isHardStop =
       new Trigger(
               () -> {
-                return motor_id_15Velocity.getValue().abs(RotationsPerSecond) < 1
-                    && motor_id_15TorqueCurrent.getValue().abs(Amps) > 10;
+                return leaderVelocity.getValue().abs(RotationsPerSecond) < 1
+                    && leaderTorqueCurrent.getValue().abs(Amps)
+                        > 10; // consider changing to statorcurrent for reliability
               })
           .debounce(0.1);
-
-  /* simulation */
-  private final ElevatorSim climberSim_motor_id_15 =
-      new ElevatorSim(
-          DCMotor.getKrakenX60Foc(2),
-          kGearRatio,
-          5,
-          kDrumRadius.in(Meters),
-          0.0,
-          kMaxHeight.in(Meters),
-          true,
-          0.0);
-
-  private static final double kSimLoopPeriod = 0.002; // 2 ms
-  private Notifier simNotifier = null;
-  private double lastSimTime = 0.0;
-
-  /* Mechanism2d visualization of the climber */
-  private final Mechanism2d mech2d = new Mechanism2d(1, kMaxHeight.in(Meters));
-  private final MechanismLigament2d motor_id_15Mech2d =
-      mech2d
-          .getRoot("motor_id_15 Root", 0.500, 0)
-          .append(
-              new MechanismLigament2d(
-                  "motor_id_15", climberSim_motor_id_15.getPositionMeters(), 90));
 
   /** Configs common across all motors. */
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
@@ -128,8 +91,8 @@ public class Climber extends SubsystemBase {
   /** Configs common across just the leader motors. */
   private static final TalonFXConfiguration leaderInitialConfigs = motorInitialConfigs.clone();
 
-  /** Configs for {@link #motor_id_19}. */
-  private final TalonFXConfiguration motor_id_19Configs =
+  /** Configs for {@link #follower}. */
+  private final TalonFXConfiguration followerConfigs =
       motorInitialConfigs
           .clone()
           .withMotorOutput(
@@ -140,19 +103,6 @@ public class Climber extends SubsystemBase {
                   .clone()
                   .withStatorCurrentLimit(Amps.of(120))
                   .withStatorCurrentLimitEnable(true))
-          .withSlot0(
-              motorInitialConfigs
-                  .Slot0
-                  .clone()
-                  .withKP(98.4)
-                  .withKI(0)
-                  .withKD(0)
-                  .withKS(0.2)
-                  .withKV(2.952)
-                  .withKA(0)
-                  .withKG(0)
-                  .withGravityType(GravityTypeValue.Elevator_Static))
-          .withFeedback(motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(24.6))
           .withHardwareLimitSwitch(
               motorInitialConfigs
                   .HardwareLimitSwitch
@@ -166,16 +116,10 @@ public class Climber extends SubsystemBase {
                   .withReverseLimitEnable(true)
                   .withReverseLimitRemoteSensorID(0)
                   .withReverseLimitSource(ReverseLimitSourceValue.LimitSwitchPin)
-                  .withReverseLimitType(ReverseLimitTypeValue.NormallyOpen))
-          .withMotionMagic(
-              motorInitialConfigs
-                  .MotionMagic
-                  .clone()
-                  .withMotionMagicCruiseVelocity(RotationsPerSecond.of(3.252032520325203))
-                  .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(16.260162601626014)));
+                  .withReverseLimitType(ReverseLimitTypeValue.NormallyOpen));
 
-  /** Configs for {@link #motor_id_15}. */
-  private final TalonFXConfiguration motor_id_15Configs =
+  /** Configs for {@link #leader}. */
+  private final TalonFXConfiguration leaderConfigs =
       leaderInitialConfigs
           .clone()
           .withMotorOutput(
@@ -198,7 +142,8 @@ public class Climber extends SubsystemBase {
                   .withKA(0)
                   .withKG(0)
                   .withGravityType(GravityTypeValue.Elevator_Static))
-          .withFeedback(leaderInitialConfigs.Feedback.clone().withSensorToMechanismRatio(24.6))
+          .withFeedback(
+              leaderInitialConfigs.Feedback.clone().withSensorToMechanismRatio(kGearRatio))
           .withHardwareLimitSwitch(
               leaderInitialConfigs
                   .HardwareLimitSwitch
@@ -222,48 +167,43 @@ public class Climber extends SubsystemBase {
 
   public Climber() {
     super("Climber");
-    StatusCode status = motor_id_19.getConfigurator().apply(motor_id_19Configs);
+    StatusCode status = follower.getConfigurator().apply(followerConfigs);
 
     for (int i = 0; i < kNumConfigAttempts; ++i) {
       if (status.isOK()) break;
-      status = motor_id_19.getConfigurator().apply(motor_id_19Configs);
+      status = follower.getConfigurator().apply(followerConfigs);
     }
     if (!status.isOK()) {
       System.out.println("ERROR Configuring Climber follower motor: " + status);
     }
 
-    status = motor_id_15.getConfigurator().apply(motor_id_15Configs);
+    status = leader.getConfigurator().apply(leaderConfigs);
     for (int i = 0; i < kNumConfigAttempts; ++i) {
       if (status.isOK()) break;
-      status = motor_id_15.getConfigurator().apply(motor_id_15Configs);
+      status = leader.getConfigurator().apply(leaderConfigs);
     }
     if (!status.isOK()) {
       System.out.println("ERROR Configuring Climber leader motor: " + status);
     }
 
-    motor_id_19.setControl(new Follower(motor_id_15.getDeviceID(), MotorAlignmentValue.Aligned));
-
-    if (Utils.isSimulation()) {
-      SmartDashboard.putData("climber", mech2d);
-      startSimThread();
-    }
+    follower.setControl(new Follower(leader.getDeviceID(), MotorAlignmentValue.Aligned));
 
     optimizeCAN();
     System.out.println("Climber Subsystem Initialized");
   }
 
   private void optimizeCAN() {
-    motor_id_15.getPosition().setUpdateFrequency(100);
-    motor_id_15.getVelocity().setUpdateFrequency(100);
-    motor_id_15.getSupplyCurrent().setUpdateFrequency(50);
-    motor_id_15.getDeviceTemp().setUpdateFrequency(4);
+    leader.getPosition().setUpdateFrequency(100);
+    leader.getVelocity().setUpdateFrequency(100);
+    leader.getSupplyCurrent().setUpdateFrequency(50);
+    leader.getDeviceTemp().setUpdateFrequency(4);
 
-    motor_id_15.optimizeBusUtilization();
+    leader.optimizeBusUtilization();
 
-    motor_id_19.getSupplyCurrent().setUpdateFrequency(10);
-    motor_id_19.getDeviceTemp().setUpdateFrequency(4);
+    follower.getSupplyCurrent().setUpdateFrequency(10);
+    follower.getDeviceTemp().setUpdateFrequency(4);
 
-    motor_id_19.optimizeBusUtilization();
+    follower.optimizeBusUtilization();
   }
 
   /**
@@ -271,17 +211,17 @@ public class Climber extends SubsystemBase {
    */
   @Logged
   public Angle getPosition() {
-    return motor_id_15Position.getValue();
+    return leaderPosition.getValue();
   }
 
   @Logged
   public Distance getPositionDistance() {
-    return kDrumRadius.times(motor_id_15Position.getValue().in(Radians));
+    return kDrumRadius.times(leaderPosition.getValue().in(Radians));
   }
 
   @Logged
   public double getPositionInches() {
-    return kDrumRadius.times(motor_id_15Position.getValue().in(Radians)).in(Inches);
+    return kDrumRadius.times(leaderPosition.getValue().in(Radians)).in(Inches);
   }
 
   /**
@@ -289,7 +229,7 @@ public class Climber extends SubsystemBase {
    */
   @Logged
   public AngularVelocity getVelocity() {
-    return motor_id_15Velocity.getValue();
+    return leaderVelocity.getValue();
   }
 
   /**
@@ -297,7 +237,7 @@ public class Climber extends SubsystemBase {
    */
   @Logged
   public Current getTorqueCurrentA() {
-    return motor_id_15TorqueCurrent.getValue();
+    return leaderTorqueCurrent.getValue();
   }
 
   /**
@@ -305,7 +245,7 @@ public class Climber extends SubsystemBase {
    */
   @Logged
   public Current getTorqueCurrentB() {
-    return motor_id_19TorqueCurrent.getValue();
+    return followerTorqueCurrent.getValue();
   }
 
   /**
@@ -313,15 +253,15 @@ public class Climber extends SubsystemBase {
    */
   @Logged
   public double getTempuratureAFahrenheit() {
-    return motor_id_15Temperature.getValue().in(Fahrenheit);
+    return leaderTemperature.getValue().in(Fahrenheit);
   }
 
   /**
    * @return The Temperature of the climber
    */
   @Logged
-  public double getTempuratureBAFahrenheit() {
-    return motor_id_19Temperature.getValue().in(Fahrenheit);
+  public double getTempuratureBFahrenheit() {
+    return followerTemperature.getValue().in(Fahrenheit);
   }
 
   /**
@@ -330,11 +270,11 @@ public class Climber extends SubsystemBase {
    * @return Command to run
    */
   public Command holdPosition() {
-    return runOnce(() -> setpointRequest.withPosition(motor_id_15Position.getValue()))
+    return runOnce(() -> setpointRequest.withPosition(leaderPosition.getValue()))
         .andThen(
             run(
                 () -> {
-                  motor_id_15.setControl(setpointRequest);
+                  leader.setControl(setpointRequest);
                 }));
   }
 
@@ -348,7 +288,7 @@ public class Climber extends SubsystemBase {
     return run(
         () -> {
           setpointRequest.withPosition(setpoint.get().target);
-          motor_id_15.setControl(setpointRequest);
+          leader.setControl(setpointRequest);
         });
   }
 
@@ -362,7 +302,7 @@ public class Climber extends SubsystemBase {
     return run(
         () -> {
           manualRequest.withOutput(manualOutput.getAsDouble());
-          motor_id_15.setControl(manualRequest);
+          leader.setControl(manualRequest);
         });
   }
 
@@ -374,7 +314,7 @@ public class Climber extends SubsystemBase {
    */
   public Command calibrateZero() {
     return run(() -> {
-          motor_id_15.setControl(calibrationRequest);
+          leader.setControl(calibrationRequest);
         })
         .until(isHardStop)
         .andThen(
@@ -382,8 +322,8 @@ public class Climber extends SubsystemBase {
                 .withTimeout(0.25)
                 .finallyDo(
                     () -> {
-                      motor_id_19.setPosition(Rotations.of(0));
-                      motor_id_15.setPosition(Rotations.of(0));
+                      follower.setPosition(Rotations.of(0));
+                      leader.setPosition(Rotations.of(0));
                     }));
   }
 
@@ -391,67 +331,11 @@ public class Climber extends SubsystemBase {
   public void periodic() {
     /* refresh all status signals */
     BaseStatusSignal.refreshAll(
-        motor_id_15Position,
-        motor_id_15Velocity,
-        motor_id_15TorqueCurrent,
-        motor_id_15Temperature,
-        motor_id_19TorqueCurrent,
-        motor_id_19Temperature);
-
-    // motor_id_15Mech2d.setLength(
-    //    motor_id_15Position.getValueAsDouble() * kDrumRadius.in(Meters) * 2 * Math.PI);
-  }
-
-  private void startSimThread() {
-    motor_id_19.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
-    motor_id_19.getSimState().setMotorType(TalonFXSimState.MotorType.KrakenX60);
-    motor_id_15.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
-    motor_id_15.getSimState().setMotorType(TalonFXSimState.MotorType.KrakenX60);
-
-    lastSimTime = Utils.getCurrentTimeSeconds();
-
-    /* Run simulation at a faster rate so PID gains behave more reasonably */
-    simNotifier =
-        new Notifier(
-            () -> {
-              /* Calculate the time delta */
-              final double currentTime = Utils.getCurrentTimeSeconds();
-              final double deltaTime = currentTime - lastSimTime;
-              lastSimTime = currentTime;
-
-              final var motor_id_19Sim = motor_id_19.getSimState();
-              final var motor_id_15Sim = motor_id_15.getSimState();
-
-              /* First set the supply voltage of all the devices */
-              motor_id_19Sim.setSupplyVoltage(RobotController.getBatteryVoltage());
-              motor_id_15Sim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-              /* Then calculate the new position and velocity of the simulated climber */
-              climberSim_motor_id_15.setInputVoltage(motor_id_15Sim.getMotorVoltage());
-              climberSim_motor_id_15.update(deltaTime);
-
-              /* Apply the new rotor position and velocity to the motors (before gear ratio) */
-              motor_id_19Sim.setRawRotorPosition(
-                  Radians.of(
-                      climberSim_motor_id_15.getPositionMeters()
-                          / kDrumRadius.in(Meters)
-                          * kGearRatio));
-              motor_id_19Sim.setRotorVelocity(
-                  RadiansPerSecond.of(
-                      climberSim_motor_id_15.getVelocityMetersPerSecond()
-                          / kDrumRadius.in(Meters)
-                          * kGearRatio));
-              motor_id_15Sim.setRawRotorPosition(
-                  Radians.of(
-                      climberSim_motor_id_15.getPositionMeters()
-                          / kDrumRadius.in(Meters)
-                          * kGearRatio));
-              motor_id_15Sim.setRotorVelocity(
-                  RadiansPerSecond.of(
-                      climberSim_motor_id_15.getVelocityMetersPerSecond()
-                          / kDrumRadius.in(Meters)
-                          * kGearRatio));
-            });
-    simNotifier.startPeriodic(kSimLoopPeriod);
+        leaderPosition,
+        leaderVelocity,
+        leaderTorqueCurrent,
+        leaderTemperature,
+        followerTorqueCurrent,
+        followerTemperature);
   }
 }

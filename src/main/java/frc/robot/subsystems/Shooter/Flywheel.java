@@ -7,9 +7,11 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -19,6 +21,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -42,6 +45,9 @@ public class Flywheel extends SubsystemBase {
 
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
+  private final StatusSignal<Current> motorCurrent = motor.getSupplyCurrent(false);
+  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
+
   private final SysIdRoutine m_sysIdRoutine =
       new SysIdRoutine(
           new SysIdRoutine.Config(
@@ -60,10 +66,11 @@ public class Flywheel extends SubsystemBase {
     // Put's the motor in Coast mode to make it easier to move by hand
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    config.Slot0.kS = 0.18342; // Static gain
-    config.Slot0.kV = 0.11941; // Velocity gain
-    config.Slot0.kA = 0.015595;
-    config.Slot0.kP = 99999.0; // Proportional gain
+    // Adjusted the values for VelocityTorqueCurrentFOC which uses amps instead of volts
+    config.Slot0.kS = 2.82; //  0.18342; // Static gain
+    config.Slot0.kV = 1.84; // 0.11941; // Velocity gain
+    config.Slot0.kA = 0.24; //  0.015595;
+    config.Slot0.kP = 50.0; // 99999.0; // Proportional gain
     config.MotionMagic.MotionMagicCruiseVelocity = 9000; // Max velocity
     config.MotionMagic.MotionMagicAcceleration = 9000; // Max acceleration allowed
     config.TorqueCurrent.PeakForwardTorqueCurrent = 100;
@@ -98,7 +105,9 @@ public class Flywheel extends SubsystemBase {
   }
 
   @Override
-  public void periodic() {}
+  public void periodic() {
+    BaseStatusSignal.refreshAll(motorCurrent, motorVelocity);
+  }
 
   public void setVelocity(AngularVelocity velocity) {
     // motor.setControl(new VelocityDutyCycle(velocity));
@@ -147,7 +156,7 @@ public class Flywheel extends SubsystemBase {
 
   @Logged
   public double getMotorCurrent() {
-    return motor.getSupplyCurrent().refresh().getValueAsDouble();
+    return motorCurrent.getValueAsDouble();
   }
 
   // Stop the flywheel motors
@@ -175,7 +184,7 @@ public class Flywheel extends SubsystemBase {
 
   @Logged
   public double getVelocityInRPM() {
-    return motor.getVelocity().getValue().in(RPM);
+    return motorVelocity.getValue().in(RPM);
   }
 
   @Logged
