@@ -15,13 +15,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -84,29 +78,6 @@ public class Hood extends SubsystemBase {
               })
           .debounce(0.1);
 
-  /* simulation */
-  private final ElevatorSim hoodSim_motor =
-      new ElevatorSim(
-          DCMotor.getKrakenX60Foc(1),
-          kGearRatio,
-          5,
-          kDrumRadius.in(Meters),
-          0.0,
-          kMaxHeight.in(Meters),
-          true,
-          0.0);
-
-  private static final double kSimLoopPeriod = 0.002; // 2 ms
-  private Notifier simNotifier = null;
-  private double lastSimTime = 0.0;
-
-  /* Mechanism2d visualization of the hood */
-  private final Mechanism2d mech2d = new Mechanism2d(1, kMaxHeight.in(Meters));
-  private final MechanismLigament2d motorMech2d =
-      mech2d
-          .getRoot("motor Root", 0.500, 0)
-          .append(new MechanismLigament2d("motor", hoodSim_motor.getPositionMeters(), 90));
-
   /** Configs common across all motors. */
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
 
@@ -163,8 +134,6 @@ public class Hood extends SubsystemBase {
     if (!status.isOK()) {
       System.out.println("ERROR Configuring Hood motor: " + status);
     }
-
-    SmartDashboard.putData("Hood", mech2d);
 
     motor.setPosition(Rotations.of(0.0));
     optimizeCAN();
