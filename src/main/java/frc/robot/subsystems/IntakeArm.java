@@ -11,7 +11,6 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -20,6 +19,8 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Voltage;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.Supplier;
@@ -48,40 +49,39 @@ public class IntakeArm extends SubsystemBase {
 
   private final TalonFX arm = new TalonFX(10, canivore);
 
-  private final PositionVoltage posReq = new PositionVoltage(0.0);
   private final MotionMagicVoltage motionMagicVoltageRequest = new MotionMagicVoltage(0);
 
   /* device status signals */
   private final StatusSignal<Angle> armPosition = arm.getPosition(false);
   private final StatusSignal<AngularVelocity> armVelocity = arm.getVelocity(false);
   private final StatusSignal<Current> armTorqueCurrent = arm.getTorqueCurrent(false);
+  private final StatusSignal<Voltage> armVoltage = arm.getMotorVoltage(false);
 
-  public final double ARM_GEAR_RATIO = 12;
+  private final StatusSignal<Double> armProfileVelocity = arm.getClosedLoopReferenceSlope(false);
+
+  private final double ARM_GEAR_RATIO = 12;
 
   /** Configs common across all motors. */
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
 
-  /** Configs common across just the leader motors. */
-  private static final TalonFXConfiguration armInitialConfigs = motorInitialConfigs.clone();
-
   /** Configs for arm */
   private final TalonFXConfiguration armConfig =
-      armInitialConfigs
+      motorInitialConfigs
           .clone()
           .withMotorOutput(
-              armInitialConfigs
+              motorInitialConfigs
                   .MotorOutput
                   .clone()
                   .withNeutralMode(NeutralModeValue.Brake)
                   .withInverted(InvertedValue.CounterClockwise_Positive))
           .withCurrentLimits(
-              armInitialConfigs
+              motorInitialConfigs
                   .CurrentLimits
                   .clone()
                   .withStatorCurrentLimit(Amps.of(120))
                   .withStatorCurrentLimitEnable(true))
           .withSlot0(
-              armInitialConfigs
+              motorInitialConfigs
                   .Slot0
                   .clone()
                   .withKP(20)
@@ -91,13 +91,28 @@ public class IntakeArm extends SubsystemBase {
                   .withGravityType(GravityTypeValue.Arm_Cosine)
                   .withGravityArmPositionOffset(Degrees.of(20)))
           .withFeedback(
-              armInitialConfigs.Feedback.clone().withSensorToMechanismRatio(ARM_GEAR_RATIO))
+              motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(ARM_GEAR_RATIO))
           .withMotionMagic(
-              armInitialConfigs
+              motorInitialConfigs
                   .MotionMagic
                   .clone()
                   .withMotionMagicCruiseVelocity(RotationsPerSecond.of(200))
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(600)));
+
+
+                  /*
+                   * try:
+                   * kp=150
+                   * kd=2
+                   * ks=.3
+                   *          .9 sec  / .5 sec / .25 sec
+                   * mm_cruise= 0.3   or 0.5  or 1.0
+                   * mm_accel = 1.0   0r 2.0  or 5.0
+                   * 
+                   * Use jerk = 5.0
+                   * 
+                   * chech stator current limit ... increase from 120 ???
+                   */
 
   public IntakeArm() {
     super("IntakeArm");
@@ -109,13 +124,13 @@ public class IntakeArm extends SubsystemBase {
       status = arm.getConfigurator().apply(armConfig);
     }
     if (!status.isOK()) {
-      System.out.println("ERROR Configuring Intake arm motor: " + status);
+      DriverStation.reportError("ERROR Configuring IntakeArm arm motor: " + status, false);
     }
 
     arm.setPosition(Setpoint.Initial.target);
 
     optimizeCAN();
-    System.out.println("Intake Subsystem Initialized");
+    System.out.println("IntakeArm Subsystem Initialized");
   }
 
   private void optimizeCAN() {
@@ -138,7 +153,8 @@ public class IntakeArm extends SubsystemBase {
   public Command armOscillate() {
     return goToSetpoint(() -> Setpoint.OscillateMin)
         .withTimeout(.75)
-        .andThen(goToSetpoint(() -> Setpoint.OscillateMax));
+        .andThen(goToSetpoint(() -> Setpoint.OscillateMax).withTimeout(.75))
+        .repeatedly();
   }
 
   @Logged
@@ -147,13 +163,18 @@ public class IntakeArm extends SubsystemBase {
   }
 
   @Logged
+  public double getProvileVelocityRPS() {
+    return armProfileVelocity.getValue();
+  }
+
+  @Logged
   public double getArmSetpoint() {
-    return posReq.getPositionMeasure().in(Degrees);
+    return motionMagicVoltageRequest.getPositionMeasure().in(Degrees);
   }
 
   @Logged
   public double getArmVoltage() {
-    return arm.getMotorVoltage().getValueAsDouble();
+    return armVoltage.getValueAsDouble();
   }
 
   @Logged
@@ -184,7 +205,6 @@ public class IntakeArm extends SubsystemBase {
   private Command goToSetpoint(Supplier<Setpoint> setpoint) {
     return run(
         () -> {
-          posReq.withPosition(setpoint.get().target); // just for unified logging
           motionMagicVoltageRequest.withPosition(setpoint.get().target);
           arm.setControl(motionMagicVoltageRequest);
         });
@@ -193,6 +213,7 @@ public class IntakeArm extends SubsystemBase {
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(armPosition, armVelocity, armTorqueCurrent);
+    BaseStatusSignal.refreshAll(
+        armPosition, armVelocity, armTorqueCurrent, armVoltage, armProfileVelocity);
   }
 }
