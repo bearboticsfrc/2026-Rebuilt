@@ -37,10 +37,6 @@ public class Flywheel extends SubsystemBase {
 
   private final DutyCycleOut output = new DutyCycleOut(0);
 
-  private boolean getTuningMode() {
-    return true;
-  }
-
   // Tolerance for the flywheel velocity
   private final double tolerance = 750; // RPM
 
@@ -107,16 +103,6 @@ public class Flywheel extends SubsystemBase {
   public void setVelocity(AngularVelocity velocity) {
     // motor.setControl(new VelocityDutyCycle(velocity));
     motor.setControl(velocityTorqueCurrentFOC.withVelocity(velocity));
-  }
-
-  /**
-   * Sets the percent for the flywheel.
-   *
-   * @param percent The percent to set.
-   */
-  public void setPercent(double value) {
-    // Apply the velocity output to the motor motor
-    motor.setControl(output.withOutput(.1));
   }
 
   /**

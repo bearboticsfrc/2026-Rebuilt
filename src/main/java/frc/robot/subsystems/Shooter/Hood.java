@@ -7,7 +7,6 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
@@ -15,13 +14,10 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
@@ -170,10 +166,6 @@ public class Hood extends SubsystemBase {
 
     SmartDashboard.putData("Hood", mech2d);
 
-    if (Utils.isSimulation()) {
-      startSimThread();
-    }
-
     motor.setPosition(Rotations.of(0.0));
     optimizeCAN();
     System.out.println("Hood Subsystem Initialized");
@@ -222,7 +214,7 @@ public class Hood extends SubsystemBase {
 
   @Logged
   public boolean isAtSetpoint() {
-    return getHoodPosition().isNear(getSetpoint(), 0.5);
+    return getHoodPosition().isNear(getSetpoint(), 0.05);
   }
 
   /**
@@ -273,44 +265,5 @@ public class Hood extends SubsystemBase {
   public void periodic() {
     /* refresh all status signals */
     BaseStatusSignal.refreshAll(motorPosition, motorVelocity, motorTorqueCurrent);
-
-    motorMech2d.setLength(motorPosition.getValueAsDouble() * kDrumRadius.in(Meters) * 2 * Math.PI);
-  }
-
-  private void startSimThread() {
-    motor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
-    motor.getSimState().setMotorType(TalonFXSimState.MotorType.KrakenX60);
-
-    lastSimTime = Utils.getCurrentTimeSeconds();
-
-    /* Run simulation at a faster rate so PID gains behave more reasonably */
-    simNotifier =
-        new Notifier(
-            () -> {
-              /* Calculate the time delta */
-              final double currentTime = Utils.getCurrentTimeSeconds();
-              final double deltaTime = currentTime - lastSimTime;
-              lastSimTime = currentTime;
-
-              final var motorSim = motor.getSimState();
-
-              /* First set the supply voltage of all the devices */
-              motorSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-              /* Then calculate the new position and velocity of the simulated hood */
-              hoodSim_motor.setInputVoltage(motorSim.getMotorVoltage());
-              hoodSim_motor.update(deltaTime);
-
-              /* Apply the new rotor position and velocity to the motors (before gear ratio) */
-              motorSim.setRawRotorPosition(
-                  Radians.of(
-                      hoodSim_motor.getPositionMeters() / kDrumRadius.in(Meters) * kGearRatio));
-              motorSim.setRotorVelocity(
-                  RadiansPerSecond.of(
-                      hoodSim_motor.getVelocityMetersPerSecond()
-                          / kDrumRadius.in(Meters)
-                          * kGearRatio));
-            });
-    simNotifier.startPeriodic(kSimLoopPeriod);
   }
 }

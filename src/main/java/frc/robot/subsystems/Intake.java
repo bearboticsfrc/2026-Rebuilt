@@ -67,7 +67,6 @@ public class Intake extends SubsystemBase {
   private final double MOUTH_SLOW_SPEED = 0.15;
   public final double ROLLER_SPEED = 0.5;
   public final double ARM_GEAR_RATIO = 12;
-  private Angle latestPosistion = Setpoint.Retracted.target;
 
   /** Configs common across all motors. */
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
@@ -187,9 +186,8 @@ public class Intake extends SubsystemBase {
     mouth.setControl(dutyReq.withOutput(output));
   }
 
-  public void setPosistion(Setpoint setpoint) {
+  public void setPosition(Setpoint setpoint) {
     arm.setControl(posReq.withPosition(setpoint.target));
-    latestPosistion = setpoint.target;
   }
 
   public void stopRoller() {
@@ -222,17 +220,17 @@ public class Intake extends SubsystemBase {
 
   public Command extendArm() {
     return goToSetpoint(() -> Setpoint.Extended);
-    // return runOnce(() -> setPosistion(Setpoint.Extended));
+    // return runOnce(() -> setPosition(Setpoint.Extended));
   }
 
   public Command retractArm() {
     // return goToSetpoint(() -> Setpoint.Retracted);
 
-    return runOnce(() -> setPosistion(Setpoint.Retracted));
+    return runOnce(() -> setPosition(Setpoint.Retracted));
   }
 
   public Command setArm(Setpoint setpoint) {
-    return runOnce(() -> setPosistion(setpoint));
+    return runOnce(() -> setPosition(setpoint));
   }
 
   public Command intakeOut() {
@@ -257,11 +255,11 @@ public class Intake extends SubsystemBase {
 
   @Logged
   public double getMouthVelocityInRPM() {
-    return roller.getVelocity().getValue().in(RPM);
+    return mouth.getVelocity().getValue().in(RPM);
   }
 
   @Logged
-  public double getArmPosistion() {
+  public double getArmPosition() {
     return arm.getPosition().getValue().in(Degrees);
   }
 
@@ -313,9 +311,5 @@ public class Intake extends SubsystemBase {
   public void periodic() {
     /* refresh all status signals */
     BaseStatusSignal.refreshAll(armPosition, armVelocity, armTorqueCurrent);
-
-    // arm.setControl(motionMagicVoltageRequest.withPosition(latestPosistion));
-
-    // arm.setControl(posReq.withPosition(latestPosistion));
   }
 }
