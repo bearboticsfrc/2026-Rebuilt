@@ -56,7 +56,7 @@ public class InterpolatedShootCommand {
 
   public Command shoot() {
 
-    return Commands.runOnce(() -> solutionNotifier.startPeriodic(.01))
+    return Commands.runOnce(() -> solutionNotifier.startPeriodic(.02))
         .andThen(
             flywheel
                 .runAtSpeed(this::getFlywheelSpeed)
@@ -67,14 +67,15 @@ public class InterpolatedShootCommand {
                 .alongWith(
                     Commands.waitUntil(() -> flywheel.isAtTarget())
                         .andThen(spindexer.runSpindexer())
-                        .andThen(spindexer.runTower())));
+                        .andThen(spindexer.runTower())))
+        .finallyDo(() -> solutionNotifier.stop());
   }
 
   public Command stop() {
     return flywheel
         .stopCommand()
-        .andThen(spindexer.stopMotorsCommand())
-        .andThen(hood.stopCommand())
+        .alongWith(spindexer.stopMotorsCommand())
+        .alongWith(hood.stopCommand())
         .andThen(Commands.runOnce(() -> solutionNotifier.stop()));
   }
 }
