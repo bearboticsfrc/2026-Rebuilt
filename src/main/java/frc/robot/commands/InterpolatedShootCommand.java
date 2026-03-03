@@ -23,13 +23,17 @@ public class InterpolatedShootCommand {
       new InterpolatingDoubleTreeMap();
 
   static {
-    flywheelSpeedMap.put(1.5, 2000.0);
-    flywheelSpeedMap.put(2.5, 2500.0);
-    flywheelSpeedMap.put(4.75, 3000.0);
+    flywheelSpeedMap.put(2.55, 2500.0);
+    flywheelSpeedMap.put(1.8, 2300.0);
+    flywheelSpeedMap.put(3.5, 2700.0);
+    flywheelSpeedMap.put(5.2, 3150.0);
+    flywheelSpeedMap.put(4.0, 2800.0);
 
-    hoodAngleMapMap.put(1.5, 0.5);
-    hoodAngleMapMap.put(2.5, 0.6);
-    hoodAngleMapMap.put(4.75, 0.7);
+    hoodAngleMapMap.put(2.55, 0.2);
+    hoodAngleMapMap.put(1.8, 0.1);
+    hoodAngleMapMap.put(3.5, 0.4);
+    hoodAngleMapMap.put(5.2, 0.6);
+    hoodAngleMapMap.put(4.0, 0.5);
   }
 
   public InterpolatedShootCommand(
@@ -41,14 +45,16 @@ public class InterpolatedShootCommand {
   }
 
   public Command shoot() {
-    return flywheel
-        .runAtSpeed(() -> calculateFlywheelSpeed())
-        .alongWith(hood.goToSetpointRotationsDouble(() -> calculateHoodAngle()))
-        .alongWith(
-            Commands.waitUntil(() -> flywheel.isAtTarget())
-                .andThen(spindexer.runSpindexer())
-                .andThen(spindexer.runTower())
-                .andThen(intake.runMouthSlow()));
+    return (new LogShootParamsCommand(() -> calculateFlywheelSpeed(), () -> calculateHoodAngle()))
+        .andThen(
+            flywheel
+                .runAtSpeed(() -> calculateFlywheelSpeed())
+                .alongWith(hood.goToSetpointRotationsDouble(() -> calculateHoodAngle()))
+                .alongWith(
+                    Commands.waitUntil(() -> flywheel.isAtTarget())
+                        .andThen(spindexer.runSpindexer())
+                        .andThen(spindexer.runTower())
+                        .andThen(intake.runMouthSlow())));
   }
 
   public Command stop() {

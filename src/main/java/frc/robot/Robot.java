@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.commands.StaticShootCommand;
+import frc.robot.commands.InterpolatedShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -73,8 +73,8 @@ public class Robot extends TimedRobot {
 
   private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
 
-  private final StaticShootCommand staticShootCommand =
-      new StaticShootCommand(hood, flywheel, spindexer, intake, rpm, angle);
+  private final InterpolatedShootCommand shootCommand =
+      new InterpolatedShootCommand(hood, flywheel, spindexer, intake);
 
   // private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, drivetrain);
 
@@ -220,7 +220,7 @@ public class Robot extends TimedRobot {
     //     .onTrue(dynamicShootingCommand.shoot())
     //     .onFalse(dynamicShootingCommand.stop());
 
-    pilot.rightTrigger().onTrue(staticShootCommand.shoot()).onFalse(staticShootCommand.stop());
+    pilot.rightTrigger().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
     // pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
