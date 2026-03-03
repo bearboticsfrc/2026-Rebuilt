@@ -191,6 +191,20 @@ public class Hood extends SubsystemBase {
   }
 
   /**
+   * Command to stop the hood motor.
+   *
+   * @return The command to stop the hood.
+   */
+  public Command stopCommand() {
+    return runOnce(() -> stop());
+  }
+
+  // Stop the hood motor
+  public void stop() {
+    motor.stopMotor();
+  }
+
+  /**
    * Drives the hood to the provided position setpoint.
    *
    * @param setpoint Function returning the setpoint to apply
