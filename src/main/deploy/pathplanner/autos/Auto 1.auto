@@ -15,6 +15,12 @@
           "data": {
             "pathName": "Outpost  - L Climb"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "LowerClimb"
+          }
         }
       ]
     }
