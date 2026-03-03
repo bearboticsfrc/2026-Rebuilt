@@ -43,6 +43,16 @@ public class RobotState {
   @Getter @Setter public ChassisSpeeds robotVelocity = new ChassisSpeeds();
 
   @Logged
+  public Rotation2d getRotation() {
+    return robotPose.getRotation();
+  }
+
+  @Logged
+  public ChassisSpeeds getFieldVelocity() {
+    return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
+  }
+
+  @Logged
   public boolean isInAllianceZone() {
     if (isBlueAlliance() && robotPose.getY() < Field.getMyAllianceLine().getY()) return true;
     else if (isRedAlliance() && robotPose.getY() > Field.getMyAllianceLine().getY()) return true;
