@@ -56,21 +56,31 @@ public class RobotState {
     else return false;
   }
 
+
   @Logged
-  public String getNeutralZoneDirection() {
+  public boolean isleftNeutralZone(){
     if (isBlueAlliance()
         && isInNeutralZone()
-        && robotPose.getX() > Field.getMyAllianceLine().getX()) return "L";
-    else if (isBlueAlliance()
-        && isInNeutralZone()
-        && robotPose.getX() < Field.getMyAllianceLine().getX()) return "R";
+        && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
+
     else if (isRedAlliance()
         && isInNeutralZone()
-        && robotPose.getX() < Field.getMyAllianceLine().getX()) return "L";
+        && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
+
+    else return false;
+  }
+
+  @Logged
+  public boolean isRightNeutralZone(){
+    if (isBlueAlliance()
+        && isInNeutralZone()
+        && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
+
     else if (isRedAlliance()
         && isInNeutralZone()
-        && robotPose.getX() > Field.getMyAllianceLine().getX()) return "R";
-    else return null;
+        && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;    
+
+    else return false;
   }
 
   public void updatePose() {
