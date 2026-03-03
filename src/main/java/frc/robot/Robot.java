@@ -25,8 +25,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.commands.DynamicShootingCommand;
-import frc.robot.commands.ShootCommand;
 import frc.robot.commands.StaticShootCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
@@ -66,10 +64,10 @@ public class Robot extends TimedRobot {
 
   @Logged private final Climber climber = new Climber();
 
-  private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
+  // private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
 
-  private final DynamicShootingCommand dynamicShootingCommand =
-      new DynamicShootingCommand(hood, flywheel, spindexer, intake, drivetrain);
+  // private final DynamicShootingCommand dynamicShootingCommand =
+  //     new DynamicShootingCommand(hood, flywheel, spindexer, intake, drivetrain);
 
   private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
 
@@ -114,6 +112,11 @@ public class Robot extends TimedRobot {
 
   private boolean getTuningMode() {
     return true;
+  }
+
+  @Logged
+  public double getDistanceToHub() {
+    return RobotState.getInstance().getDistanceToHub();
   }
 
   public void configureLogging() {
@@ -192,8 +195,6 @@ public class Robot extends TimedRobot {
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
-    // climber.setDefaultCommand(
-    //    climber.manualDrive(() -> -MathUtil.applyDeadband(copilot.getRightY() / 2.0, 0.1)));
     // turret.setDefaultCommand(turret.setAngle(() -> turret.getAngleTo(Field.getMyHub())));
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
@@ -209,8 +210,10 @@ public class Robot extends TimedRobot {
         .onFalse(
             intakeArm
                 .retract()
-                .alongWith(Commands.waitSeconds(2).andThen(intake.stopRollerCommand()))
-                .alongWith(Commands.waitSeconds(5).andThen(intake.stopMouthCommand())));
+                .alongWith(
+                    Commands.waitSeconds(1)
+                        .andThen(intake.stopRollerCommand())
+                        .andThen(Commands.waitSeconds(2).andThen(intake.stopMouthCommand()))));
 
     // pilot
     //     .rightTrigger()
@@ -219,9 +222,9 @@ public class Robot extends TimedRobot {
 
     pilot.rightTrigger().onTrue(staticShootCommand.shoot()).onFalse(staticShootCommand.stop());
 
-    pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
+    // pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
-    pilot.x().onTrue(intakeArm.armOscillate()).onFalse(intakeArm.retract());
+    // pilot.x().onTrue(intakeArm.armOscillate()).onFalse(intakeArm.retract());
 
     // pilot
     //     .y()

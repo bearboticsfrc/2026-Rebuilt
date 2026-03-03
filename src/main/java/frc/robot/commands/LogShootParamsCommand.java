@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Rotations;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class LogShootParamsCommand extends InstantCommand {
@@ -20,6 +21,21 @@ public class LogShootParamsCommand extends InstantCommand {
                     + flywheelRPM.get()
                     + " hoodAngle = "
                     + hoodAngle.get().in(Rotations)));
+  }
+
+  /**
+   * Creates a new a PrintCommand.
+   *
+   * @param message the message to print
+   */
+  public LogShootParamsCommand(DoubleSupplier flywheelRPM, DoubleSupplier hoodAngle) {
+    super(
+        () ->
+            System.out.println(
+                "Dynamic Shoot with flywheel = "
+                    + flywheelRPM.getAsDouble()
+                    + " hoodAngle = "
+                    + hoodAngle.getAsDouble()));
   }
 
   @Override

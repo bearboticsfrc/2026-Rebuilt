@@ -33,14 +33,16 @@ public class StaticShootCommand extends Command {
   }
 
   public Command shoot() {
-    return flywheel
-        .runAtSpeed(flywheelRPMSupplier)
-        .alongWith(hood.goToSetpointRotationsDouble(hoodAngleSupplier))
-        .alongWith(
-            Commands.waitUntil(() -> flywheel.isAtTarget())
-                .andThen(spindexer.runSpindexer())
-                .andThen(spindexer.runTower())
-                .andThen(intake.runMouthSlow()));
+    return (new LogShootParamsCommand(flywheelRPMSupplier, hoodAngleSupplier))
+        .andThen(
+            flywheel
+                .runAtSpeed(flywheelRPMSupplier)
+                .alongWith(hood.goToSetpointRotationsDouble(hoodAngleSupplier))
+                .alongWith(
+                    Commands.waitUntil(() -> flywheel.isAtTarget())
+                        .andThen(spindexer.runSpindexer())
+                        .andThen(spindexer.runTower())
+                        .andThen(intake.runMouthSlow())));
   }
 
   public Command stop() {

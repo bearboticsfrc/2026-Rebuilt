@@ -248,8 +248,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     List<EstimatedRobotPose> estimatedPoses = vision.getEstimatedGlobalPoses();
 
     for (EstimatedRobotPose estimatedPose : estimatedPoses) {
-      addVisionMeasurement(estimatedPose, vision.getEstimationStdDevs());
-      // addVisionMeasurement(estimatedPose, VisionConstants.SINGLE_TAG_STD_DEVS);
+      // addVisionMeasurement(estimatedPose, vision.getEstimationStdDevs());
+      addVisionMeasurement(estimatedPose, VisionConstants.SINGLE_TAG_STD_DEVS);
     }
   }
 

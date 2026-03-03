@@ -27,7 +27,7 @@ public class Intake extends SubsystemBase {
   private final DutyCycleOut dutyReq = new DutyCycleOut(0.0);
 
   /* device status signals */
-  private final StatusSignal<AngularVelocity> rollerVelocity = roller.getVelocity(false);
+  // private final StatusSignal<AngularVelocity> rollerVelocity = roller.getVelocity(false);
   private final StatusSignal<AngularVelocity> mouthVelocity = mouth.getVelocity(false);
 
   private final double MOUTH_SPEED = 0.3;
@@ -69,12 +69,12 @@ public class Intake extends SubsystemBase {
   }
 
   private void optimizeCAN() {
-    roller.getPosition().setUpdateFrequency(50);
-    roller.getVelocity().setUpdateFrequency(50);
-    roller.getSupplyCurrent().setUpdateFrequency(50);
-    roller.getDeviceTemp().setUpdateFrequency(10);
+    // roller.getPosition().setUpdateFrequency(50);
+    // roller.getVelocity().setUpdateFrequency(50);
+    // roller.getSupplyCurrent().setUpdateFrequency(50);
+    // roller.getDeviceTemp().setUpdateFrequency(10);
 
-    roller.optimizeBusUtilization();
+    // roller.optimizeBusUtilization();
 
     mouth.getPosition().setUpdateFrequency(50);
     mouth.getVelocity().setUpdateFrequency(50);
@@ -122,7 +122,7 @@ public class Intake extends SubsystemBase {
 
   @Logged
   public double getRollerVelocityInRPM() {
-    return rollerVelocity.getValue().in(RPM);
+    return roller.getVelocity().getValue().in(RPM);
   }
 
   @Logged
@@ -133,6 +133,6 @@ public class Intake extends SubsystemBase {
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(mouthVelocity, rollerVelocity);
+    BaseStatusSignal.refreshAll(mouthVelocity);
   }
 }

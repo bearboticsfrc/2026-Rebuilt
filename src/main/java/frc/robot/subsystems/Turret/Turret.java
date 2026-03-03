@@ -36,11 +36,11 @@ public class Turret extends SubsystemBase implements NTSendable {
   /* Turret config values */
   @Getter private double currentLimit = 44;
   @Getter private double torqueCurrentLimit = 400;
-  @Getter private double velocityKp = 5; // 25; // 31.931;
+  @Getter private double velocityKp = 40; // 25; // 31.931;
   @Getter private double velocityKi = 0;
-  @Getter private double velocityKd = 0.1; // 1.5; // 0.8981;
+  @Getter private double velocityKd = 0.5; // 1.5; // 0.8981;
 
-  @Getter private double velocityKs = 0; // * 2.0;
+  @Getter private double velocityKs = 6; // * 2.0;
   @Getter private double velocityKv = 0; // 2.3767;
   @Getter private double velocityKa = 0; // .077265;
 
@@ -81,19 +81,19 @@ public class Turret extends SubsystemBase implements NTSendable {
 
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    config.Slot0.kP = velocityKp;
-    config.Slot0.kI = velocityKi;
-    config.Slot0.kD = velocityKd;
+    config.Slot0.kP = 400; // 25; // 31.931;
+    config.Slot0.kI = 0.0;
+    config.Slot0.kD = 50.0; // 1.5; // 0.8981;
 
-    config.Slot0.kA = velocityKa;
-    config.Slot0.kS = velocityKs;
-    config.Slot0.kV = velocityKv;
+    config.Slot0.kA = 0.0;
+    config.Slot0.kS = 3; // * 2.0;
+    config.Slot0.kV = 0.5;
 
     var motionMagicConfigs = config.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = 320; // 80; // Target cruise velocity of 80 rps
+    motionMagicConfigs.MotionMagicCruiseVelocity = 1.5; // Target cruise velocity of 80 rps
     motionMagicConfigs.MotionMagicAcceleration =
-        480; // Target acceleration of 160 rps/s (0.5 seconds)
-    motionMagicConfigs.MotionMagicJerk = 1600; // Target jerk of 1600 rps/s/s (0.1 seconds)
+        6; // Target acceleration of 160 rps/s (0.5 seconds)
+    motionMagicConfigs.MotionMagicJerk = 30; // Target jerk of 1600 rps/s/s (0.1 seconds)
 
     config.Feedback.RotorToSensorRatio = 1.0;
     config.Feedback.SensorToMechanismRatio = gearRatio;
@@ -101,8 +101,8 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.CurrentLimits.StatorCurrentLimit = statorLimit;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
 
-    config.TorqueCurrent.PeakForwardTorqueCurrent = 40; // amps -- tune up from here
-    config.TorqueCurrent.PeakReverseTorqueCurrent = -40;
+    config.TorqueCurrent.PeakForwardTorqueCurrent = 120; // amps -- tune up from here
+    config.TorqueCurrent.PeakReverseTorqueCurrent = -120;
 
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .5;

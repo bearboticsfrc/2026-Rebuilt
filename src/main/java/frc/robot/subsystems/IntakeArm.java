@@ -96,8 +96,9 @@ public class IntakeArm extends SubsystemBase {
               motorInitialConfigs
                   .MotionMagic
                   .clone()
-                  .withMotionMagicCruiseVelocity(RotationsPerSecond.of(200))
-                  .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(600)));
+                  .withMotionMagicCruiseVelocity(RotationsPerSecond.of(.5))
+                  .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(2.0))
+                  .withMotionMagicJerk(5.0));
 
   /*
    * try:

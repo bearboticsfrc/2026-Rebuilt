@@ -13,8 +13,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -36,9 +35,12 @@ public class Flywheel extends SubsystemBase {
 
   // Velocity output control for the flywheel
 
-  private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new VelocityTorqueCurrentFOC(0);
+  // private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new
+  // VelocityTorqueCurrentFOC(0);
+  // private final VelocityDutyCycle velocityDutyCycle = new VelocityDutyCycle(0);
 
-  private final DutyCycleOut output = new DutyCycleOut(0);
+  private final MotionMagicVelocityVoltage velocityOut = new MotionMagicVelocityVoltage(0);
+  // private final DutyCycleOut output = new DutyCycleOut(0);
 
   // Tolerance for the flywheel velocity
   private final double tolerance = 750; // RPM
@@ -67,10 +69,10 @@ public class Flywheel extends SubsystemBase {
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     // Adjusted the values for VelocityTorqueCurrentFOC which uses amps instead of volts
-    config.Slot0.kS = 2.82; //  0.18342; // Static gain
-    config.Slot0.kV = 1.84; // 0.11941; // Velocity gain
-    config.Slot0.kA = 0.24; //  0.015595;
-    config.Slot0.kP = 50.0; // 99999.0; // Proportional gain
+    config.Slot0.kS = 0.31576; // Static gain
+    config.Slot0.kV = 0.11941; // Velocity gain
+    config.Slot0.kA = 0.015595;
+    config.Slot0.kP = .185; // Proportional gain
     config.MotionMagic.MotionMagicCruiseVelocity = 9000; // Max velocity
     config.MotionMagic.MotionMagicAcceleration = 9000; // Max acceleration allowed
     config.TorqueCurrent.PeakForwardTorqueCurrent = 100;
@@ -111,7 +113,7 @@ public class Flywheel extends SubsystemBase {
 
   public void setVelocity(AngularVelocity velocity) {
     // motor.setControl(new VelocityDutyCycle(velocity));
-    motor.setControl(velocityTorqueCurrentFOC.withVelocity(velocity));
+    motor.setControl(velocityOut.withVelocity(velocity));
   }
 
   /**
@@ -189,6 +191,6 @@ public class Flywheel extends SubsystemBase {
 
   @Logged
   public double getTargetVelocityInRPM() {
-    return velocityTorqueCurrentFOC.getVelocityMeasure().in(RPM);
+    return velocityOut.getVelocityMeasure().in(RPM);
   }
 }
