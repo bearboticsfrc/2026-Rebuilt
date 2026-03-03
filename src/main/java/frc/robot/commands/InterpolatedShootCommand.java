@@ -16,8 +16,8 @@ public class InterpolatedShootCommand {
   private final Flywheel flywheel;
   private final Spindexer spindexer;
 
-  @Getter private double flywheelSpeed = 0;
-  @Getter private double hoodAngle = 0;
+  @Getter private volatile double flywheelSpeed = 0;
+  @Getter private volatile double hoodAngle = 0;
 
   private static final InterpolatingDoubleTreeMap flywheelSpeedMap =
       new InterpolatingDoubleTreeMap();
@@ -69,15 +69,5 @@ public class InterpolatedShootCommand {
 
   public Command stop() {
     return flywheel.stopCommand().andThen(spindexer.stopMotorsCommand());
-  }
-
-  private double calculateFlywheelSpeed() {
-    double distance = RobotState.getInstance().getDistanceToHub();
-    return flywheelSpeedMap.get(distance);
-  }
-
-  private double calculateHoodAngle() {
-    double distance = RobotState.getInstance().getDistanceToHub();
-    return hoodAngleMap.get(distance);
   }
 }
