@@ -152,8 +152,9 @@ public class Flywheel extends SubsystemBase {
    */
   @Logged
   public boolean isAtTarget() {
-    return Math.abs(getVelocityInRPM() - getTargetVelocityInRPM())
-        < tolerance; // Check if the current velocity is near the target velocity
+    return getTargetVelocityInRPM() > 0
+        && Math.abs(getVelocityInRPM() - getTargetVelocityInRPM())
+            < tolerance; // Check if the current velocity is near the target velocity
   }
 
   @Logged

@@ -32,11 +32,11 @@ public class RobotState {
   }
 
   public boolean isRedAlliance() {
-    return DriverStation.getAlliance().get() == Alliance.Red;
+    return DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red;
   }
 
   public boolean isBlueAlliance() {
-    return DriverStation.getAlliance().get() == Alliance.Blue;
+    return DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
   }
 
   @Getter @Setter public Pose2d robotPose = new Pose2d();
@@ -45,7 +45,7 @@ public class RobotState {
   @Logged
   public boolean isInAllianceZone() {
     if (isBlueAlliance() && robotPose.getY() < Field.getMyAllianceLine().getY()) return true;
-    else if (isBlueAlliance() && robotPose.getY() > Field.getMyAllianceLine().getY()) return true;
+    else if (isRedAlliance() && robotPose.getY() > Field.getMyAllianceLine().getY()) return true;
     else return false;
   }
 
