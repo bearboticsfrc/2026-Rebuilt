@@ -6,7 +6,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -31,18 +31,12 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   private final TalonFX motor = new TalonFX(22, canivore);
 
-  MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC = new MotionMagicTorqueCurrentFOC(0);
+  // MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC = new MotionMagicTorqueCurrentFOC(0);
+  MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
 
   /* Turret config values */
   @Getter private double currentLimit = 44;
   @Getter private double torqueCurrentLimit = 400;
-  @Getter private double velocityKp = 40; // 25; // 31.931;
-  @Getter private double velocityKi = 0;
-  @Getter private double velocityKd = 0.5; // 1.5; // 0.8981;
-
-  @Getter private double velocityKs = 6; // * 2.0;
-  @Getter private double velocityKv = 0; // 2.3767;
-  @Getter private double velocityKa = 0; // .077265;
 
   @Getter private double gearRatio = 4.35;
 
@@ -81,13 +75,13 @@ public class Turret extends SubsystemBase implements NTSendable {
 
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    config.Slot0.kP = 400; // 25; // 31.931;
+    config.Slot0.kP = 23.221;
     config.Slot0.kI = 0.0;
-    config.Slot0.kD = 50.0; // 1.5; // 0.8981;
+    config.Slot0.kD = .8981;
 
-    config.Slot0.kA = 0.0;
-    config.Slot0.kS = 3; // * 2.0;
-    config.Slot0.kV = 0.5;
+    config.Slot0.kA = .077265;
+    config.Slot0.kS = .8;
+    config.Slot0.kV = 2.3767;
 
     var motionMagicConfigs = config.MotionMagic;
     motionMagicConfigs.MotionMagicCruiseVelocity = 1.5; // Target cruise velocity of 80 rps
@@ -240,12 +234,12 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   @Logged
   public double getSetpoint() {
-    return motionMagicTorqueCurrentFOC.Position * 360.0;
+    return motionMagicVoltage.Position * 360.0;
   }
 
   @Logged
   public double getSetpointRotations() {
-    return motionMagicTorqueCurrentFOC.Position;
+    return motionMagicVoltage.Position;
   }
 
   // Get Velocity in RPM
@@ -264,9 +258,7 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   public Command setAngle(Angle angle) {
     return Commands.run(
-            () ->
-                motor.setControl(
-                    motionMagicTorqueCurrentFOC.withPosition(wrapDegreesToSoftLimits(angle))),
+            () -> motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle))),
             this)
         .withName(this.getName() + " SetAngle");
   }
@@ -275,7 +267,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     return Commands.run(
             () ->
                 motor.setControl(
-                    motionMagicTorqueCurrentFOC.withPosition(wrapDegreesToSoftLimits(angle.get()))),
+                    motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle.get()))),
             this)
         .withName(this.getName() + " SetAngleSupplier");
   }
