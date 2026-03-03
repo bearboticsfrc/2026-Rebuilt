@@ -46,8 +46,6 @@ public class InterpolatedShootCommand {
     this.hood = hood;
     this.flywheel = flywheel;
     this.spindexer = spindexer;
-
-    solutionNotifier.startPeriodic(.02);
   }
 
   private void calculateShootSolution() {
@@ -57,17 +55,25 @@ public class InterpolatedShootCommand {
   }
 
   public Command shoot() {
-    return (new LogShootParamsCommand(
-            "Interpolated Shoot", this::getFlywheelSpeed, this::getHoodAngle))
-        .andThen(flywheel.runAtSpeed(this::getFlywheelSpeed))
-        .alongWith(hood.goToSetpointRotationsDouble(this::getHoodAngle))
-        .alongWith(
-            Commands.waitUntil(() -> flywheel.isAtTarget())
-                .andThen(spindexer.runSpindexer())
-                .andThen(spindexer.runTower()));
+
+    return Commands.runOnce(() -> solutionNotifier.startPeriodic(.01))
+        .andThen(
+            flywheel
+                .runAtSpeed(this::getFlywheelSpeed)
+                .alongWith(hood.goToSetpointRotationsDouble(this::getHoodAngle))
+                .alongWith(
+                    new LogShootParamsCommand(
+                        "Interpolated Shoot", this::getFlywheelSpeed, this::getHoodAngle))
+                .alongWith(
+                    Commands.waitUntil(() -> flywheel.isAtTarget())
+                        .andThen(spindexer.runSpindexer())
+                        .andThen(spindexer.runTower())));
   }
 
   public Command stop() {
-    return flywheel.stopCommand().andThen(spindexer.stopMotorsCommand());
+    return flywheel
+        .stopCommand()
+        .andThen(spindexer.stopMotorsCommand())
+        .andThen(Commands.runOnce(() -> solutionNotifier.stop()));
   }
 }

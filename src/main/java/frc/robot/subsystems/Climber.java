@@ -278,6 +278,14 @@ public class Climber extends SubsystemBase {
                 }));
   }
 
+  public Command raise() {
+    return goToSetpoint(() -> Climber.Setpoint.Top);
+  }
+
+  public Command lower() {
+    return goToSetpoint(() -> Climber.Setpoint.Bottom);
+  }
+
   /**
    * Drives the climber to the provided position setpoint.
    *

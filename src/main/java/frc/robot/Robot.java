@@ -9,13 +9,11 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import java.util.jar.Attributes.Name;
-
 import bearlib.fms.AllianceColor;
 import bearlib.util.TunableNumber;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.apple.laf.AquaButtonBorder.Named;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
@@ -26,6 +24,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.InterpolatedShootCommand;
@@ -38,7 +37,6 @@ import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.turret.Turret;
-import com.pathplanner.lib.auto.NamedCommands;
 
 public class Robot extends TimedRobot {
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
@@ -145,12 +143,14 @@ public class Robot extends TimedRobot {
     m_robotContainer.robotInit();
 
     // creating named commands for pathplanner auto builder
-    NamedCommands.registerCommand("Intake", Command.defer(intake.runRoller().andThen(intake.runMouth()).andThen(intakeArm.extend())));
-    NamedCommands.registerCommand("StopIntake", Command.defer(intake.stopRollerCommand().andThen(intake.stopMouth()).andThen(intakeArm.retract())));
+    NamedCommands.registerCommand(
+        "Intake", new ScheduleCommand(intake.runRoller().andThen(intakeArm.extend())));
+    NamedCommands.registerCommand(
+        "StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
     NamedCommands.registerCommand("Shoot", (shootCommand.shoot()));
     NamedCommands.registerCommand("StopShoot", (shootCommand.stop()));
-    NamedCommands.registerCommand("RaiseClimb", (Climber.Setpoint.Top));
-    NamedCommands.registerCommand("LowerClimb", (Climber.Setpoint.Bottom));
+    NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
+    NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
   }
 
   @Override
@@ -258,8 +258,8 @@ public class Robot extends TimedRobot {
                         .withHeadingPID(18, 0, .1)
                         .withTargetDirection(RobotState.getInstance().getAngleToHub())));
 
-    copilot.povUp().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Top));
-    copilot.povDown().onTrue(climber.goToSetpoint(() -> Climber.Setpoint.Bottom));
+    copilot.povUp().onTrue(climber.raise());
+    copilot.povDown().onTrue(climber.lower());
     copilot
         .povLeft()
         .onTrue(

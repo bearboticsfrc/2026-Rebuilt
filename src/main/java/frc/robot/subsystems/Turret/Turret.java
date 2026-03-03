@@ -165,7 +165,6 @@ public class Turret extends SubsystemBase implements NTSendable {
     updateCurrent();
     updatePositionRotations();
     updateVelocityRPM();
-    updateVelocityRPS();
     updateVoltage();
   }
 
