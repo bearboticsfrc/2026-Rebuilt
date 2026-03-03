@@ -74,7 +74,7 @@ public class Robot extends TimedRobot {
   private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
 
   private final InterpolatedShootCommand shootCommand =
-      new InterpolatedShootCommand(hood, flywheel, spindexer, intake);
+      new InterpolatedShootCommand(hood, flywheel, spindexer);
 
   // private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, drivetrain);
 
@@ -206,14 +206,14 @@ public class Robot extends TimedRobot {
 
     pilot
         .leftTrigger()
-        .onTrue(intake.runRoller().andThen(intake.runMouth()).andThen(intakeArm.extend()))
+        .onTrue(intake.runRoller().andThen(intakeArm.extend()))
         .onFalse(
             intakeArm
                 .retract()
                 .alongWith(
                     Commands.waitSeconds(1)
                         .andThen(intake.stopRollerCommand())
-                        .andThen(Commands.waitSeconds(2).andThen(intake.stopMouthCommand()))));
+                        .andThen(Commands.waitSeconds(2))));
 
     // pilot
     //     .rightTrigger()

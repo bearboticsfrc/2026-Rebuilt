@@ -4,7 +4,6 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
-import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
@@ -14,7 +13,6 @@ public class InterpolatedShootCommand {
   private final Hood hood;
   private final Flywheel flywheel;
   private final Spindexer spindexer;
-  private final Intake intake;
 
   private static final InterpolatingDoubleTreeMap flywheelSpeedMap =
       new InterpolatingDoubleTreeMap();
@@ -38,12 +36,10 @@ public class InterpolatedShootCommand {
     hoodAngleMapMap.put(3.0, 0.25);
   }
 
-  public InterpolatedShootCommand(
-      Hood hood, Flywheel flywheel, Spindexer spindexer, Intake intake) {
+  public InterpolatedShootCommand(Hood hood, Flywheel flywheel, Spindexer spindexer) {
     this.hood = hood;
     this.flywheel = flywheel;
     this.spindexer = spindexer;
-    this.intake = intake;
   }
 
   public Command shoot() {
@@ -55,15 +51,11 @@ public class InterpolatedShootCommand {
                 .alongWith(
                     Commands.waitUntil(() -> flywheel.isAtTarget())
                         .andThen(spindexer.runSpindexer())
-                        .andThen(spindexer.runTower())
-                        .andThen(intake.runMouthSlow())));
+                        .andThen(spindexer.runTower())));
   }
 
   public Command stop() {
-    return flywheel
-        .stopCommand()
-        .andThen(spindexer.stopMotorsCommand())
-        .andThen(intake.stopMouthCommand());
+    return flywheel.stopCommand().andThen(spindexer.stopMotorsCommand());
   }
 
   private double calculateFlywheelSpeed() {
