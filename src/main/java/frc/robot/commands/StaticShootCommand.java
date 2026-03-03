@@ -29,7 +29,7 @@ public class StaticShootCommand extends Command {
   }
 
   public Command shoot() {
-    return (new LogShootParamsCommand(flywheelRPMSupplier, hoodAngleSupplier))
+    return (new LogShootParamsCommand("Static Shoot ", flywheelRPMSupplier, hoodAngleSupplier))
         .andThen(
             flywheel
                 .runAtSpeed(flywheelRPMSupplier)

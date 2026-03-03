@@ -28,11 +28,13 @@ public class LogShootParamsCommand extends InstantCommand {
    *
    * @param message the message to print
    */
-  public LogShootParamsCommand(DoubleSupplier flywheelRPM, DoubleSupplier hoodAngle) {
+  public LogShootParamsCommand(
+      String source, DoubleSupplier flywheelRPM, DoubleSupplier hoodAngle) {
     super(
         () ->
             System.out.println(
-                "Dynamic Shoot with flywheel = "
+                source
+                    + " with flywheel = "
                     + flywheelRPM.getAsDouble()
                     + " hoodAngle = "
                     + hoodAngle.getAsDouble()));

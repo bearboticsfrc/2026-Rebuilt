@@ -75,13 +75,15 @@ public class Turret extends SubsystemBase implements NTSendable {
 
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    config.Slot0.kP = 23.221;
+    config.Slot0.kP =
+        23.221; //   72 for 5 degrees, 180 for 2 degrees, 360 for 1 degrees.  Increase D with
+    // increase in P
     config.Slot0.kI = 0.0;
-    config.Slot0.kD = .8981;
+    config.Slot0.kD = .8981; //   start with d = p / 100 and increase until oscillation stops
 
     config.Slot0.kA = .077265;
-    config.Slot0.kS = .8;
-    config.Slot0.kV = 2.3767;
+    config.Slot0.kS = .8; // start with .4; tune up if mechanism stalls at end of moves
+    config.Slot0.kV = 0.54; // 2.3767;  ( 0.124 x 4.34 = .54  V/mechanism-RPS )
 
     var motionMagicConfigs = config.MotionMagic;
     motionMagicConfigs.MotionMagicCruiseVelocity = 1.5; // Target cruise velocity of 80 rps

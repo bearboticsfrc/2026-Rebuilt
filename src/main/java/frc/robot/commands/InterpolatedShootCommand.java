@@ -1,12 +1,14 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
+import lombok.Getter;
 
 public class InterpolatedShootCommand {
 
@@ -14,11 +16,13 @@ public class InterpolatedShootCommand {
   private final Flywheel flywheel;
   private final Spindexer spindexer;
 
+  @Getter private double flywheelSpeed = 0;
+  @Getter private double hoodAngle = 0;
+
   private static final InterpolatingDoubleTreeMap flywheelSpeedMap =
       new InterpolatingDoubleTreeMap();
 
-  private static final InterpolatingDoubleTreeMap hoodAngleMapMap =
-      new InterpolatingDoubleTreeMap();
+  private static final InterpolatingDoubleTreeMap hoodAngleMap = new InterpolatingDoubleTreeMap();
 
   static {
     flywheelSpeedMap.put(2.55, 2500.0);
@@ -28,30 +32,39 @@ public class InterpolatedShootCommand {
     flywheelSpeedMap.put(4.0, 2800.0);
     flywheelSpeedMap.put(3.0, 2650.0);
 
-    hoodAngleMapMap.put(2.55, 0.2);
-    hoodAngleMapMap.put(1.8, 0.1);
-    hoodAngleMapMap.put(3.5, 0.4);
-    hoodAngleMapMap.put(5.2, 0.6);
-    hoodAngleMapMap.put(4.0, 0.5);
-    hoodAngleMapMap.put(3.0, 0.25);
+    hoodAngleMap.put(2.55, 0.2);
+    hoodAngleMap.put(1.8, 0.1);
+    hoodAngleMap.put(3.5, 0.4);
+    hoodAngleMap.put(5.2, 0.6);
+    hoodAngleMap.put(4.0, 0.5);
+    hoodAngleMap.put(3.0, 0.25);
   }
+
+  private final Notifier solutionNotifier = new Notifier(this::calculateShootSolution);
 
   public InterpolatedShootCommand(Hood hood, Flywheel flywheel, Spindexer spindexer) {
     this.hood = hood;
     this.flywheel = flywheel;
     this.spindexer = spindexer;
+
+    solutionNotifier.startPeriodic(.02);
+  }
+
+  private void calculateShootSolution() {
+    double distance = RobotState.getInstance().getDistanceToHub();
+    flywheelSpeed = flywheelSpeedMap.get(distance);
+    hoodAngle = hoodAngleMap.get(distance);
   }
 
   public Command shoot() {
-    return (new LogShootParamsCommand(() -> calculateFlywheelSpeed(), () -> calculateHoodAngle()))
-        .andThen(
-            flywheel
-                .runAtSpeed(() -> calculateFlywheelSpeed())
-                .alongWith(hood.goToSetpointRotationsDouble(() -> calculateHoodAngle()))
-                .alongWith(
-                    Commands.waitUntil(() -> flywheel.isAtTarget())
-                        .andThen(spindexer.runSpindexer())
-                        .andThen(spindexer.runTower())));
+    return (new LogShootParamsCommand(
+            "Interpolated Shoot", this::getFlywheelSpeed, this::getHoodAngle))
+        .andThen(flywheel.runAtSpeed(this::getFlywheelSpeed))
+        .alongWith(hood.goToSetpointRotationsDouble(this::getHoodAngle))
+        .alongWith(
+            Commands.waitUntil(() -> flywheel.isAtTarget())
+                .andThen(spindexer.runSpindexer())
+                .andThen(spindexer.runTower()));
   }
 
   public Command stop() {
@@ -65,6 +78,6 @@ public class InterpolatedShootCommand {
 
   private double calculateHoodAngle() {
     double distance = RobotState.getInstance().getDistanceToHub();
-    return hoodAngleMapMap.get(distance);
+    return hoodAngleMap.get(distance);
   }
 }
