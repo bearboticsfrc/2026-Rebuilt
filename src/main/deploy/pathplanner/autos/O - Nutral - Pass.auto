@@ -5,21 +5,27 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "L- Outpost"
+            "name": "Intake"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost  - L Climb"
+            "pathName": "O - Nutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Nutral - Pass"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "LowerClimb"
+            "name": "StopIntake"
           }
         }
       ]
