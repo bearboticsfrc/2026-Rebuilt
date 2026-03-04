@@ -35,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveToPoseCommand;
+import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
@@ -88,10 +89,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
 
-  private final InterpolatedShootCommand shootCommand =
+  private final InterpolatedShootCommand interpolatedShootCommand =
       new InterpolatedShootCommand(hood, flywheel, spindexer);
 
-  // private final ShooterCommand shooter = new ShooterCommand(hood, flywheel, drivetrain);
+  private final DynamicShootingCommand dynamicShootingCommand =
+      new DynamicShootingCommand(hood, flywheel, spindexer, turret);
 
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -161,13 +163,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void robotInit() {
     m_robotContainer.robotInit();
 
-    // creating named commands for pathplanner auto builder
+    // named commands for autonomous
     NamedCommands.registerCommand(
         "Intake", new ScheduleCommand(intake.runRoller().andThen(intakeArm.extend())));
     NamedCommands.registerCommand(
         "StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
-    NamedCommands.registerCommand("Shoot", (shootCommand.shoot()));
-    NamedCommands.registerCommand("StopShoot", (shootCommand.stop()));
+    NamedCommands.registerCommand("Shoot", (interpolatedShootCommand.shoot()));
+    NamedCommands.registerCommand("StopShoot", (interpolatedShootCommand.stop()));
     NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
     NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
   }
@@ -249,11 +251,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                         .andThen(intake.stopRollerCommand())
                         .andThen(Commands.waitSeconds(2))));
 
-    pilot.rightTrigger().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
+    pilot
+        .rightTrigger()
+        .onTrue(interpolatedShootCommand.shoot())
+        .onFalse(interpolatedShootCommand.stop());
 
     pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
-
-    // pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
     // copilot controlls
     copilot
@@ -264,7 +267,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                     driveFacingAngle
                         .withVelocityX(-pilot.getLeftY() * MaxSpeed)
                         .withVelocityY(-pilot.getLeftX() * MaxSpeed)
-                        .withHeadingPID(18, 0, .1)
+                        .withHeadingPID(18, 0, .2)
                         .withTargetDirection(
                             DynamicShootingCalculator.getInstance()
                                 .getParameters()
