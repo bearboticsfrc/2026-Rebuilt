@@ -24,7 +24,7 @@ public class RobotState {
   @Logged public Pose2d turretPose;
 
   public final Transform2d turretToRobot =
-      new Transform2d(Inches.of(-3.25), Inches.of(-3.25), new Rotation2d(Degrees.zero()));
+      new Transform2d(Inches.of(-3.25), Inches.of(-3.25), new Rotation2d(Degrees.of(180)));
 
   public static RobotState getInstance() {
     if (instance == null) instance = new RobotState();

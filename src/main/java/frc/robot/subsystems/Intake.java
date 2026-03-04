@@ -21,7 +21,7 @@ public class Intake extends SubsystemBase {
 
   private final DutyCycleOut dutyReq = new DutyCycleOut(0.0);
 
-  public final double ROLLER_SPEED = 0.5;
+  public final double ROLLER_SPEED = 0.65;
 
   public Intake() {
     super("Intake");

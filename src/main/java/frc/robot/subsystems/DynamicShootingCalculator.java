@@ -13,10 +13,10 @@ import frc.robot.field.Field;
 public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
 
-  private Rotation2d lastTurretAngle;
-  private Rotation2d turretAngle;
-  private double hoodAngle;
-  private double turretVelocity;
+  private Rotation2d lastTurretAngle = new Rotation2d();
+  private Rotation2d turretAngle = new Rotation2d();
+  private double hoodAngle = 0;
+  private double turretVelocity = 0;
 
   public static DynamicShootingCalculator getInstance() {
     if (instance == null) instance = new DynamicShootingCalculator();
@@ -65,12 +65,8 @@ public class DynamicShootingCalculator {
     hoodAngleMap.put(4.0, 0.5);
     hoodAngleMap.put(3.0, 0.25);
 
-    timeOfFlightMap.put(2.55, 0.0);
-    timeOfFlightMap.put(1.8, 0.0);
-    timeOfFlightMap.put(3.5, 0.0);
-    timeOfFlightMap.put(5.2, 0.0);
-    timeOfFlightMap.put(4.0, 0.0);
-    timeOfFlightMap.put(3.0, 0.0);
+    timeOfFlightMap.put(1.8, 0.95);
+    timeOfFlightMap.put(4.0, 1.15);
   }
 
   public LaunchingParameters getParameters() {
