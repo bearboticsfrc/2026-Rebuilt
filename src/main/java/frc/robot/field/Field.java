@@ -1,5 +1,9 @@
 package frc.robot.field;
 
+import static edu.wpi.first.units.Units.Degrees;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 public class Field {
@@ -8,6 +12,9 @@ public class Field {
   public static final Translation2d BLUE_HUB = new Translation2d(4.625594, 4.034536);
   public static final Translation2d RED_HUB = new Translation2d(11.915394, 4.034536);
   public static final Translation2d BLUE_OUTPOST = new Translation2d(0.52, 0.639);
+  public static final Pose2d BLUE_OUTPOST_POSE =
+      new Pose2d(BLUE_OUTPOST, new Rotation2d(Degrees.of(90)));
+
   public static final Translation2d BLUE_LEFT = new Translation2d(1.218, 7.082);
   public static final Translation2d BLUE_ALLIANCE_LINE = new Translation2d(4, 4);
 
@@ -17,6 +24,10 @@ public class Field {
 
   public static Translation2d getMyOutpost() {
     return AllianceFlipUtil.apply(BLUE_OUTPOST);
+  }
+
+  public static Pose2d getMyOutputPose() {
+    return AllianceFlipUtil.apply(BLUE_OUTPOST_POSE);
   }
 
   public static Translation2d getMyLeft() {

@@ -56,7 +56,11 @@ public class InterpolatedShootCommand {
 
   public Command shoot() {
 
-    return Commands.runOnce(() -> solutionNotifier.startPeriodic(.02))
+    return Commands.runOnce(
+            () -> {
+              calculateShootSolution();
+              solutionNotifier.startPeriodic(.02);
+            })
         .andThen(
             flywheel
                 .runAtSpeed(this::getFlywheelSpeed)

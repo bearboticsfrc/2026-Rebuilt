@@ -1,20 +1,16 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Radians;
-
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
-import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.RobotState;
 import frc.robot.field.Field;
 
-public class DynamicShootingCalculator{
+public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
 
   private Rotation2d lastTurretAngle;
@@ -28,9 +24,8 @@ public class DynamicShootingCalculator{
     return instance;
   }
 
-  private final LinearFilter turretAngleFilter =
-      LinearFilter.movingAverage((int) (0.1 / 0.02));
- 
+  private final LinearFilter turretAngleFilter = LinearFilter.movingAverage((int) (0.1 / 0.02));
+
   public record LaunchingParameters(
       boolean isValid,
       Rotation2d turretAngle,
@@ -38,7 +33,7 @@ public class DynamicShootingCalculator{
       double hoodAngle,
       double flywheelVelocity) {}
 
-// Cache parameters
+  // Cache parameters
   private LaunchingParameters latestParameters = null;
 
   private static double minDistance;
@@ -48,14 +43,12 @@ public class DynamicShootingCalculator{
   private static final InterpolatingDoubleTreeMap flywheelSpeedMap =
       new InterpolatingDoubleTreeMap();
 
-  private static final InterpolatingDoubleTreeMap hoodAngleMap =
-      new InterpolatingDoubleTreeMap();
+  private static final InterpolatingDoubleTreeMap hoodAngleMap = new InterpolatingDoubleTreeMap();
 
   private static final InterpolatingDoubleTreeMap timeOfFlightMap =
       new InterpolatingDoubleTreeMap();
 
-static {
-
+  static {
     maxDistance = 0.0;
     minDistance = 0.0;
 
@@ -79,33 +72,32 @@ static {
     timeOfFlightMap.put(5.2, 0.0);
     timeOfFlightMap.put(4.0, 0.0);
     timeOfFlightMap.put(3.0, 0.0);
-
   }
 
-    public LaunchingParameters getParameters() {
+  public LaunchingParameters getParameters() {
     if (latestParameters != null) {
       return latestParameters;
     }
 
-    //estimated robot pose
+    // estimated robot pose
     Pose2d currentPose = RobotState.getInstance().robotPose;
 
     ChassisSpeeds robotRelativeVelocity = RobotState.getInstance().robotVelocity;
 
-    //apply robot velocities to current pose
+    // apply robot velocities to current pose
     Pose2d estimatedPose =
         currentPose.exp(
             new Twist2d(
-                robotRelativeVelocity.vxMetersPerSecond ,
+                robotRelativeVelocity.vxMetersPerSecond,
                 robotRelativeVelocity.vyMetersPerSecond,
                 robotRelativeVelocity.omegaRadiansPerSecond));
 
-    //get distance to Hub
+    // get distance to Hub
     Pose2d turretPose = estimatedPose.transformBy(RobotState.getInstance().turretToRobot);
 
     double turretToHub = Field.getMyHub().getDistance(turretPose.getTranslation());
 
-    //Calculate field relative turret velocity
+    // Calculate field relative turret velocity
     ChassisSpeeds robotVelocity = RobotState.getInstance().getFieldVelocity();
 
     double robotAngle = estimatedPose.getRotation().getRadians();
@@ -136,7 +128,8 @@ static {
           new Pose2d(
               turretPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
               turretPose.getRotation());
-      lookaheadTurretToTargetDistance = Field.getMyHub().getDistance(lookaheadPose.getTranslation());
+      lookaheadTurretToTargetDistance =
+          Field.getMyHub().getDistance(lookaheadPose.getTranslation());
     }
 
     // Calculate parameters accounted for imparted velocity
@@ -145,8 +138,7 @@ static {
     lastTurretAngle = turretAngle;
     lastHoodAngle = hoodAngle;
     turretVelocity =
-        turretAngleFilter.calculate(
-            turretAngle.minus(lastTurretAngle).getRadians() / 0.02);
+        turretAngleFilter.calculate(turretAngle.minus(lastTurretAngle).getRadians() / 0.02);
     lastTurretAngle = turretAngle;
     lastHoodAngle = hoodAngle;
     latestParameters =
@@ -165,4 +157,3 @@ static {
     latestParameters = null;
   }
 }
-

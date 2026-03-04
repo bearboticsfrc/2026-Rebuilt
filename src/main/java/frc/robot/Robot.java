@@ -27,7 +27,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.InterpolatedShootCommand;
+import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -233,6 +235,8 @@ public class Robot extends TimedRobot {
     //     .onFalse(dynamicShootingCommand.stop());
 
     pilot.rightTrigger().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
+
+    pilot.b().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
 
     // pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
