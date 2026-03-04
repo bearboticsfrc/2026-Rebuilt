@@ -64,7 +64,7 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   // set these small to start
   @Getter public Angle minRotations = Rotations.of(-.25);
-  @Getter public Angle maxRotations = Rotations.of(.5);
+  @Getter public Angle maxRotations = Rotations.of(.25);
 
   public Turret() {
     super("Turret");
@@ -101,7 +101,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.TorqueCurrent.PeakReverseTorqueCurrent = -120;
 
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .5;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .26;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.26;
 

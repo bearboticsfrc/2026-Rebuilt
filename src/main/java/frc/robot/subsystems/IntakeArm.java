@@ -78,18 +78,18 @@ public class IntakeArm extends SubsystemBase {
               motorInitialConfigs
                   .CurrentLimits
                   .clone()
-                  .withStatorCurrentLimit(Amps.of(120))
+                  .withStatorCurrentLimit(Amps.of(200))
                   .withStatorCurrentLimitEnable(true))
           .withSlot0(
               motorInitialConfigs
                   .Slot0
                   .clone()
-                  .withKP(20)
-                  .withKD(0)
-                  .withKS(0)
+                  .withKP(100)
+                  .withKD(2)
+                  .withKS(.3)
                   .withKG(0)
                   .withGravityType(GravityTypeValue.Arm_Cosine)
-                  .withGravityArmPositionOffset(Degrees.of(20)))
+                  .withGravityArmPositionOffset(Degrees.of(0)))
           .withFeedback(
               motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(ARM_GEAR_RATIO))
           .withMotionMagic(
