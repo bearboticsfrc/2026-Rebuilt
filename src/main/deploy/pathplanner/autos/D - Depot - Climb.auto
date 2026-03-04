@@ -31,6 +31,12 @@
         {
           "type": "named",
           "data": {
+            "name": "StopShoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "StopIntake"
           }
         },
