@@ -14,7 +14,6 @@ public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
 
   private Rotation2d lastTurretAngle;
-  private double lastHoodAngle;
   private Rotation2d turretAngle;
   private double hoodAngle;
   private double turretVelocity;
@@ -136,11 +135,9 @@ public class DynamicShootingCalculator {
     turretAngle = Field.getMyHub().minus(lookaheadPose.getTranslation()).getAngle();
     hoodAngle = (hoodAngleMap.get(lookaheadTurretToTargetDistance));
     lastTurretAngle = turretAngle;
-    lastHoodAngle = hoodAngle;
     turretVelocity =
         turretAngleFilter.calculate(turretAngle.minus(lastTurretAngle).getRadians() / 0.02);
     lastTurretAngle = turretAngle;
-    lastHoodAngle = hoodAngle;
     latestParameters =
         new LaunchingParameters(
             lookaheadTurretToTargetDistance >= minDistance
