@@ -283,8 +283,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.povRight().onTrue(climber.calibrateZero());
 
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
-    copilot.circle().onTrue(turret.setAngle(Rotations.of(-.15)));
-    copilot.square().onTrue(turret.setAngle(Rotations.of(.15)));
+    copilot.circle().onTrue(turret.setAngle(Rotations.of(-.35)));
+    copilot.square().onTrue(turret.setAngle(Rotations.of(.40)));
   }
 
   private boolean initialPoseSet = false;

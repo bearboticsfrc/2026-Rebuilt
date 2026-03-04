@@ -13,8 +13,8 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class AutoClimbCommand extends Command {
 
-  private static final Time DRIVE_SIDEWAYS_DURATION = Seconds.of(0.05);
-  private static final LinearVelocity DRIVE_SIDEWAYS_VELOCITY = MetersPerSecond.of(0.5);
+  private static final Time DRIVE_LEFT_DURATION = Seconds.of(0.05);
+  private static final LinearVelocity DRIVE_LEFT_VELOCITY = MetersPerSecond.of(0.5);
 
   private static final Time DRIVE_BACKWARDS_DURATION = Seconds.of(0.05);
   private static final LinearVelocity DRIVE_BACKWARDS_VELOCITY = MetersPerSecond.of(0.5);
@@ -33,21 +33,18 @@ public class AutoClimbCommand extends Command {
 
   private Command driveSideways() {
     // Use RobotCentric request for simple backwards movement
-    SwerveRequest.RobotCentric driveSideways =
+    SwerveRequest.RobotCentric driveLeft =
         new SwerveRequest.RobotCentric()
-            .withVelocityX(-DRIVE_SIDEWAYS_VELOCITY.in(MetersPerSecond)); // Negative X is backwards
-
+            .withVelocityY(DRIVE_LEFT_VELOCITY.in(MetersPerSecond)); // Postive Y is Left
     SwerveRequest.RobotCentric driveBackwards =
         new SwerveRequest.RobotCentric()
             .withVelocityX(
                 -DRIVE_BACKWARDS_VELOCITY.in(MetersPerSecond)); // Negative X is backwards
 
     return drivetrain
-        .runOnce(
-            () ->
-                drivetrain.setControl(
-                    driveSideways)) /// should do a waitUntil sensor is clear with .1 timeout
-        .andThen(Commands.waitTime(DRIVE_SIDEWAYS_DURATION))
+        .runOnce(() -> drivetrain.setControl(driveLeft))
+        .until(() -> !climber.climberBlocked())
+        .withTimeout(.05)
         .andThen(drivetrain.runOnce(() -> drivetrain.setControl(new SwerveRequest.Idle())))
         .andThen(drivetrain.runOnce(() -> drivetrain.setControl(driveBackwards)))
         .andThen(Commands.waitTime(DRIVE_BACKWARDS_DURATION))

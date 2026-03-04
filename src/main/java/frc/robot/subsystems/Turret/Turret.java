@@ -65,8 +65,8 @@ public class Turret extends SubsystemBase implements NTSendable {
   // }
 
   // set these small to start
-  @Getter public Angle minRotations = Rotations.of(-.3);
-  @Getter public Angle maxRotations = Rotations.of(.3);
+  @Getter public Angle minRotations = Rotations.of(-.4);
+  @Getter public Angle maxRotations = Rotations.of(.35);
 
   public Turret() {
     super("Turret");
@@ -78,10 +78,10 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
     config.Slot0.kP =
-        35; // 23.221; //   72 for 5 degrees, 180 for 2 degrees, 360 for 1 degrees.  Increase D
+        70; // 23.221; //   72 for 5 degrees, 180 for 2 degrees, 360 for 1 degrees.  Increase D
     // with
     // increase in P
-    config.Slot0.kD = 1; // .8981; //   start with d = p / 100 and increase until oscillation stops
+    config.Slot0.kD = 3; // .8981; //   start with d = p / 100 and increase until oscillation stops
 
     config.Slot0.kA = 0; // .077265;
     config.Slot0.kS = .6; // .2; // start with .4; tune up if mechanism stalls at end of moves
@@ -94,10 +94,10 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.Slot1.kV = 0;
 
     var motionMagicConfigs = config.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = .3; // Target cruise velocity of 80 rps
+    motionMagicConfigs.MotionMagicCruiseVelocity = 1.8; // Target cruise velocity of 80 rps
     motionMagicConfigs.MotionMagicAcceleration =
-        .8; // Target acceleration of 160 rps/s (0.5 seconds)
-    motionMagicConfigs.MotionMagicJerk = 5; // Target jerk of 1600 rps/s/s (0.1 seconds)
+        3.6; // Target acceleration of 160 rps/s (0.5 seconds)
+    motionMagicConfigs.MotionMagicJerk = 25; // Target jerk of 1600 rps/s/s (0.1 seconds)
 
     config.Feedback.RotorToSensorRatio = 1.0;
     config.Feedback.SensorToMechanismRatio = gearRatio;
@@ -113,7 +113,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .35;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.35;
+    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.4;
 
     // motionMagicVoltage.withFeedForward(Volts.of(1));
 
