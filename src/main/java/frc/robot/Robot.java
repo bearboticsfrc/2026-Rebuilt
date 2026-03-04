@@ -256,6 +256,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(interpolatedShootCommand.shoot())
         .onFalse(interpolatedShootCommand.stop());
 
+    // pilot
+    //     .rightTrigger()
+    //     .onTrue(dynamicShootingCommand.shoot())
+    //     .onFalse(dynamicShootingCommand.stop());
+
     pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
 
     // copilot controlls
