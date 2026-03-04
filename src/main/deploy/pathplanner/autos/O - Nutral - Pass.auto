@@ -17,9 +17,9 @@
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "Nutral - Pass"
+            "name": "Pass"
           }
         },
         {
