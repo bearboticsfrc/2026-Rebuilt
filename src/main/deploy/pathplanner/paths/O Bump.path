@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.534450784593438,
-        "y": 1.3631669044222543
+        "x": 3.568809649493243,
+        "y": 2.088
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.273757975570816,
-        "y": 1.273674163088653
+        "x": 3.8326385670518586,
+        "y": 2.0700613027926438
       },
       "isLocked": false,
-      "linkedName": "O Start"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.41683976195908523,
-        "y": 0.6948285004948047
+        "x": 5.625,
+        "y": 2.088
       },
       "prevControl": {
-        "x": 2.0301769205297506,
-        "y": 1.0692195466507868
+        "x": 4.60030187928099,
+        "y": 2.1146833324507357
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.0,
-    "maxAcceleration": 1.0,
+    "maxVelocity": 1.5,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": "O - Outpost - Climb",
+  "folder": "O Bump Neutral",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": false
 }

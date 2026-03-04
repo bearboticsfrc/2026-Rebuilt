@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5473894436519258,
-        "y": 1.2984736091298146
+        "x": 3.534450784593438,
+        "y": 1.3631669044222543
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.055720399429386,
-        "y": 1.479614835948646
+        "x": 3.273757975570816,
+        "y": 1.273674163088653
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "O Start"
     },
     {
       "anchor": {
-        "x": 2.5769900142653355,
-        "y": 2.3594436519258206
+        "x": 0.41683976195908523,
+        "y": 0.6948285004948047
       },
       "prevControl": {
-        "x": 2.344094151212554,
-        "y": 1.8030813124108422
+        "x": 2.0301769205297506,
+        "y": 1.0692195466507868
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Outpost"
     }
   ],
   "rotationTargets": [],
@@ -42,10 +42,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -141.09586154459583
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "O - Outpost - Climb",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

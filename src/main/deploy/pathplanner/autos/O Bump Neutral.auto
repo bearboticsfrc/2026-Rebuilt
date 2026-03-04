@@ -7,7 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O - Outpost"
+            "pathName": "O Bump"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "O Bump - Neutral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "O Neutral - Outpost"
           }
         },
         {

@@ -7,7 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O - Outpost"
+            "pathName": "D Bump"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D Bump - Neutral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Neutal - AS"
           }
         },
         {
@@ -37,7 +61,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost  - O Climb"
+            "pathName": "Depot - Climb"
           }
         },
         {
