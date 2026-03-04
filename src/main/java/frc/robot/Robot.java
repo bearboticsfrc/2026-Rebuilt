@@ -211,7 +211,6 @@ public class Robot extends TimedRobot {
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
-
     drivetrain.registerTelemetry(telemetry::telemeterize);
   }
 
@@ -230,7 +229,6 @@ public class Robot extends TimedRobot {
                         .andThen(intake.stopRollerCommand())
                         .andThen(Commands.waitSeconds(2))));
 
-
     pilot.rightTrigger().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
     pilot.b().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
@@ -247,7 +245,10 @@ public class Robot extends TimedRobot {
                         .withVelocityX(-pilot.getLeftY() * MaxSpeed)
                         .withVelocityY(-pilot.getLeftX() * MaxSpeed)
                         .withHeadingPID(18, 0, .1)
-                        .withTargetDirection(DynamicShootingCalculator.getInstance().getParameters().turretAngle())));
+                        .withTargetDirection(
+                            DynamicShootingCalculator.getInstance()
+                                .getParameters()
+                                .turretAngle())));
 
     copilot.povUp().onTrue(climber.raise());
     copilot.povDown().onTrue(climber.lower());
