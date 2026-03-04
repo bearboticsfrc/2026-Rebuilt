@@ -147,13 +147,14 @@ public class Robot extends TimedRobot {
     m_robotContainer.robotInit();
 
     // creating named commands for pathplanner auto builder
-    NamedCommands.registerCommand("Intake", new ScheduleCommand(intake.runRoller().andThen(intakeArm.extend())));
-    NamedCommands.registerCommand("StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
+    NamedCommands.registerCommand(
+        "Intake", new ScheduleCommand(intake.runRoller().andThen(intakeArm.extend())));
+    NamedCommands.registerCommand(
+        "StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
     NamedCommands.registerCommand("Shoot", (shootCommand.shoot()));
     NamedCommands.registerCommand("StopShoot", (shootCommand.stop()));
     NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
     NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
-  }
   }
 
   @Override
@@ -246,7 +247,7 @@ public class Robot extends TimedRobot {
                         .withVelocityX(-pilot.getLeftY() * MaxSpeed)
                         .withVelocityY(-pilot.getLeftX() * MaxSpeed)
                         .withHeadingPID(18, 0, .1)
-                        .withTargetDirection(RobotState.getInstance().getAngleToHub())));
+                        .withTargetDirection(DynamicShootingCalculator.getInstance().getParameters().turretAngle())));
 
     copilot.povUp().onTrue(climber.raise());
     copilot.povDown().onTrue(climber.lower());
