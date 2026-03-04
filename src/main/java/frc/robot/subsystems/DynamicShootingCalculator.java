@@ -49,7 +49,7 @@ public class DynamicShootingCalculator {
 
   static {
     maxDistance = 5.5;
-    minDistance = 1.5;
+    minDistance = 1.25;
 
     flywheelSpeedMap.put(2.55, 2500.0);
     flywheelSpeedMap.put(1.8, 2300.0);

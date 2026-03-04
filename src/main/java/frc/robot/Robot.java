@@ -33,6 +33,7 @@ import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.Spindexer;
@@ -138,6 +139,7 @@ public class Robot extends TimedRobot {
     DriverStation.getAlliance().ifPresent(AllianceColor::setAllianceColor);
     RobotState.getInstance().updatePose();
     CommandScheduler.getInstance().run();
+    DynamicShootingCalculator.getInstance().clearLaunchingParameters();
   }
 
   @Override
@@ -209,7 +211,6 @@ public class Robot extends TimedRobot {
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
-    // turret.setDefaultCommand(turret.setAngle(() -> turret.getAngleTo(Field.getMyHub())));
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
   }
@@ -229,26 +230,12 @@ public class Robot extends TimedRobot {
                         .andThen(intake.stopRollerCommand())
                         .andThen(Commands.waitSeconds(2))));
 
-    // pilot
-    //     .rightTrigger()
-    //     .onTrue(dynamicShootingCommand.shoot())
-    //     .onFalse(dynamicShootingCommand.stop());
 
     pilot.rightTrigger().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
 
     pilot.b().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
 
     // pilot.a().onTrue(shootCommand.shoot()).onFalse(shootCommand.stop());
-
-    // pilot.x().onTrue(intakeArm.armOscillate()).onFalse(intakeArm.retract());
-
-    // pilot
-    //     .y()
-    //     .onTrue(hood.goToSetpointAngle(()-> Rotations.of(1.4)));
-
-    // pilot
-    //     .b()
-    //     .onTrue(hood.goToSetpointAngle(() -> Rotations.of(0)));
 
     // copilot controlls
     copilot

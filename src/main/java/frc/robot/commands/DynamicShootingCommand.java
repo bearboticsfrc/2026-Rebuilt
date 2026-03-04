@@ -1,51 +1,46 @@
 package frc.robot.commands;
 
-import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
-import frc.robot.subsystems.shooter.trajectory.ShotCalculator;
+import lombok.Getter;
 
-public class DynamicShootingCommand extends Command {
+public class DynamicShootingCommand{
 
   private final Hood hood;
   private final Flywheel flywheel;
   private final Spindexer spindexer;
-  private final ShotCalculator shotCalculator;
+  private final DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance(); 
 
-  @Logged public double[] shotCalculations;
-  @Logged public double flywheelRPM;
-  @Logged public double hoodAngle;
+  @Getter private volatile double flywheelSpeed = 0;
+  @Getter private volatile double hoodAngle = 0;
 
-  public DynamicShootingCommand(
-      Hood hood, Flywheel flywheel, Spindexer spindexer, CommandSwerveDrivetrain drivetrain) {
+  public DynamicShootingCommand(Hood hood, Flywheel flywheel, Spindexer spindexer) {
     this.hood = hood;
     this.flywheel = flywheel;
     this.spindexer = spindexer;
-    shotCalculator =
-        new ShotCalculator(
-            () -> RobotState.getInstance().turretPose, () -> drivetrain.getChassisSpeeds());
   }
 
   public Command shoot() {
-    return Commands.runOnce(() -> shotCalculator.ShootOnMoveSolver("Hub"))
-        .andThen(
-            new LogShootParamsCommand(shotCalculator::getFlywheelRPM, shotCalculator::getHoodAngle))
-        .andThen(
-            flywheel
-                .runAtSpeed(shotCalculator::getFlywheelRPM)
-                .alongWith(hood.goToSetpointAngle(shotCalculator::getHoodAngle))
+            return flywheel.runAtSpeed(()-> calculator.getParameters().flywheelVelocity())
+                .alongWith(hood.goToSetpointRotationsDouble(()-> calculator.getParameters().hoodAngle()))
                 .alongWith(
                     Commands.waitUntil(() -> flywheel.isAtTarget())
                         .andThen(spindexer.runSpindexer())
-                        .andThen(spindexer.runTower())));
+                        .andThen(spindexer.runTower()));
   }
 
   public Command stop() {
-    return flywheel.stopCommand().andThen(spindexer.stopMotorsCommand());
+    return flywheel
+        .stopCommand()
+        .alongWith(spindexer.stopMotorsCommand())
+        .alongWith(hood.stopCommand());
   }
 }
