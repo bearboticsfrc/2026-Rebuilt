@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -49,7 +50,7 @@ public class InterpolatedShootCommand {
   }
 
   private void calculateShootSolution() {
-    double distance = RobotState.getInstance().getDistanceToHub();
+    double distance = MathUtil.clamp(RobotState.getInstance().getDistanceToHub(),1.25,5.5);
     flywheelSpeed = flywheelSpeedMap.get(distance);
     hoodAngle = hoodAngleMap.get(distance);
   }
@@ -79,7 +80,6 @@ public class InterpolatedShootCommand {
     return flywheel
         .stopCommand()
         .alongWith(spindexer.stopMotorsCommand())
-        .alongWith(hood.stopCommand())
-        .andThen(Commands.runOnce(() -> solutionNotifier.stop()));
+        .alongWith(hood.stopCommand());
   }
 }
