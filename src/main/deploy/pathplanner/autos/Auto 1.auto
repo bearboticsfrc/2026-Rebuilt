@@ -5,21 +5,51 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "L- Outpost"
+            "name": "Shoot"
           }
         },
         {
-          "type": "path",
+          "type": "wait",
           "data": {
-            "pathName": "Outpost  - L Climb"
+            "waitTime": 3.0
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "LowerClimb"
+            "name": "StopShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "O- Outpost"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Outpost  - O Climb"
           }
         }
       ]
