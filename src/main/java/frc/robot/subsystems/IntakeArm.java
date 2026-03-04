@@ -18,7 +18,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -54,7 +53,6 @@ public class IntakeArm extends SubsystemBase {
   /* device status signals */
   private final StatusSignal<Angle> armPosition = arm.getPosition(false);
   private final StatusSignal<AngularVelocity> armVelocity = arm.getVelocity(false);
-  private final StatusSignal<Current> armTorqueCurrent = arm.getTorqueCurrent(false);
   private final StatusSignal<Voltage> armVoltage = arm.getMotorVoltage(false);
 
   private final StatusSignal<Double> armProfileVelocity = arm.getClosedLoopReferenceSlope(false);
@@ -78,6 +76,8 @@ public class IntakeArm extends SubsystemBase {
               motorInitialConfigs
                   .CurrentLimits
                   .clone()
+                  .withSupplyCurrentLimit(Amps.of(40))
+                  .withSupplyCurrentLimitEnable(true)
                   .withStatorCurrentLimit(Amps.of(120))
                   .withStatorCurrentLimitEnable(true))
           .withSlot0(
@@ -89,7 +89,7 @@ public class IntakeArm extends SubsystemBase {
                   .withKS(0)
                   .withKG(0)
                   .withGravityType(GravityTypeValue.Arm_Cosine)
-                  .withGravityArmPositionOffset(Degrees.of(20)))
+                  .withGravityArmPositionOffset(Degrees.of(0)))
           .withFeedback(
               motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(ARM_GEAR_RATIO))
           .withMotionMagic(
@@ -163,7 +163,7 @@ public class IntakeArm extends SubsystemBase {
   }
 
   @Logged
-  public double getProvileVelocityRPS() {
+  public double getProfileVelocityRPS() {
     return armProfileVelocity.getValue();
   }
 
@@ -213,7 +213,6 @@ public class IntakeArm extends SubsystemBase {
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(
-        armPosition, armVelocity, armTorqueCurrent, armVoltage, armProfileVelocity);
+    BaseStatusSignal.refreshAll(armPosition, armVelocity, armVoltage, armProfileVelocity);
   }
 }
