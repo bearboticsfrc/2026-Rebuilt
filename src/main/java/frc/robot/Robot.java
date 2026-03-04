@@ -265,7 +265,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                     driveFacingAngle
                         .withVelocityX(-pilot.getLeftY() * MaxSpeed)
                         .withVelocityY(-pilot.getLeftX() * MaxSpeed)
-                        .withHeadingPID(18, 0, .2)
+                        .withHeadingPID(18, 0, .1)
                         .withTargetDirection(
                             DynamicShootingCalculator.getInstance()
                                 .getParameters()
