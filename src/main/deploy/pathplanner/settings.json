@@ -5,8 +5,9 @@
   "pathFolders": [
     "D - Depot - Climb",
     "D Bump Neutral",
-    "O Bump Neutral",
-    "O - Outpost - Climb"
+    "Simple Paths",
+    "O - Outpost - Climb",
+    "O Bump Neutral"
   ],
   "autoFolders": [],
   "defaultMaxVel": 2.5,
