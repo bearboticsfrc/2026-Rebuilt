@@ -147,14 +147,13 @@ public class Robot extends TimedRobot {
     m_robotContainer.robotInit();
 
     // creating named commands for pathplanner auto builder
-    NamedCommands.registerCommand(
-        "Intake", new ScheduleCommand(intake.runRoller().andThen(intakeArm.extend())));
-    NamedCommands.registerCommand(
-        "StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
+    NamedCommands.registerCommand("Intake", new ScheduleCommand(intake.runRoller().andThen(intakeArm.extend())));
+    NamedCommands.registerCommand("StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
     NamedCommands.registerCommand("Shoot", (shootCommand.shoot()));
     NamedCommands.registerCommand("StopShoot", (shootCommand.stop()));
     NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
     NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
+  }
   }
 
   @Override
