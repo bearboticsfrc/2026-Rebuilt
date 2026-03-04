@@ -10,17 +10,24 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
+import bearlib.fms.AllianceReadyListener;
 import bearlib.util.TunableNumber;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -29,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.InterpolatedShootCommand;
+import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
@@ -41,10 +49,12 @@ import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.turret.Turret;
 
-public class Robot extends TimedRobot {
+public class Robot extends TimedRobot implements AllianceReadyListener {
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
 
   private Command m_autonomousCommand;
+
+  private final SendableChooser<Command> autoChooser;
 
   // @Logged(importance = Importance.CRITICAL)
   private final RobotContainer m_robotContainer;
@@ -107,12 +117,17 @@ public class Robot extends TimedRobot {
 
   public Robot() {
     m_robotContainer = new RobotContainer();
+    autoChooser = AutoBuilder.buildAutoChooser("SimpleAuto");
+    SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();
     configureBindings();
     configureDefaultCommands();
 
-    DriverStation.silenceJoystickConnectionWarning(true);
+    CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
+    AllianceColor.addListener(this);
+
+    DriverStation.silenceJoystickConnectionWarning(false);
   }
 
   private boolean getTuningMode() {
@@ -162,11 +177,16 @@ public class Robot extends TimedRobot {
     m_robotContainer.autonomousInit();
     CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+    m_autonomousCommand = getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(m_autonomousCommand);
     }
+  }
+
+  public Command getAutonomousCommand() {
+    /* Run the path selected from the auto chooser */
+    return autoChooser.getSelected();
   }
 
   @Override
@@ -264,5 +284,16 @@ public class Robot extends TimedRobot {
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
     copilot.circle().onTrue(turret.setAngle(Rotations.of(-.15)));
     copilot.square().onTrue(turret.setAngle(Rotations.of(.15)));
+  }
+
+  private boolean initialPoseSet = false;
+
+  @Override
+  public void updateAlliance(Alliance alliance) {
+    if (!initialPoseSet) {
+      drivetrain.resetPose(
+          AllianceFlipUtil.apply(((PathPlannerAuto) autoChooser.getSelected()).getStartingPose()));
+      initialPoseSet = true;
+    }
   }
 }
