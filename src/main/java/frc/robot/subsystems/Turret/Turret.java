@@ -7,6 +7,7 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -32,7 +33,8 @@ public class Turret extends SubsystemBase implements NTSendable {
   private final TalonFX motor = new TalonFX(22, canivore);
 
   // MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC = new MotionMagicTorqueCurrentFOC(0);
-  MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
+  private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
+  private PositionVoltage positionHold = new PositionVoltage(0).withSlot(1);
 
   /* Turret config values */
   @Getter private double currentLimit = 44;
@@ -63,8 +65,8 @@ public class Turret extends SubsystemBase implements NTSendable {
   // }
 
   // set these small to start
-  @Getter public Angle minRotations = Rotations.of(-.25);
-  @Getter public Angle maxRotations = Rotations.of(.25);
+  @Getter public Angle minRotations = Rotations.of(-.3);
+  @Getter public Angle maxRotations = Rotations.of(.3);
 
   public Turret() {
     super("Turret");
@@ -79,11 +81,17 @@ public class Turret extends SubsystemBase implements NTSendable {
         35; // 23.221; //   72 for 5 degrees, 180 for 2 degrees, 360 for 1 degrees.  Increase D
     // with
     // increase in P
-    config.Slot0.kD = 2; // .8981; //   start with d = p / 100 and increase until oscillation stops
+    config.Slot0.kD = 1; // .8981; //   start with d = p / 100 and increase until oscillation stops
 
     config.Slot0.kA = .077265;
-    config.Slot0.kS = .8; // start with .4; tune up if mechanism stalls at end of moves
-    config.Slot0.kV = 0.54; // 2.3767;  ( 0.124 x 4.34 = .54  V/mechanism-RPS )
+    config.Slot0.kS = 1.6; // .8; // start with .4; tune up if mechanism stalls at end of moves
+    config.Slot0.kV = 0.54; // ( 0.124 x 4.34 = .54  V/mechanism-RPS )
+
+    config.Slot1.kP = 150;
+    config.Slot1.kD = 12;
+    config.Slot1.kA = .077265;
+    config.Slot1.kS = 1.6;
+    config.Slot1.kV = 0.54;
 
     var motionMagicConfigs = config.MotionMagic;
     motionMagicConfigs.MotionMagicCruiseVelocity = 1.0; // Target cruise velocity of 80 rps
@@ -94,6 +102,8 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.Feedback.RotorToSensorRatio = 1.0;
     config.Feedback.SensorToMechanismRatio = gearRatio;
 
+    config.CurrentLimits.SupplyCurrentLimit = 60;
+    config.CurrentLimits.SupplyCurrentLimitEnable = true;
     config.CurrentLimits.StatorCurrentLimit = statorLimit;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
 
@@ -101,9 +111,9 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.TorqueCurrent.PeakReverseTorqueCurrent = -120;
 
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .26;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .35;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.26;
+    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.35;
 
     // motionMagicVoltage.withFeedForward(Volts.of(1));
 
@@ -257,19 +267,21 @@ public class Turret extends SubsystemBase implements NTSendable {
     return motor.getVelocity().getValueAsDouble();
   }
 
+  private void controlMotor(Angle angle) {
+    double errorDeg = Math.abs(motor.getPosition().getValue().minus(angle).in(Degrees));
+    if (errorDeg > 2.0) {
+      motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle)));
+    } else {
+      motor.setControl(positionHold.withPosition(angle));
+    }
+  }
+
   public Command setAngle(Angle angle) {
-    return Commands.run(
-            () -> motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle))),
-            this)
-        .withName(this.getName() + " SetAngle");
+    return Commands.run(() -> controlMotor(angle), this).withName(this.getName() + " SetAngle");
   }
 
   public Command setAngle(Supplier<Angle> angle) {
-    return Commands.run(
-            () ->
-                motor.setControl(
-                    motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle.get()))),
-            this)
+    return Commands.run(() -> controlMotor(angle.get()), this)
         .withName(this.getName() + " SetAngleSupplier");
   }
 

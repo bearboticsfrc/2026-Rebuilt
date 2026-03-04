@@ -115,7 +115,7 @@ public class DynamicShootingCalculator {
 
     double lookaheadTurretToTargetDistance = turretToHub;
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 3; i++) {
       timeOfFlight = timeOfFlightMap.get(lookaheadTurretToTargetDistance);
       double offsetX = turretVelocityX * timeOfFlight;
       double offsetY = turretVelocityY * timeOfFlight;

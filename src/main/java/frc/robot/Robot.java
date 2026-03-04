@@ -262,7 +262,7 @@ public class Robot extends TimedRobot {
     copilot.povRight().onTrue(climber.calibrateZero());
 
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
-    copilot.circle().onTrue(turret.setAngle(Rotations.of(-.20)));
-    copilot.square().onTrue(turret.setAngle(Rotations.of(.20)));
+    copilot.circle().onTrue(turret.setAngle(Rotations.of(-.25)));
+    copilot.square().onTrue(turret.setAngle(Rotations.of(.25)));
   }
 }
