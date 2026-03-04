@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.6158059914407983,
-        "y": 6.3963052781740375
+        "x": 2.5887275854580265,
+        "y": 6.618803674777314
       },
       "isLocked": false,
       "linkedName": "D Start"
     },
     {
       "anchor": {
-        "x": 1.1518602345820843,
-        "y": 5.932143290273289
+        "x": 0.9984736091298143,
+        "y": 5.982268188302426
       },
       "prevControl": {
-        "x": 0.6839076738499286,
-        "y": 5.809317467117919
+        "x": 0.5305210483976586,
+        "y": 5.859442365147055
       },
       "nextControl": null,
       "isLocked": false,
@@ -53,7 +53,7 @@
   "folder": "D - Depot - Climb",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -179.72285663248078
   },
   "useDefaultConstraints": true
 }
