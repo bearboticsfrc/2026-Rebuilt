@@ -173,7 +173,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void autonomousInit() {
-  
+
     CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
     m_autonomousCommand = getAutonomousCommand();
@@ -195,8 +195,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
-
-  
   }
 
   @Override
@@ -205,9 +203,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   }
 
   @Override
-  public void disabledPeriodic() {
-  
-  }
+  public void disabledPeriodic() {}
 
   @Logged
   public double getMatchTime() {

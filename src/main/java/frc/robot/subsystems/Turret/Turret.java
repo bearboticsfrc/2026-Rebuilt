@@ -40,7 +40,7 @@ public class Turret extends SubsystemBase implements NTSendable {
   @Getter private double currentLimit = 44;
   @Getter private double torqueCurrentLimit = 400;
 
-  @Getter private double gearRatio = 4.35;
+  @Getter private double gearRatio = 10.44; //  4.35;
 
   @Getter private double statorLimit = 200;
 

@@ -20,7 +20,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
 import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -50,6 +52,11 @@ public class Climber extends SubsystemBase {
       this.targetDist = target;
     }
   }
+
+  private final int SENSOR_PORT = 0;
+
+  @Logged(name = "Climber Sensor", importance = Importance.CRITICAL)
+  private final DigitalInput sensor = new DigitalInput(SENSOR_PORT);
 
   private static final int kNumConfigAttempts = 2;
 
@@ -204,6 +211,14 @@ public class Climber extends SubsystemBase {
     follower.getDeviceTemp().setUpdateFrequency(4);
 
     follower.optimizeBusUtilization();
+  }
+
+  /**
+   * @return true if the coral is blocking the coral intake sensor.
+   */
+  @Logged(name = "Climber Blocked", importance = Importance.CRITICAL)
+  public boolean climberBlocked() {
+    return !sensor.get();
   }
 
   /**
