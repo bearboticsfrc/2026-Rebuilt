@@ -50,7 +50,7 @@ public class InterpolatedShootCommand {
   }
 
   private void calculateShootSolution() {
-    double distance = MathUtil.clamp(RobotState.getInstance().getDistanceToHub(), 1.25, 5.5);
+    double distance = MathUtil.clamp(RobotState.getInstance().getDistanceToHub(),1.25,5.5);
     flywheelSpeed = flywheelSpeedMap.get(distance);
     hoodAngle = hoodAngleMap.get(distance);
   }
