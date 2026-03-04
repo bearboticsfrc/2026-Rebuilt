@@ -4,7 +4,7 @@
   "holonomicMode": true,
   "pathFolders": [
     "D - Depot - Climb",
-    "O - Outpost -Climb"
+    "O - Outpost - Climb"
   ],
   "autoFolders": [],
   "defaultMaxVel": 1.0,

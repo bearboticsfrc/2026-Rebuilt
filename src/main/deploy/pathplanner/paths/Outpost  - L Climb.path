@@ -50,7 +50,7 @@
     "rotation": -90.0
   },
   "reversed": false,
-  "folder": "O - Outpost -Climb",
+  "folder": "O - Outpost - Climb",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0
