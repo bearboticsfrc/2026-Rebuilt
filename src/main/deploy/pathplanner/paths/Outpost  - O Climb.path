@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.4291726105563489,
-        "y": 0.71623395149786
+        "x": 0.46459696756314073,
+        "y": 0.6550843633672776
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.241096066016242,
-        "y": 0.8332546709603563
+        "x": 0.6655692874215456,
+        "y": 0.45028780819547815
       },
       "isLocked": false,
       "linkedName": "Outpost"
     },
     {
       "anchor": {
-        "x": 1.257,
-        "y": 2.877
+        "x": 1.169339432709385,
+        "y": 2.9152317671697756
       },
       "prevControl": {
-        "x": 1.257,
-        "y": 1.8418264118604601
+        "x": 0.37241679075178336,
+        "y": 1.4626171522549891
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,7 +30,7 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.7473010795681664,
+      "waypointRelativePos": 0.8543071546052634,
       "rotationDegrees": -90.0
     }
   ],
@@ -47,10 +47,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -87.03643744412881
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "O - Outpost -Climb",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

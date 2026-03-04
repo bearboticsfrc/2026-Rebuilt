@@ -3,32 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.593403518264358,
-        "y": 1.4228996648015197
+        "x": 1.1518602345820843,
+        "y": 5.932143290273289
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.3397976201670514,
-        "y": 1.3224636347562304
+        "x": 1.397295419639251,
+        "y": 5.986111260397376
       },
       "isLocked": false,
-      "linkedName": "O Start"
+      "linkedName": "Depot"
     },
     {
       "anchor": {
-        "x": 0.46459696756314073,
-        "y": 0.6550843633672776
+        "x": 0.9323195168455378,
+        "y": 4.605228409147124
       },
       "prevControl": {
-        "x": 2.1411924961721085,
-        "y": 1.1886628870925287
+        "x": 0.7985583395425797,
+        "y": 4.186866733836405
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": null
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.66,
+      "rotationDegrees": -90.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": "O - Outpost -Climb",
+  "folder": "D - Depot - Climb",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }
