@@ -247,7 +247,7 @@ public class Robot extends TimedRobot {
                         .withVelocityX(-pilot.getLeftY() * MaxSpeed)
                         .withVelocityY(-pilot.getLeftX() * MaxSpeed)
                         .withHeadingPID(18, 0, .1)
-                        .withTargetDirection(RobotState.getInstance().getAngleToHub())));
+                        .withTargetDirection(DynamicShootingCalculator.getInstance().getParameters().turretAngle())));
 
     copilot.povUp().onTrue(climber.raise());
     copilot.povDown().onTrue(climber.lower());
