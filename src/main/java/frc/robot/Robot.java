@@ -58,7 +58,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private final SendableChooser<Command> autoChooser;
 
   // @Logged(importance = Importance.CRITICAL)
-  private final RobotContainer m_robotContainer;
 
   private final CommandXboxController pilot = new CommandXboxController(0);
 
@@ -118,7 +117,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private final Telemetry telemetry = new Telemetry(MaxSpeed);
 
   public Robot() {
-    m_robotContainer = new RobotContainer();
     autoChooser = AutoBuilder.buildAutoChooser("SimpleAuto");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
@@ -161,7 +159,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void robotInit() {
-    m_robotContainer.robotInit();
 
     // named commands for autonomous
     NamedCommands.registerCommand(
@@ -176,7 +173,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void autonomousInit() {
-    m_robotContainer.autonomousInit();
+  
     CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
     m_autonomousCommand = getAutonomousCommand();
@@ -199,7 +196,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
       m_autonomousCommand.cancel();
     }
 
-    m_robotContainer.teleopInit();
+  
   }
 
   @Override
@@ -209,7 +206,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void disabledPeriodic() {
-    m_robotContainer.disabledPeriodic();
+  
   }
 
   @Logged
