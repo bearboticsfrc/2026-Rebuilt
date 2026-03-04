@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.466616537395433,
-        "y": 6.609122995487778
+        "x": 2.6158059914407983,
+        "y": 6.3963052781740375
       },
       "isLocked": false,
       "linkedName": "D Start"
@@ -28,7 +28,12 @@
       "linkedName": "Depot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.8480607756897179,
+      "rotationDegrees": 180.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],

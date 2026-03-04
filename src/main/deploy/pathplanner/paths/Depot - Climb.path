@@ -16,12 +16,44 @@
     },
     {
       "anchor": {
-        "x": 0.9323195168455378,
-        "y": 4.605228409147124
+        "x": 2.66756062767475,
+        "y": 5.115378031383738
       },
       "prevControl": {
-        "x": 0.7985583395425797,
-        "y": 4.186866733836405
+        "x": 2.6416833095577745,
+        "y": 5.619985734664765
+      },
+      "nextControl": {
+        "x": 2.690637450205447,
+        "y": 4.665379992035143
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.904179743223965,
+        "y": 4.688402282453637
+      },
+      "prevControl": {
+        "x": 2.341966863207489,
+        "y": 4.676803356997938
+      },
+      "nextControl": {
+        "x": 1.4663926232404412,
+        "y": 4.700001207909336
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.8173323823109842,
+        "y": 4.688402282453637
+      },
+      "prevControl": {
+        "x": 1.4143179436394213,
+        "y": 4.688402282453637
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,8 +62,8 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.66,
-      "rotationDegrees": -90.0
+      "waypointRelativePos": 1.7189124350260234,
+      "rotationDegrees": 90.0
     }
   ],
   "constraintZones": [],
@@ -47,7 +79,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -90.0
+    "rotation": 93.13635836833261
   },
   "reversed": false,
   "folder": "D - Depot - Climb",
