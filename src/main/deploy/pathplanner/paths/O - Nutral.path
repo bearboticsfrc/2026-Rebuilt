@@ -48,12 +48,12 @@
     },
     {
       "anchor": {
-        "x": 8.244122681883024,
-        "y": 5.490599144079885
+        "x": 8.27,
+        "y": 3.510984308131241
       },
       "prevControl": {
-        "x": 8.295877318116977,
-        "y": 4.85660485021398
+        "x": 8.321754636233953,
+        "y": 2.8769900142653357
       },
       "nextControl": null,
       "isLocked": false,
@@ -63,7 +63,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 2.009448035803058,
-      "rotationDegrees": 80.21573697738836
+      "rotationDegrees": 80.216
     }
   ],
   "constraintZones": [],
@@ -78,8 +78,8 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -87.61405596961119
+    "velocity": 0.0,
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "O - Nutral - Pass",
