@@ -50,9 +50,16 @@
     }
   ],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Intake",
+      "waypointRelativePos": 0.3761786600496344,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
-    "maxVelocity": 2.5,
+    "maxVelocity": 1.5,
     "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -69,5 +76,5 @@
     "velocity": 0,
     "rotation": -179.72285663248078
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
