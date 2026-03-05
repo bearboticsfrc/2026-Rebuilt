@@ -278,6 +278,10 @@ public class Turret extends SubsystemBase implements NTSendable {
     return motor.getVelocity().getValueAsDouble();
   }
 
+  public Command stop() {
+    return Commands.runOnce(() -> motor.stopMotor());
+  }
+
   private void controlMotor(Angle angle) {
     // double errorDeg = Math.abs(motor.getPosition().getValue().minus(angle).in(Degrees));
     // if (errorDeg > 2.0) {

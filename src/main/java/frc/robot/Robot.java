@@ -119,6 +119,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private final Telemetry telemetry = new Telemetry(MaxSpeed);
 
   public Robot() {
+    registerPathplannerCommands();
+
     autoChooser = AutoBuilder.buildAutoChooser("SimpleAuto");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
@@ -160,17 +162,24 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   }
 
   @Override
-  public void robotInit() {
+  public void robotInit() {}
 
+  public void registerPathplannerCommands() {
     // named commands for autonomous
     NamedCommands.registerCommand(
         "Intake", new ScheduleCommand(intake.runRoller().andThen(intakeArm.extend())));
     NamedCommands.registerCommand(
         "StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
-    NamedCommands.registerCommand("Shoot", (interpolatedShootCommand.shoot()));
-    NamedCommands.registerCommand("StopShoot", (interpolatedShootCommand.stop()));
+    NamedCommands.registerCommand(
+        "Shoot", new ScheduleCommand(getTurretCommand().alongWith(dynamicShootingCommand.shoot())));
+    NamedCommands.registerCommand(
+        "StopShoot", new ScheduleCommand(turret.stop().alongWith(dynamicShootingCommand.stop())));
     NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
     NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
+  }
+
+  private Command getTurretCommand() {
+    return turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure());
   }
 
   @Override
