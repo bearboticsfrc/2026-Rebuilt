@@ -85,8 +85,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
 
+  //for shot tuning
   private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
-
   private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
 
   private final InterpolatedShootCommand interpolatedShootCommand =
@@ -97,19 +97,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+
   private double MaxAngularRate =
       RotationsPerSecond.of(0.75)
           .in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
   private final SwerveRequest.FieldCentric drive =
       new SwerveRequest.FieldCentric()
-          .withDeadband(MaxSpeed * 0.1)
-          .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-          .withDriveRequestType(
-              DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-
-  private final SwerveRequest.FieldCentricFacingAngle driveFacingAngle =
-      new SwerveRequest.FieldCentricFacingAngle()
           .withDeadband(MaxSpeed * 0.1)
           .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
           .withDriveRequestType(
@@ -169,19 +163,24 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     // named commands for autonomous
     NamedCommands.registerCommand(
         "Intake", new ScheduleCommand(intake.runRoller().andThen(intakeArm.extend())));
+
     NamedCommands.registerCommand(
         "StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
+
     NamedCommands.registerCommand(
         "Shoot",
         new ScheduleCommand(
             getTurretCommand().alongWith(dynamicShootingCommand.shoot().withTimeout(5))));
+
     NamedCommands.registerCommand(
         "StopShoot", new ScheduleCommand(turret.stop().alongWith(dynamicShootingCommand.stop())));
 
     NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
+
     NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
   }
 
+  // set turret
   private Command getTurretCommand() {
     return turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure());
   }
@@ -243,7 +242,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
 
-    //turret.setAngle(()-> calculator.getParameters().turretAngle().getMeasure());
+    // turret.setAngle(()-> calculator.getParameters().turretAngle().getMeasure());
   }
 
   public void configureBindings() {
