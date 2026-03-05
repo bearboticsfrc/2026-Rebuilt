@@ -4,10 +4,8 @@
   "holonomicMode": true,
   "pathFolders": [
     "D - Depot - Climb",
-    "D Bump Neutral",
-    "Simple Paths",
     "O - Outpost - Climb",
-    "O Bump Neutral"
+    "Simple Paths"
   ],
   "autoFolders": [],
   "defaultMaxVel": 2.5,

@@ -16,28 +16,12 @@
     },
     {
       "anchor": {
-        "x": 1.7554175654613804,
-        "y": 5.275527973522539
-      },
-      "prevControl": {
-        "x": 1.7352941104791744,
-        "y": 5.524716750476035
-      },
-      "nextControl": {
-        "x": 1.7755410204435864,
-        "y": 5.026339196569044
-      },
-      "isLocked": false,
-      "linkedName": null
-    },
-    {
-      "anchor": {
         "x": 1.1589101955645629,
         "y": 4.6095039590862426
       },
       "prevControl": {
-        "x": 1.7581895368946467,
-        "y": 5.213958582783851
+        "x": 2.1407444444444446,
+        "y": 5.009444444444443
       },
       "nextControl": null,
       "isLocked": false,
@@ -46,15 +30,15 @@
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1.35,
+      "waypointRelativePos": 0.7,
       "rotationDegrees": 90.0
     }
   ],
   "constraintZones": [
     {
       "name": "Slow Climb",
-      "minWaypointRelativePos": 1.7781872923588042,
-      "maxWaypointRelativePos": 2.0,
+      "minWaypointRelativePos": 0.9,
+      "maxWaypointRelativePos": 1.0,
       "constraints": {
         "maxVelocity": 0.5,
         "maxAcceleration": 1.5,
