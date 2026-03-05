@@ -16,6 +16,7 @@ public class DynamicShootingCalculator {
   private Rotation2d lastTurretAngle = new Rotation2d();
   private Rotation2d turretAngle = new Rotation2d();
   private double hoodAngle = 0;
+  private double flywheelVelocity = 0;
   private double turretVelocity = 0;
 
   public static DynamicShootingCalculator getInstance() {
@@ -100,13 +101,13 @@ public class DynamicShootingCalculator {
     double turretVelocityX =
         robotVelocity.vxMetersPerSecond
             + robotVelocity.omegaRadiansPerSecond
-                * (RobotState.getInstance().turretToRobot.getY() * Math.cos(robotAngle)
-                    - RobotState.getInstance().turretToRobot.getX() * Math.sin(robotAngle));
+                * (RobotState.getInstance().turretToRobot.getY() * Math.sin(robotAngle)
+                    - RobotState.getInstance().turretToRobot.getX() * Math.cos(robotAngle));
     double turretVelocityY =
         robotVelocity.vyMetersPerSecond
             + robotVelocity.omegaRadiansPerSecond
-                * (RobotState.getInstance().turretToRobot.getX() * Math.cos(robotAngle)
-                    - RobotState.getInstance().turretToRobot.getY() * Math.sin(robotAngle));
+                * (RobotState.getInstance().turretToRobot.getX() * Math.sin(robotAngle)
+                    - RobotState.getInstance().turretToRobot.getY() * Math.cos(robotAngle));
 
     // Account for imparted velocity by robot (turret) to offset
     double timeOfFlight;
@@ -130,6 +131,7 @@ public class DynamicShootingCalculator {
     // Calculate parameters accounted for imparted velocity
     turretAngle = Field.getMyHub().minus(lookaheadPose.getTranslation()).getAngle();
     hoodAngle = (hoodAngleMap.get(lookaheadTurretToTargetDistance));
+    flywheelVelocity = flywheelSpeedMap.get(lookaheadTurretToTargetDistance);
     turretVelocity =
         turretAngleFilter.calculate(turretAngle.minus(lastTurretAngle).getRadians() / 0.02);
     lastTurretAngle = turretAngle;
@@ -139,8 +141,8 @@ public class DynamicShootingCalculator {
                 && lookaheadTurretToTargetDistance <= maxDistance,
             turretAngle,
             turretVelocity,
-            hoodAngleMap.get(lookaheadTurretToTargetDistance),
-            flywheelSpeedMap.get(lookaheadTurretToTargetDistance));
+            hoodAngle,
+            flywheelVelocity);
 
     return latestParameters;
   }
