@@ -15,7 +15,7 @@ public class Field {
       new Pose2d(new Translation2d(0.42, 0.7), new Rotation2d(Degrees.of(180)));
 
   public static final Translation2d BLUE_LEFT = new Translation2d(1.2, 7.0);
-  public static final Translation2d BLUE_RIGHT = new Translation2d(1.2, 0.7);
+  public static final Translation2d BLUE_RIGHT = new Translation2d(1.2, 1);
   public static final Translation2d BLUE_ALLIANCE_LINE = new Translation2d(4, 4);
 
   public static Pose2d getMyOutputPose() {
