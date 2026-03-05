@@ -254,7 +254,7 @@ public class Robot extends TimedRobot {
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
 
-    // turret.setAngle(()-> calculator.getParameters().turretAngle().getMeasure());
+    turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure());
   }
 
   public void configureBindings() {
@@ -296,12 +296,10 @@ public class Robot extends TimedRobot {
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
     copilot.circle().whileTrue(autoClimbCommand.climb());
 
-    copilot
-        .L2()
-        .whileTrue(turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
-
     copilot.L1().onTrue(turret.setAngle(Rotations.of(-.25)));
 
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
+
+    copilot.L2().toggleOnTrue(Commands.idle(turret));
   }
 }
