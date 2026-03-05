@@ -85,7 +85,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
 
-  //for shot tuning
+  // for shot tuning
   private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
   private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
 

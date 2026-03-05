@@ -53,7 +53,7 @@ public class DynamicShootingCalculator {
       new InterpolatingDoubleTreeMap();
 
   static {
-    maxDistance = 5.5;
+    maxDistance = 9;
     minDistance = 1.25;
 
     // angles for shooting
