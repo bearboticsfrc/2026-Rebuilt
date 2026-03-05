@@ -117,9 +117,9 @@ public class DynamicShootingCalculator {
 
     double turretVelocityX =
         robotVelocity.vxMetersPerSecond
-            + robotVelocity.omegaRadiansPerSecond
-                * (RobotState.getInstance().turretToRobot.getY() * Math.cos(robotAngle)
-                    - RobotState.getInstance().turretToRobot.getX() * Math.sin(robotAngle));
+            - robotVelocity.omegaRadiansPerSecond
+                * (RobotState.getInstance().turretToRobot.getX() * Math.sin(robotAngle)
+                    + RobotState.getInstance().turretToRobot.getY() * Math.cos(robotAngle));
     double turretVelocityY =
         robotVelocity.vyMetersPerSecond
             + robotVelocity.omegaRadiansPerSecond
@@ -149,7 +149,7 @@ public class DynamicShootingCalculator {
     turretAngle = Field.getMyHub().minus(lookaheadPose.getTranslation()).getAngle();
     turretAngle =
         turretAngle
-            .minus(RobotState.getInstance().robotPose.getRotation())
+            .minus(lookaheadPose.getRotation())
             .minus(new Rotation2d(Degrees.of(180)));
 
     hoodAngle = (hoodAngleMap.get(lookaheadTurretToTargetDistance));
