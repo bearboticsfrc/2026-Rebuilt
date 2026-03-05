@@ -84,6 +84,8 @@ public class Robot extends TimedRobot {
 
   @Logged private DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
 
+  @Logged private RobotState robotState = RobotState.getInstance();
+
   private Command introspectedAutoCommand;
 
   @Logged(name = "Auto Start Pose", importance = Importance.CRITICAL)
@@ -228,6 +230,7 @@ public class Robot extends TimedRobot {
       autoStartPose =
           AllianceFlipUtil.apply(((PathPlannerAuto) selectedAutoCommand).getStartingPose());
       introspectedAutoCommand = selectedAutoCommand;
+      drivetrain.resetPose(autoStartPose);
     }
   }
 
@@ -254,7 +257,8 @@ public class Robot extends TimedRobot {
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
 
-    turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure());
+    turret.setDefaultCommand(
+        turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
   }
 
   public void configureBindings() {

@@ -54,15 +54,15 @@ public class RobotState {
 
   @Logged
   public boolean isInAllianceZone() {
-    if (isBlueAlliance() && robotPose.getY() < Field.getMyAllianceLine().getY()) return true;
-    else if (isRedAlliance() && robotPose.getY() > Field.getMyAllianceLine().getY()) return true;
+    if (isBlueAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
+    else if (isRedAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
     else return false;
   }
 
   @Logged
   public boolean isInNeutralZone() {
-    if (isBlueAlliance() && robotPose.getY() > Field.getMyAllianceLine().getY()) return true;
-    else if (isRedAlliance() && robotPose.getY() < Field.getMyAllianceLine().getY()) return true;
+    if (isBlueAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
+    else if (isRedAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
     else return false;
   }
 
@@ -70,10 +70,10 @@ public class RobotState {
   public boolean isLeftNeutralZone() {
     if (isBlueAlliance()
         && isInNeutralZone()
-        && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
+        && robotPose.getY() > Field.getMyAllianceLine().getY()) return true;
     else if (isRedAlliance()
         && isInNeutralZone()
-        && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
+        && robotPose.getY() < Field.getMyAllianceLine().getY()) return true;
     else return false;
   }
 
@@ -81,10 +81,10 @@ public class RobotState {
   public boolean isRightNeutralZone() {
     if (isBlueAlliance()
         && isInNeutralZone()
-        && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
+        && robotPose.getY() < Field.getMyAllianceLine().getY()) return true;
     else if (isRedAlliance()
         && isInNeutralZone()
-        && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
+        && robotPose.getY() > Field.getMyAllianceLine().getY()) return true;
     else return false;
   }
 

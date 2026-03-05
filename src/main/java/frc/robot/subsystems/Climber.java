@@ -197,6 +197,10 @@ public class Climber extends SubsystemBase {
     return !sensor.get();
   }
 
+  public boolean isAtTop() {
+    return Math.abs(getPositionInches() - Setpoint.Top.targetDist.in(Inches)) < .5;
+  }
+
   /**
    * @return The Position of the climber
    */

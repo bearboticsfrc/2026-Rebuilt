@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import static edu.wpi.first.units.Units.Degrees;
-
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -102,8 +100,8 @@ public class DynamicShootingCalculator {
     Translation2d target;
 
     if (RobotState.getInstance().isInAllianceZone()) target = Field.getMyHub();
-    else if (RobotState.getInstance().isRightNeutralZone()) target = Field.getMyRight();
     else if (RobotState.getInstance().isLeftNeutralZone()) target = Field.getMyLeft();
+    else if (RobotState.getInstance().isRightNeutralZone()) target = Field.getMyRight();
     else target = Field.getMyHub();
 
     Pose2d turretPose = estimatedPose.transformBy(RobotState.getInstance().turretToRobot);
@@ -135,8 +133,8 @@ public class DynamicShootingCalculator {
 
     for (int i = 0; i < 3; i++) {
       timeOfFlight = timeOfFlightMap.get(lookaheadTurretToTargetDistance);
-      double offsetX = turretVelocityX * timeOfFlight;
-      double offsetY = turretVelocityY * timeOfFlight;
+      double offsetX = turretVelocityX * timeOfFlight / 4.0;
+      double offsetY = turretVelocityY * timeOfFlight / 4.0;
       lookaheadPose =
           new Pose2d(
               turretPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
@@ -147,7 +145,7 @@ public class DynamicShootingCalculator {
     // Calculate parameters accounted for imparted velocity
     turretAngle = target.minus(lookaheadPose.getTranslation()).getAngle();
     turretAngle =
-        turretAngle.minus(lookaheadPose.getRotation()).minus(new Rotation2d(Degrees.of(180)));
+        turretAngle.minus(lookaheadPose.getRotation()); // .minus(new Rotation2d(Degrees.of(180)));
 
     hoodAngle = (hoodAngleMap.get(lookaheadTurretToTargetDistance));
     flywheelVelocity = flywheelSpeedMap.get(lookaheadTurretToTargetDistance);
