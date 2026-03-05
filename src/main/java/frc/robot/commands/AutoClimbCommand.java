@@ -28,10 +28,10 @@ public class AutoClimbCommand extends Command {
   }
 
   public Command climb() {
-    return climber.raise().andThen(driveSideways()).andThen(climber.lower());
+    return climber.raise().andThen(driveToHook()).andThen(climber.lower());
   }
 
-  private Command driveSideways() {
+  private Command driveToHook() {
     // Use RobotCentric request for simple backwards movement
     SwerveRequest.RobotCentric driveLeft =
         new SwerveRequest.RobotCentric()
@@ -43,8 +43,8 @@ public class AutoClimbCommand extends Command {
 
     return drivetrain
         .runOnce(() -> drivetrain.setControl(driveLeft))
-        .until(() -> !climber.climberBlocked())
-        .withTimeout(.05)
+       // .until(() -> !climber.climberBlocked())
+        .withTimeout(DRIVE_LEFT_DURATION)
         .andThen(drivetrain.runOnce(() -> drivetrain.setControl(new SwerveRequest.Idle())))
         .andThen(drivetrain.runOnce(() -> drivetrain.setControl(driveBackwards)))
         .andThen(Commands.waitTime(DRIVE_BACKWARDS_DURATION))

@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.AutoClimbCommand;
 import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
@@ -49,6 +50,7 @@ import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.util.HubTracker;
 
 public class Robot extends TimedRobot implements AllianceReadyListener {
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
@@ -62,6 +64,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private final CommandXboxController pilot = new CommandXboxController(0);
 
   private final CommandPS5Controller copilot = new CommandPS5Controller(1);
+
+  @Logged private final HubTracker tracker = new HubTracker();
 
   @Logged private final Intake intake = new Intake();
 
@@ -112,6 +116,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
   private final Telemetry telemetry = new Telemetry(MaxSpeed);
+
+  private final AutoClimbCommand autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
 
   public Robot() {
     registerPathplannerCommands();
@@ -275,6 +281,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.povRight().onTrue(climber.calibrateZero());
 
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
+    copilot.circle().onTrue(autoClimbCommand.climb());
 
     copilot
         .L2()
