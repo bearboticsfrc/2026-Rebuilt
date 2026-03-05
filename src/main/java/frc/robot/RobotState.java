@@ -67,7 +67,7 @@ public class RobotState {
   }
 
   @Logged
-  public boolean isleftNeutralZone() {
+  public boolean isLeftNeutralZone() {
     if (isBlueAlliance()
         && isInNeutralZone()
         && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;

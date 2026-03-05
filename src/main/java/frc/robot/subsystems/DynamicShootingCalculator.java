@@ -56,12 +56,15 @@ public class DynamicShootingCalculator {
     maxDistance = 5.5;
     minDistance = 1.25;
 
+    // angles for shooting
     flywheelSpeedMap.put(2.55, 2500.0);
     flywheelSpeedMap.put(1.8, 2300.0);
     flywheelSpeedMap.put(3.5, 2700.0);
     flywheelSpeedMap.put(5.2, 3150.0);
     flywheelSpeedMap.put(4.0, 2800.0);
     flywheelSpeedMap.put(3.0, 2650.0);
+
+    // angles for passing
 
     hoodAngleMap.put(2.55, 0.2);
     hoodAngleMap.put(1.8, 0.1);
@@ -70,6 +73,9 @@ public class DynamicShootingCalculator {
     hoodAngleMap.put(4.0, 0.5);
     hoodAngleMap.put(3.0, 0.25);
 
+    // speeds for passing
+
+    // get better time of flights
     timeOfFlightMap.put(1.8, 0.95);
     timeOfFlightMap.put(4.0, 1.15);
   }
@@ -93,9 +99,16 @@ public class DynamicShootingCalculator {
                 robotRelativeVelocity.omegaRadiansPerSecond));
 
     // get distance to Hub
+    Translation2d target;
+
+    if (RobotState.getInstance().isInAllianceZone()) target = Field.getMyHub();
+    else if (RobotState.getInstance().isRightNeutralZone()) target = Field.getMyRight();
+    else if (RobotState.getInstance().isLeftNeutralZone()) target = Field.getMyLeft();
+    else target = Field.getMyHub();
+
     Pose2d turretPose = estimatedPose.transformBy(RobotState.getInstance().turretToRobot);
 
-    double turretToHub = Field.getMyHub().getDistance(turretPose.getTranslation());
+    double turretToTarget = target.getDistance(turretPose.getTranslation());
 
     // Calculate field relative turret velocity
     ChassisSpeeds robotVelocity = RobotState.getInstance().getFieldVelocity();
@@ -118,7 +131,7 @@ public class DynamicShootingCalculator {
 
     Pose2d lookaheadPose = turretPose;
 
-    double lookaheadTurretToTargetDistance = turretToHub;
+    double lookaheadTurretToTargetDistance = turretToTarget;
 
     for (int i = 0; i < 3; i++) {
       timeOfFlight = timeOfFlightMap.get(lookaheadTurretToTargetDistance);
