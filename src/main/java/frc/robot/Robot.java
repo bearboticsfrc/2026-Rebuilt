@@ -234,7 +234,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void configureBindings() {
 
     // pilot controlls
-
     pilot
         .leftTrigger()
         .onTrue(intake.runRoller().andThen(intakeArm.extend()))
@@ -246,24 +245,19 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                         .andThen(intake.stopRollerCommand())
                         .andThen(Commands.waitSeconds(2))));
 
-    // pilot
-    //     .rightTrigger()
     //     .onTrue(interpolatedShootCommand.shoot())
-    //     .onFalse(interpolatedShootCommand.stop());
-
     pilot
         .rightTrigger()
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
-    pilot.povDown().onTrue(Commands.run(() -> calculator.getParameters()));
-
     pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
 
     // copilot controlls
-
     copilot.povUp().onTrue(climber.raise());
+
     copilot.povDown().onTrue(climber.lower());
+
     copilot
         .povLeft()
         .onTrue(
@@ -271,11 +265,18 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                 () -> {
                   if (climber.getCurrentCommand() != null) climber.getCurrentCommand().cancel();
                 }));
+
     copilot.povRight().onTrue(climber.calibrateZero());
 
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
-    copilot.circle().onTrue(turret.setAngle(Rotations.of(-.35)));
-    copilot.square().onTrue(turret.setAngle(Rotations.of(.40)));
+
+    copilot
+        .L2()
+        .whileTrue(turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
+
+    copilot.L1().onTrue(turret.setAngle(Rotations.of(-.25)));
+
+    copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
   }
 
   private boolean initialPoseSet = false;
