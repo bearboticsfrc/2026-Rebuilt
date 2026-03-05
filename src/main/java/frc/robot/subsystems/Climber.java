@@ -49,7 +49,7 @@ public class Climber extends SubsystemBase {
     }
   }
 
-  private final int SENSOR_PORT = 0;
+  private static final int SENSOR_PORT = 0;
 
   @Logged(name = "Climber Sensor", importance = Importance.CRITICAL)
   private final DigitalInput sensor = new DigitalInput(SENSOR_PORT);
@@ -105,15 +105,7 @@ public class Climber extends SubsystemBase {
                   .CurrentLimits
                   .clone()
                   .withStatorCurrentLimit(Amps.of(120))
-                  .withStatorCurrentLimitEnable(true))
-          .withSoftwareLimitSwitch(
-              motorInitialConfigs
-                  .SoftwareLimitSwitch
-                  .clone()
-                  .withForwardSoftLimitThreshold(Setpoint.Top.target.in(Rotations))
-                  .withForwardSoftLimitEnable(true)
-                  .withReverseSoftLimitThreshold(0.0)
-                  .withReverseSoftLimitEnable(true));
+                  .withStatorCurrentLimitEnable(true));
 
   /** Configs for {@link #leader}. */
   private final TalonFXConfiguration leaderConfigs =
@@ -198,7 +190,7 @@ public class Climber extends SubsystemBase {
   }
 
   /**
-   * @return true if the coral is blocking the coral intake sensor.
+   * @return true if the tower rung is blocking the climber sensor.
    */
   @Logged(name = "Climber Blocked", importance = Importance.CRITICAL)
   public boolean climberBlocked() {
