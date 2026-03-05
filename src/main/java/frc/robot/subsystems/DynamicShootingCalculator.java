@@ -142,11 +142,11 @@ public class DynamicShootingCalculator {
               turretPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
               turretPose.getRotation());
       lookaheadTurretToTargetDistance =
-          Field.getMyHub().getDistance(lookaheadPose.getTranslation());
+          target.getDistance(lookaheadPose.getTranslation());
     }
 
     // Calculate parameters accounted for imparted velocity
-    turretAngle = Field.getMyHub().minus(lookaheadPose.getTranslation()).getAngle();
+    turretAngle = target.minus(lookaheadPose.getTranslation()).getAngle();
     turretAngle =
         turretAngle.minus(lookaheadPose.getRotation()).minus(new Rotation2d(Degrees.of(180)));
 
