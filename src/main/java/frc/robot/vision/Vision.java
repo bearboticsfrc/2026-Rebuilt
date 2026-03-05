@@ -1,6 +1,6 @@
 package frc.robot.vision;
 
-import static frc.robot.constants.VisionConstants.*;
+import static frc.robot.vision.VisionConstants.*;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
@@ -13,7 +13,6 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
-import frc.robot.constants.VisionConstants;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

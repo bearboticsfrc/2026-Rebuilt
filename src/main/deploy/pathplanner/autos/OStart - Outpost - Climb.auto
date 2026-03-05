@@ -13,6 +13,12 @@
         {
           "type": "named",
           "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "Shoot"
           }
         },
@@ -29,21 +35,9 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "RaiseClimb"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Outpost  - O Climb"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "LowerClimb"
           }
         }
       ]

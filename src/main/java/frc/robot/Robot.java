@@ -116,7 +116,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public Robot() {
     registerPathplannerCommands();
 
-    autoChooser = AutoBuilder.buildAutoChooser("SimpleAuto");
+    autoChooser = AutoBuilder.buildAutoChooser("OStart - Outpost - Climb");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();
@@ -166,9 +166,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     NamedCommands.registerCommand(
         "StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
     NamedCommands.registerCommand(
-        "Shoot", new ScheduleCommand(getTurretCommand().alongWith(dynamicShootingCommand.shoot())));
+        "Shoot",
+        new ScheduleCommand(
+            getTurretCommand().alongWith(dynamicShootingCommand.shoot().withTimeout(5))));
     NamedCommands.registerCommand(
         "StopShoot", new ScheduleCommand(turret.stop().alongWith(dynamicShootingCommand.stop())));
+
     NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
     NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
   }
@@ -179,7 +182,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void autonomousInit() {
-
+    CommandScheduler.getInstance().schedule(intakeArm.retract());
     CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
     m_autonomousCommand = getAutonomousCommand();
@@ -287,8 +290,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Override
   public void updateAlliance(Alliance alliance) {
     if (!initialPoseSet) {
-      drivetrain.resetPose(
-          AllianceFlipUtil.apply(((PathPlannerAuto) autoChooser.getSelected()).getStartingPose()));
+      Command firstAuto = autoChooser.getSelected();
+      System.out.println("FirstAuto: " + firstAuto.getName());
+      drivetrain.resetPose(AllianceFlipUtil.apply(((PathPlannerAuto) firstAuto).getStartingPose()));
       initialPoseSet = true;
     }
   }
