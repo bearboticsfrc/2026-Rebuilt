@@ -37,7 +37,7 @@
   "constraintZones": [
     {
       "name": "slow for climb",
-      "minWaypointRelativePos": 0.75,
+      "minWaypointRelativePos": 0.6541865656146176,
       "maxWaypointRelativePos": 1.0,
       "constraints": {
         "maxVelocity": 0.7,

@@ -20,8 +20,8 @@
         "y": 4.6095039590862426
       },
       "prevControl": {
-        "x": 2.1407444444444446,
-        "y": 5.009444444444443
+        "x": 1.6458294270833336,
+        "y": 5.209625361689815
       },
       "nextControl": null,
       "isLocked": false,
@@ -37,7 +37,7 @@
   "constraintZones": [
     {
       "name": "Slow Climb",
-      "minWaypointRelativePos": 0.9,
+      "minWaypointRelativePos": 0.8501868770764115,
       "maxWaypointRelativePos": 1.0,
       "constraints": {
         "maxVelocity": 0.5,
