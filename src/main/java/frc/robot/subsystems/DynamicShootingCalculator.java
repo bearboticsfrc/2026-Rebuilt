@@ -141,8 +141,7 @@ public class DynamicShootingCalculator {
           new Pose2d(
               turretPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
               turretPose.getRotation());
-      lookaheadTurretToTargetDistance =
-          target.getDistance(lookaheadPose.getTranslation());
+      lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
     }
 
     // Calculate parameters accounted for imparted velocity
