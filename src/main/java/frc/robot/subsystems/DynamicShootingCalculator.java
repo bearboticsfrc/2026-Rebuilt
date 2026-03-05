@@ -105,13 +105,13 @@ public class DynamicShootingCalculator {
     double turretVelocityX =
         robotVelocity.vxMetersPerSecond
             + robotVelocity.omegaRadiansPerSecond
-                * (RobotState.getInstance().turretToRobot.getY() * Math.sin(robotAngle)
-                    - RobotState.getInstance().turretToRobot.getX() * Math.cos(robotAngle));
+                * (RobotState.getInstance().turretToRobot.getY() * Math.cos(robotAngle)
+                    - RobotState.getInstance().turretToRobot.getX() * Math.sin(robotAngle));
     double turretVelocityY =
         robotVelocity.vyMetersPerSecond
             + robotVelocity.omegaRadiansPerSecond
-                * (RobotState.getInstance().turretToRobot.getX() * Math.sin(robotAngle)
-                    - RobotState.getInstance().turretToRobot.getY() * Math.cos(robotAngle));
+                * (RobotState.getInstance().turretToRobot.getX() * Math.cos(robotAngle)
+                    - RobotState.getInstance().turretToRobot.getY() * Math.sin(robotAngle));
 
     // Account for imparted velocity by robot (turret) to offset
     double timeOfFlight;

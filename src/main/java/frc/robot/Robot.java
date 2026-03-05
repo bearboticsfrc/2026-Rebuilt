@@ -81,11 +81,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
 
-  // private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
-
-  // private final DynamicShootingCommand dynamicShootingCommand =
-  //     new DynamicShootingCommand(hood, flywheel, spindexer, intake, drivetrain);
-
   private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
 
   private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
@@ -254,7 +249,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                         .andThen(intake.stopRollerCommand())
                         .andThen(Commands.waitSeconds(2))));
 
-    //     .onTrue(interpolatedShootCommand.shoot())
     pilot
         .rightTrigger()
         .onTrue(dynamicShootingCommand.shoot())
