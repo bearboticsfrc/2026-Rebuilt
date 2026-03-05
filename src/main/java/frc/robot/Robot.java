@@ -242,6 +242,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
             ));
 
     drivetrain.registerTelemetry(telemetry::telemeterize);
+
+    //turret.setAngle(()-> calculator.getParameters().turretAngle().getMeasure());
   }
 
   public void configureBindings() {
