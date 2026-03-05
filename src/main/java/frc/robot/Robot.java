@@ -79,6 +79,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final Climber climber = new Climber();
 
+  @Logged private DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
+
   // private final ShootCommand shootCommand = new ShootCommand(hood, flywheel, spindexer, intake);
 
   // private final DynamicShootingCommand dynamicShootingCommand =
@@ -254,22 +256,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
+    pilot.povDown().onTrue(Commands.run(() -> calculator.getParameters()));
+
     pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
 
     // copilot controlls
-    copilot
-        .L2()
-        .whileTrue(
-            drivetrain.applyRequest(
-                () ->
-                    driveFacingAngle
-                        .withVelocityX(-pilot.getLeftY() * MaxSpeed)
-                        .withVelocityY(-pilot.getLeftX() * MaxSpeed)
-                        .withHeadingPID(18, 0, .1)
-                        .withTargetDirection(
-                            DynamicShootingCalculator.getInstance()
-                                .getParameters()
-                                .turretAngle())));
 
     copilot.povUp().onTrue(climber.raise());
     copilot.povDown().onTrue(climber.lower());

@@ -134,6 +134,11 @@ public class DynamicShootingCalculator {
 
     // Calculate parameters accounted for imparted velocity
     turretAngle = Field.getMyHub().minus(lookaheadPose.getTranslation()).getAngle();
+    turretAngle =
+        turretAngle
+            .minus(RobotState.getInstance().robotPose.getRotation())
+            .minus(new Rotation2d(Degrees.of(180)));
+
     hoodAngle = (hoodAngleMap.get(lookaheadTurretToTargetDistance));
     flywheelVelocity = flywheelSpeedMap.get(lookaheadTurretToTargetDistance);
     turretVelocity =
@@ -143,9 +148,7 @@ public class DynamicShootingCalculator {
         new LaunchingParameters(
             lookaheadTurretToTargetDistance >= minDistance
                 && lookaheadTurretToTargetDistance <= maxDistance,
-            turretAngle
-                .minus(RobotState.getInstance().robotPose.getRotation())
-                .minus(new Rotation2d(Degrees.of(180))),
+            turretAngle,
             turretVelocity,
             hoodAngle,
             flywheelVelocity);
