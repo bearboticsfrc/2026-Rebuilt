@@ -22,6 +22,14 @@ public class AutoClimbCommand extends Command {
   private final CommandSwerveDrivetrain drivetrain;
   private final Climber climber;
 
+  // Use RobotCentric request for simple movement
+  SwerveRequest.RobotCentric driveLeft =
+      new SwerveRequest.RobotCentric()
+          .withVelocityY(DRIVE_LEFT_VELOCITY.in(MetersPerSecond)); // Postive Y is Left
+  SwerveRequest.RobotCentric driveBackwards =
+      new SwerveRequest.RobotCentric()
+          .withVelocityX(-DRIVE_BACKWARDS_VELOCITY.in(MetersPerSecond)); // Negative X is backwards
+
   public AutoClimbCommand(CommandSwerveDrivetrain drivetrain, Climber climber) {
     this.drivetrain = drivetrain;
     this.climber = climber;
@@ -32,22 +40,33 @@ public class AutoClimbCommand extends Command {
   }
 
   private Command driveToHook() {
-    // Use RobotCentric request for simple backwards movement
-    SwerveRequest.RobotCentric driveLeft =
-        new SwerveRequest.RobotCentric()
-            .withVelocityY(DRIVE_LEFT_VELOCITY.in(MetersPerSecond)); // Postive Y is Left
-    SwerveRequest.RobotCentric driveBackwards =
-        new SwerveRequest.RobotCentric()
-            .withVelocityX(
-                -DRIVE_BACKWARDS_VELOCITY.in(MetersPerSecond)); // Negative X is backwards
 
-    return drivetrain
-        .runOnce(() -> drivetrain.setControl(driveLeft))
-       // .until(() -> !climber.climberBlocked())
-        .withTimeout(DRIVE_LEFT_DURATION)
-        .andThen(drivetrain.runOnce(() -> drivetrain.setControl(new SwerveRequest.Idle())))
+    return Commands.runOnce(() -> System.out.println("starting climb"))
+        .andThen(
+            Commands.either(
+                driveLeftUntilBlocked(), Commands.none(), () -> !climber.climberBlocked()))
+        .andThen(driveLeftUntilNotBlocked())
+        .andThen(stopDrive())
         .andThen(drivetrain.runOnce(() -> drivetrain.setControl(driveBackwards)))
         .andThen(Commands.waitTime(DRIVE_BACKWARDS_DURATION))
-        .andThen(drivetrain.runOnce(() -> drivetrain.setControl(new SwerveRequest.Idle()))); // Stop
+        .andThen(stopDrive()); // Stop
+  }
+
+  public Command driveLeftUntilBlocked() {
+    return drivetrain
+        .runOnce(() -> drivetrain.setControl(driveLeft))
+        .until(() -> climber.climberBlocked())
+        .withTimeout(DRIVE_LEFT_DURATION);
+  }
+
+  public Command driveLeftUntilNotBlocked() {
+    return drivetrain
+        .runOnce(() -> drivetrain.setControl(driveLeft))
+        .until(() -> !climber.climberBlocked())
+        .withTimeout(DRIVE_LEFT_DURATION);
+  }
+
+  public Command stopDrive() {
+    return drivetrain.runOnce(() -> drivetrain.setControl(new SwerveRequest.Idle()));
   }
 }

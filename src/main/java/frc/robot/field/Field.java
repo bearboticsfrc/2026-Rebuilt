@@ -18,10 +18,10 @@ public class Field {
   public static final Translation2d BLUE_RIGHT = new Translation2d(1.2, 0.7);
   public static final Translation2d BLUE_ALLIANCE_LINE = new Translation2d(4, 4);
 
-  public static Pose2d getMyOutputPose(){
+  public static Pose2d getMyOutputPose() {
     return AllianceFlipUtil.apply(BLUE_OUTPOST_POSE);
   }
-  
+
   public static Translation2d getMyHub() {
     return AllianceFlipUtil.apply(BLUE_HUB);
   }

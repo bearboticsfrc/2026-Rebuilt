@@ -12,13 +12,9 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.ForwardLimitSourceValue;
-import com.ctre.phoenix6.signals.ForwardLimitTypeValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.signals.ReverseLimitSourceValue;
-import com.ctre.phoenix6.signals.ReverseLimitTypeValue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.units.measure.*;
@@ -110,20 +106,14 @@ public class Climber extends SubsystemBase {
                   .clone()
                   .withStatorCurrentLimit(Amps.of(120))
                   .withStatorCurrentLimitEnable(true))
-          .withHardwareLimitSwitch(
+          .withSoftwareLimitSwitch(
               motorInitialConfigs
-                  .HardwareLimitSwitch
+                  .SoftwareLimitSwitch
                   .clone()
-                  .withForwardLimitEnable(true)
-                  .withForwardLimitAutosetPositionEnable(false)
-                  .withForwardLimitRemoteSensorID(0)
-                  .withForwardLimitSource(ForwardLimitSourceValue.LimitSwitchPin)
-                  .withForwardLimitType(ForwardLimitTypeValue.NormallyOpen)
-                  .withReverseLimitAutosetPositionEnable(false)
-                  .withReverseLimitEnable(true)
-                  .withReverseLimitRemoteSensorID(0)
-                  .withReverseLimitSource(ReverseLimitSourceValue.LimitSwitchPin)
-                  .withReverseLimitType(ReverseLimitTypeValue.NormallyOpen));
+                  .withForwardSoftLimitThreshold(Setpoint.Top.target.in(Rotations))
+                  .withForwardSoftLimitEnable(true)
+                  .withReverseSoftLimitThreshold(0.0)
+                  .withReverseSoftLimitEnable(true));
 
   /** Configs for {@link #leader}. */
   private final TalonFXConfiguration leaderConfigs =
@@ -151,20 +141,14 @@ public class Climber extends SubsystemBase {
                   .withGravityType(GravityTypeValue.Elevator_Static))
           .withFeedback(
               leaderInitialConfigs.Feedback.clone().withSensorToMechanismRatio(kGearRatio))
-          .withHardwareLimitSwitch(
-              leaderInitialConfigs
-                  .HardwareLimitSwitch
+          .withSoftwareLimitSwitch(
+              motorInitialConfigs
+                  .SoftwareLimitSwitch
                   .clone()
-                  .withForwardLimitEnable(true)
-                  .withForwardLimitAutosetPositionEnable(false)
-                  .withForwardLimitRemoteSensorID(0)
-                  .withForwardLimitSource(ForwardLimitSourceValue.LimitSwitchPin)
-                  .withForwardLimitType(ForwardLimitTypeValue.NormallyOpen)
-                  .withReverseLimitAutosetPositionEnable(false)
-                  .withReverseLimitEnable(true)
-                  .withReverseLimitRemoteSensorID(0)
-                  .withReverseLimitSource(ReverseLimitSourceValue.LimitSwitchPin)
-                  .withReverseLimitType(ReverseLimitTypeValue.NormallyOpen))
+                  .withForwardSoftLimitThreshold(Setpoint.Top.target.in(Rotations))
+                  .withForwardSoftLimitEnable(true)
+                  .withReverseSoftLimitThreshold(0.0)
+                  .withReverseSoftLimitEnable(true))
           .withMotionMagic(
               leaderInitialConfigs
                   .MotionMagic
@@ -267,7 +251,7 @@ public class Climber extends SubsystemBase {
    * @return The Temperature of the climber
    */
   @Logged
-  public double getTempuratureAFahrenheit() {
+  public double getTemperatureAFahrenheit() {
     return leaderTemperature.getValue().in(Fahrenheit);
   }
 
@@ -275,7 +259,7 @@ public class Climber extends SubsystemBase {
    * @return The Temperature of the climber
    */
   @Logged
-  public double getTempuratureBFahrenheit() {
+  public double getTemperatureBFahrenheit() {
     return followerTemperature.getValue().in(Fahrenheit);
   }
 
@@ -345,7 +329,6 @@ public class Climber extends SubsystemBase {
                 .withTimeout(0.25)
                 .finallyDo(
                     () -> {
-                      follower.setPosition(Rotations.of(0));
                       leader.setPosition(Rotations.of(0));
                     }));
   }

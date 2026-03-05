@@ -148,9 +148,7 @@ public class DynamicShootingCalculator {
     // Calculate parameters accounted for imparted velocity
     turretAngle = Field.getMyHub().minus(lookaheadPose.getTranslation()).getAngle();
     turretAngle =
-        turretAngle
-            .minus(lookaheadPose.getRotation())
-            .minus(new Rotation2d(Degrees.of(180)));
+        turretAngle.minus(lookaheadPose.getRotation()).minus(new Rotation2d(Degrees.of(180)));
 
     hoodAngle = (hoodAngleMap.get(lookaheadTurretToTargetDistance));
     flywheelVelocity = flywheelSpeedMap.get(lookaheadTurretToTargetDistance);

@@ -281,7 +281,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.povRight().onTrue(climber.calibrateZero());
 
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
-    copilot.circle().onTrue(autoClimbCommand.climb());
+    copilot.circle().whileTrue(autoClimbCommand.climb());
 
     copilot
         .L2()
