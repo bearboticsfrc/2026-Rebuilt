@@ -30,7 +30,7 @@ public class Climber extends SubsystemBase {
   public enum Setpoint {
     Bottom(Rotations.of(0)),
     Middle(Inches.of(3.5)),
-    Top(Inches.of(7.5)); // 16.5 rotations
+    Top(Inches.of(6.75)); // 16.5 rotations
 
     /** The position target of the setpoint in angular units. */
     public final Angle target;

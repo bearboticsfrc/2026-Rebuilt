@@ -10,7 +10,6 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
-import bearlib.fms.AllianceReadyListener;
 import bearlib.util.TunableNumber;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -21,9 +20,9 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -52,7 +51,7 @@ import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.HubTracker;
 
-public class Robot extends TimedRobot implements AllianceReadyListener {
+public class Robot extends TimedRobot {
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
 
   private Command m_autonomousCommand;
@@ -84,6 +83,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged private final Climber climber = new Climber();
 
   @Logged private DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
+
+  private Command introspectedAutoCommand;
+
+  @Logged(name = "Auto Start Pose", importance = Importance.CRITICAL)
+  private Pose2d autoStartPose;
 
   // for shot tuning
   private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
@@ -124,7 +128,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     configureDefaultCommands();
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
-    AllianceColor.addListener(this);
 
     DriverStation.silenceJoystickConnectionWarning(false);
   }
@@ -216,8 +219,17 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     CommandScheduler.getInstance().cancelAll();
   }
 
-  @Override
-  public void disabledPeriodic() {}
+  /** Disabled periodic which updates the autonomous starting pose. */
+  public void disabledPeriodic() {
+    Command selectedAutoCommand = autoChooser.getSelected();
+
+    if (introspectedAutoCommand != selectedAutoCommand
+        && selectedAutoCommand instanceof PathPlannerAuto) {
+      autoStartPose =
+          AllianceFlipUtil.apply(((PathPlannerAuto) selectedAutoCommand).getStartingPose());
+      introspectedAutoCommand = selectedAutoCommand;
+    }
+  }
 
   @Logged
   public double getMatchTime() {
@@ -291,17 +303,5 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.L1().onTrue(turret.setAngle(Rotations.of(-.25)));
 
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
-  }
-
-  private boolean initialPoseSet = false;
-
-  @Override
-  public void updateAlliance(Alliance alliance) {
-    if (!initialPoseSet) {
-      Command firstAuto = autoChooser.getSelected();
-      System.out.println("FirstAuto: " + firstAuto.getName());
-      drivetrain.resetPose(AllianceFlipUtil.apply(((PathPlannerAuto) firstAuto).getStartingPose()));
-      initialPoseSet = true;
-    }
   }
 }
