@@ -56,7 +56,7 @@ public class VisionConstants {
       new VisionCamera(RIGHT_CAMERA_NAME, ROBOT_TO_RIGHT_CAMERA);
 
   // The standard deviations of our vision estimated poses, which affect correction rate
-  public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(0.0001, 0.0001, 0.0001);
+  public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(0.0005, 0.0005, 0.0005);
   public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(0.001, 0.001, 0.001);
 
   public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT =

@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -14,7 +15,8 @@ public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
 
   private Rotation2d lastTurretAngle = new Rotation2d();
-  private Rotation2d turretAngle = new Rotation2d();
+
+  @Logged public Rotation2d turretAngle = new Rotation2d();
   private double hoodAngle = 0;
   private double flywheelVelocity = 0;
   private double turretVelocity = 0;

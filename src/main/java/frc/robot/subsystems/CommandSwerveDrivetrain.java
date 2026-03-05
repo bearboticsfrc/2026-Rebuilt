@@ -46,7 +46,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
-  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.01, 0.01, Math.toRadians(1));
+  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.01, 0.01, 0.01);
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -71,9 +71,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   /** Notifier for updating pose based on vision measurements. */
   private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
 
-  @Logged
-  private final Vision vision =
-      new Vision(Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA));
+  @Logged private final Vision vision = new Vision(Arrays.asList(VisionConstants.FRONT_CAMERA));
 
   @Logged(name = "PigeonPitch")
   public double getPigeonPitch() {
