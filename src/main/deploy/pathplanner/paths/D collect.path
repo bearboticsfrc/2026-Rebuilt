@@ -42,12 +42,12 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -91.8476102659946
+    "rotation": -91.84761026599462
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": -101.63363399894024
   },
   "useDefaultConstraints": true
