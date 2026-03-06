@@ -40,7 +40,7 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 2.5,
+    "maxVelocity": 1.5,
     "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -55,7 +55,7 @@
   "folder": "D Bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -91.8476102659946
+    "rotation": -91.84761026599462
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
