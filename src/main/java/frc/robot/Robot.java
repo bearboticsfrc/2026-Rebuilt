@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
+import bearlib.fms.AllianceReadyListener;
 import bearlib.util.TunableNumber;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -23,6 +24,7 @@ import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -51,7 +53,7 @@ import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.HubTracker;
 
-public class Robot extends TimedRobot {
+public class Robot extends TimedRobot implements AllianceReadyListener {
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
 
   private Command m_autonomousCommand;
@@ -74,7 +76,7 @@ public class Robot extends TimedRobot {
 
   @Logged private final Turret turret = new Turret();
 
-  private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+  @Logged private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   @Logged private final Flywheel flywheel = new Flywheel();
 
@@ -120,6 +122,7 @@ public class Robot extends TimedRobot {
   private final AutoClimbCommand autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
 
   public Robot() {
+
     registerPathplannerCommands();
 
     autoChooser = AutoBuilder.buildAutoChooser("OStart - Outpost - Climb");
@@ -130,8 +133,9 @@ public class Robot extends TimedRobot {
     configureDefaultCommands();
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
+    AllianceColor.addListener(this);
 
-    DriverStation.silenceJoystickConnectionWarning(false);
+    DriverStation.silenceJoystickConnectionWarning(true);
   }
 
   private boolean getTuningMode() {
@@ -231,6 +235,7 @@ public class Robot extends TimedRobot {
           AllianceFlipUtil.apply(((PathPlannerAuto) selectedAutoCommand).getStartingPose());
       introspectedAutoCommand = selectedAutoCommand;
       drivetrain.resetPose(autoStartPose);
+      System.out.println("Setting autostartpose!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
   }
 
@@ -299,11 +304,27 @@ public class Robot extends TimedRobot {
 
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
     copilot.circle().whileTrue(autoClimbCommand.climb());
+    copilot
+        .square()
+        .whileTrue(spindexer.reverseSpindexer().andThen(spindexer.reverseTower()))
+        .onFalse(spindexer.stopMotorsCommand());
 
     copilot.L1().onTrue(turret.setAngle(Rotations.of(-.25)));
 
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
 
     copilot.L2().toggleOnTrue(Commands.idle(turret));
+  }
+
+  private boolean initialPoseSet = false;
+
+  @Override
+  public void updateAlliance(Alliance alliance) {
+    if (!initialPoseSet) {
+      Command firstAuto = autoChooser.getSelected();
+      System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FirstAuto: " + firstAuto.getName());
+      drivetrain.resetPose(AllianceFlipUtil.apply(((PathPlannerAuto) firstAuto).getStartingPose()));
+      initialPoseSet = true;
+    }
   }
 }

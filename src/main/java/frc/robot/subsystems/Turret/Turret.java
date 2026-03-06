@@ -12,6 +12,9 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
@@ -308,5 +311,22 @@ public class Turret extends SubsystemBase implements NTSendable {
         .minus(
             AllianceFlipUtil.apply(RobotState.getInstance().getRobotPose().getRotation())
                 .getMeasure()));
+  }
+
+  @Logged
+  public Translation2d getTargetedHubPosition() {
+    Transform2d targetTransform =
+        new Transform2d(
+            new Translation2d(RobotState.getInstance().getDistanceToHub(), 0.0),
+            Rotation2d.k180deg);
+
+    Pose2d turretPose =
+        RobotState.getInstance()
+            .robotPose
+            .transformBy(RobotState.turretToRobot)
+            .transformBy(new Transform2d(0, 0, new Rotation2d(getAngle())));
+
+    Translation2d targetPos = turretPose.transformBy(targetTransform).getTranslation();
+    return targetPos;
   }
 }
