@@ -47,7 +47,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
-  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.1, 0.1, 0.05);
+  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.01, 0.01, 0.01);
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -251,7 +251,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     List<Vision.VisionEstimate> visionEstimates = vision.getEstimatedGlobalPoses();
 
     for (VisionEstimate visionEstimate : visionEstimates) {
-      addVisionMeasurement(visionEstimate.pose(), visionEstimate.stdDevs());
+      // addVisionMeasurement(visionEstimate.pose(), visionEstimate.stdDevs());
+      addVisionMeasurement(visionEstimate.pose(), VisionConstants.SINGLE_TAG_STD_DEVS);
     }
   }
 
