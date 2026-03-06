@@ -13,10 +13,10 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class AutoClimbCommand extends Command {
 
-  private static final Time DRIVE_LEFT_DURATION = Seconds.of(0.2);
-  private static final LinearVelocity DRIVE_LEFT_VELOCITY = MetersPerSecond.of(0.5);
+  private static final Time DRIVE_LEFT_DURATION = Seconds.of(0.75);
+  private static final LinearVelocity DRIVE_LEFT_VELOCITY = MetersPerSecond.of(0.8);
 
-  private static final Time DRIVE_BACKWARDS_DURATION = Seconds.of(0.2);
+  private static final Time DRIVE_BACKWARDS_DURATION = Seconds.of(0.5);
   private static final LinearVelocity DRIVE_BACKWARDS_VELOCITY = MetersPerSecond.of(0.5);
 
   private final CommandSwerveDrivetrain drivetrain;

@@ -7,31 +7,43 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O Bump"
+            "pathName": "start-overbump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "O Bump - Neutral"
+            "pathName": "overbump-neutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "O Neutral - bump"
+            "pathName": "D collect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "neutral - over bump"
+            "pathName": "collect-overbump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": null
+            "pathName": "overbump- start"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
           }
         }
       ]
