@@ -39,12 +39,6 @@
           "data": {
             "name": "StopShoot"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Outpost  - O Climb"
-          }
         }
       ]
     }
