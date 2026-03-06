@@ -314,6 +314,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
 
     copilot.L2().toggleOnTrue(Commands.idle(turret));
+
+    copilot.cross().onTrue(Commands.runOnce(() -> drivetrain.resetToFrontCameraPose()));
   }
 
   private boolean initialPoseSet = false;
