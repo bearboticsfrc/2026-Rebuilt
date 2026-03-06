@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 7.685333333333334,
-        "y": 1.374766666666667
+        "x": 7.819441899832318,
+        "y": 1.345664309652683
       },
       "prevControl": {
-        "x": 7.120155555555558,
-        "y": 0.6634222222222229
+        "x": 7.254264122054542,
+        "y": 0.634319865208239
       },
       "nextControl": null,
       "isLocked": false,
@@ -54,7 +54,7 @@
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": 0.0
   },
   "useDefaultConstraints": true
