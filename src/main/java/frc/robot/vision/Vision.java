@@ -41,7 +41,7 @@ public class Vision {
   private VisionSystemSim visionSim;
 
   @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
-  private Map<String, Pose2d> latestCameraPose = new HashMap<String, Pose2d>();
+  public Map<String, Pose2d> latestCameraPose = new HashMap<String, Pose2d>();
 
   @Logged(name = "Target Poses", importance = Importance.CRITICAL)
   private final List<Pose2d> targetPoses = new ArrayList<>();
