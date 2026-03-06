@@ -7,31 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "start-overbump"
+            "pathName": "O start - overbump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "overbump-neutral"
+            "pathName": "O overbump - neutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "D collect"
+            "pathName": "O neutral - collect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "collect-overbump"
+            "pathName": "O collect - overbump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "overbump- stop"
+            "pathName": "O overbump - stop"
           }
         },
         {

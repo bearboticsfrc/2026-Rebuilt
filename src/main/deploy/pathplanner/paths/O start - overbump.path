@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.708145506419401,
-        "y": 2.2947503566333807
+        "x": 3.008,
+        "y": 2.4466555555555556
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.45526563886474,
-        "y": 2.3045311972246343
+        "x": 4.008000000000001,
+        "y": 2.4466555555555556
       },
       "isLocked": false,
-      "linkedName": "neutral over bump"
+      "linkedName": "O Start 1"
     },
     {
       "anchor": {
-        "x": 3.4956348074179737,
-        "y": 2.2947503566333807
+        "x": 5.814399999999999,
+        "y": 2.4466555555555556
       },
       "prevControl": {
-        "x": 4.658994830004524,
-        "y": 2.2975669929815883
+        "x": 4.814399999999999,
+        "y": 2.4466555555555556
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "overbump O"
     }
   ],
   "rotationTargets": [],
@@ -45,7 +45,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "D Bump",
+  "folder": "O Bump",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
