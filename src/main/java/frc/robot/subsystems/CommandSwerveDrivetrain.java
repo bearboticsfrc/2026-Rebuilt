@@ -212,7 +212,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   }
 
   public void resetToFrontCameraPose() {
-    resetPose(vision.latestCameraPose.get(VisionConstants.FRONT_CAMERA_NAME));
+    Pose2d visionPose = vision.latestCameraPose.get(VisionConstants.REAR_CAMERA_NAME);
+    if (visionPose != null) {
+      resetPose(visionPose);
+    } else {
+      System.out.println("Tried to reset pose from rear camera without a pose!!!!!!!!!!!!!11");
+    }
   }
 
   @Override
