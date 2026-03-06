@@ -18,10 +18,10 @@ public class VisionConstants {
 
   public static final double CULLING_AMBIGUITY = 0.2;
 
-  private static final String FRONT_CAMERA_NAME = "ThriftyFront";
-  private static final String REAR_CAMERA_NAME = "ThriftyRear";
-  private static final String LEFT_CAMERA_NAME = "ThriftyLeft";
-  private static final String RIGHT_CAMERA_NAME = "ThriftyRight";
+  public static final String FRONT_CAMERA_NAME = "ThriftyFront";
+  public static final String REAR_CAMERA_NAME = "ThriftyRear";
+  public static final String LEFT_CAMERA_NAME = "ThriftyLeft";
+  public static final String RIGHT_CAMERA_NAME = "ThriftyRight";
 
   public static final Transform3d ROBOT_TO_FRONT_CAMERA =
       new Transform3d(
