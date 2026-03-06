@@ -7,25 +7,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "OutpostSideSimpleShoot"
+            "pathName": "O Bump"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "Shoot"
+            "pathName": "O Bump - Neutral"
           }
         },
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 6.0
+            "pathName": "O Neutral - bump"
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "StopShoot"
+            "pathName": "neutral - over bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": null
           }
         }
       ]
