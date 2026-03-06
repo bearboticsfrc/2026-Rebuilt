@@ -31,6 +31,9 @@ public class Vision {
   private final List<PhotonCamera> cameras = new ArrayList<>();
   private final List<PhotonPoseEstimator> photonEstimators = new ArrayList<>();
 
+  public record VisionEstimate(EstimatedRobotPose pose, Matrix<N3, N1> stdDevs) {}
+  ;
+
   private Matrix<N3, N1> curStdDevs;
 
   // Simulation
@@ -98,10 +101,10 @@ public class Vision {
    * @return An {@link EstimatedRobotPose} with an estimated pose, estimate timestamp, and targets
    *     used for estimation.
    */
-  public List<EstimatedRobotPose> getEstimatedGlobalPoses() {
+  public List<VisionEstimate> getEstimatedGlobalPoses() {
     targetPoses.clear();
 
-    List<EstimatedRobotPose> visionEstimates = new ArrayList<>();
+    List<VisionEstimate> visionEstimates = new ArrayList<>();
 
     for (PhotonCamera camera : cameras) {
       Optional<EstimatedRobotPose> visionEstimation = Optional.empty();
@@ -122,21 +125,6 @@ public class Vision {
         continue;
       }
 
-      // some brute force analysis to see if the angle of the camera is correct
-      // for (int r = -90; r < 90; r++) {
-      //   Transform3d transform =
-      //       new Transform3d(
-      //           new Translation3d(-.272, 0.172, 0.711),
-      //           new Rotation3d(Degrees.zero(), Degrees.of(r), Degrees.zero()));
-      //   photonPoseEstimator.setRobotToCameraTransform(transform);
-      //   visionEstimation = photonPoseEstimator.estimateLowestAmbiguityPose(change);
-      //   double angle =
-      //       visionEstimation.get().estimatedPose.getRotation().toRotation2d().getDegrees();
-      //   System.out.println(
-      //       "rot " + r + " angle " + angle + " x:" +
-      // visionEstimation.get().estimatedPose.getX());
-      // }
-
       updatedTargetPoses(visionEstimation.get().targetsUsed);
 
       if (Robot.isSimulation()) {
@@ -151,11 +139,10 @@ public class Vision {
             });
       }
 
-      visionEstimation.ifPresent(visionEstimates::add);
-      updateEstimationStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
-      // curStdDevs = SINGLE_TAG_STD_DEVS; // TODO: change to dynamic estimation
-
       if (visionEstimation.isPresent()) {
+        Matrix<N3, N1> stdDevs =
+            calculateStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
+        visionEstimates.add(new VisionEstimate(visionEstimation.get(), stdDevs));
         latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
       }
     }
@@ -171,14 +158,13 @@ public class Vision {
    * @param estimatedPose The estimated pose to guess standard deviations for.
    * @param targets All targets in this camera frame
    */
-  private void updateEstimationStdDevs(
+  private Matrix<N3, N1> calculateStdDevs(
       PhotonPoseEstimator photonEstimator,
       Optional<EstimatedRobotPose> estimatedPose,
       List<PhotonTrackedTarget> targets) {
     if (estimatedPose.isEmpty()) {
       // No pose input. Default to single-tag std devs
-      curStdDevs = SINGLE_TAG_STD_DEVS;
-
+      return SINGLE_TAG_STD_DEVS;
     } else {
       // Pose present. Start running Heuristic
       var estStdDevs = SINGLE_TAG_STD_DEVS;
@@ -200,7 +186,7 @@ public class Vision {
 
       if (numTags == 0) {
         // No tags visible. Default to single-tag std devs
-        curStdDevs = SINGLE_TAG_STD_DEVS;
+        return SINGLE_TAG_STD_DEVS;
       } else {
         // One or more tags visible, run the full heuristic.
         avgDist /= numTags;
@@ -208,9 +194,8 @@ public class Vision {
         if (numTags > 1) estStdDevs = MULTI_TAG_STD_DEVS;
         // Increase std devs based on (average) distance
         if (numTags == 1 && avgDist > 4)
-          estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-        else estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
-        curStdDevs = estStdDevs;
+          return VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+        else return estStdDevs.times(1 + (avgDist * avgDist / 30));
       }
     }
   }
