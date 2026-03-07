@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.534450784593438,
-        "y": 1.3631669044222543
+        "x": 3.008,
+        "y": 2.4466555555555556
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2799514744828335,
-        "y": 1.3180184424440502
+        "x": 2.802200797124393,
+        "y": 2.304716526054277
       },
       "isLocked": false,
-      "linkedName": "O Start"
+      "linkedName": "O stop"
     },
     {
       "anchor": {
@@ -20,30 +20,21 @@
         "y": 0.6774179743223976
       },
       "prevControl": {
-        "x": 1.9566048511691654,
-        "y": 0.9870050308216498
+        "x": 2.745192582025677,
+        "y": 0.7809272467902997
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Outpost"
     }
   ],
-  "rotationTargets": [],
-  "constraintZones": [
+  "rotationTargets": [
     {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.8466501240694807,
-      "maxWaypointRelativePos": 1.0,
-      "constraints": {
-        "maxVelocity": 1.0,
-        "maxAcceleration": 2.5,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
+      "waypointRelativePos": 0.6886993603411395,
+      "rotationDegrees": 180.0
     }
   ],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -59,10 +50,10 @@
     "rotation": -178.53119928561398
   },
   "reversed": false,
-  "folder": "O - Outpost",
+  "folder": "O Bump",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 180.0
+    "velocity": 1.75,
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

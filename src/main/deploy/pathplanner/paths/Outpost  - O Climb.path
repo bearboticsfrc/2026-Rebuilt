@@ -9,7 +9,7 @@
       "prevControl": null,
       "nextControl": {
         "x": 1.3929801510739308,
-        "y": 1.5697822449119292
+        "y": 1.5697822449119294
       },
       "isLocked": false,
       "linkedName": "Outpost"
@@ -64,7 +64,7 @@
     "rotation": -90.0
   },
   "reversed": false,
-  "folder": "O - Outpost - Climb",
+  "folder": "O - Outpost",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -178.53119928561398

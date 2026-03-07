@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.547389443651925,
-        "y": 2.4466555555555556
+        "x": 3.9554733903515524,
+        "y": 2.443006362841815
       },
       "isLocked": false,
       "linkedName": "O Start 1"
@@ -20,8 +20,8 @@
         "y": 2.4466555555555556
       },
       "prevControl": {
-        "x": 4.814399999999999,
-        "y": 2.4466555555555556
+        "x": 5.564401669219805,
+        "y": 2.4475691238983144
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
+    "maxVelocity": 1.75,
     "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -41,7 +41,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
+    "velocity": 1.75,
     "rotation": 0.0
   },
   "reversed": false,
