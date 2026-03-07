@@ -101,4 +101,17 @@ public class RobotState {
   public double getDistanceToHub() {
     return Field.getMyHub().getDistance((robotPose.transformBy(turretToRobot).getTranslation()));
   }
+
+  public boolean iSLeft() {
+    if (isBlueAlliance()
+        && !isInNeutralZone()
+        && robotPose.getY() > Field.getMyAllianceLine().getY()) {
+      return true;
+    } else if (isRedAlliance()
+        && !isInNeutralZone()
+        && robotPose.getY() < Field.getMyAllianceLine().getY()) {
+      return true;
+    }
+    return false;
+  }
 }
