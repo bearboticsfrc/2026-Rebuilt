@@ -25,7 +25,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "D collect"
+            "pathName": "D neutral-collect"
           }
         },
         {
@@ -44,6 +44,12 @@
           "type": "path",
           "data": {
             "pathName": "overbump- stop"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D stop-shoot"
           }
         },
         {

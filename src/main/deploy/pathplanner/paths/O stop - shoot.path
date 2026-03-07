@@ -3,44 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.890254080086002,
-        "y": 3.44567356702888
+        "x": 3.008,
+        "y": 2.4466555555555556
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.896320746752668,
-        "y": 3.377462455917769
+        "x": 2.175891583452211,
+        "y": 2.320627674750357
       },
       "isLocked": false,
-      "linkedName": "O collect"
+      "linkedName": "O stop"
     },
     {
       "anchor": {
-        "x": 5.814399999999999,
-        "y": 2.4466555555555556
+        "x": 2.162952924393723,
+        "y": 2.7993580599144083
       },
       "prevControl": {
-        "x": 6.506255555555556,
-        "y": 2.5733333333333324
+        "x": 2.4217261055634807,
+        "y": 2.100670470756063
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "overbump O"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "StopIntake",
-      "waypointRelativePos": 0.42580645161289943,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
+    "maxVelocity": 2.5,
     "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -48,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 0.0
+    "velocity": 0,
+    "rotation": -159.62356478616368
   },
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 120.65178688412193
+    "rotation": 0.0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }
