@@ -23,6 +23,8 @@ public class Intake extends SubsystemBase {
 
   public final double ROLLER_SPEED = 0.65;
 
+  public final double ROLLER_SPEED_SLOW = 0.3;
+
   public Intake() {
     super("Intake");
     TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
@@ -53,6 +55,10 @@ public class Intake extends SubsystemBase {
 
   public Command runRoller() {
     return runOnce(() -> setRollerOutput(ROLLER_SPEED));
+  }
+
+  public Command runRollerSlow() {
+    return runOnce(() -> setRollerOutput(ROLLER_SPEED_SLOW));
   }
 
   public Command stopRollerCommand() {

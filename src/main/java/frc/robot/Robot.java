@@ -182,6 +182,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
             getTurretCommand().alongWith(dynamicShootingCommand.shoot().withTimeout(5))));
 
     NamedCommands.registerCommand(
+        "ShootRoll",
+        new ScheduleCommand(
+                getTurretCommand().alongWith(dynamicShootingCommand.shoot().withTimeout(5)))
+            .alongWith(intake.runRollerSlow()));
+
+    NamedCommands.registerCommand(
         "StopShoot", new ScheduleCommand(turret.stop().alongWith(dynamicShootingCommand.stop())));
 
     NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
