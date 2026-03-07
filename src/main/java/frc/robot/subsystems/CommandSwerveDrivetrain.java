@@ -211,10 +211,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     setStateStdDevs(STD_DEVS);
   }
 
-  public void resetToFrontCameraPose() {
-    resetPose(vision.latestCameraPose.get(VisionConstants.FRONT_CAMERA_NAME));
-  }
-
   @Override
   public void resetPose(Pose2d newPose) {
     super.resetPose(newPose);
