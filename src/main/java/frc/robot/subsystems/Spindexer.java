@@ -44,6 +44,7 @@ public class Spindexer extends SubsystemBase {
     spindexerCurrentLimitsConfigs.SupplyCurrentLimit = 140;
     spindexerCurrentLimitsConfigs.StatorCurrentLimitEnable = true;
     spindexerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
+    spindexerConfig.withCurrentLimits(spindexerCurrentLimitsConfigs);
 
     towerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     towerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
