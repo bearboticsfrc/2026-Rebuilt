@@ -14,7 +14,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Distance;
 
 public class VisionConstants {
-  public static final Distance CULLING_DISTANCE = Meters.of(2.2); // Meters.of(2.5);
+  public static final Distance CULLING_DISTANCE = Meters.of(3.0); // Meters.of(2.5);
 
   public static final double CULLING_AMBIGUITY = 0.2;
 

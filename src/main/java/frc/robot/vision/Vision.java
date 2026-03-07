@@ -41,10 +41,10 @@ public class Vision {
   private VisionSystemSim visionSim;
 
   @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
-  private Map<String, Pose2d> latestCameraPose = new HashMap<String, Pose2d>();
+  public Map<String, Pose2d> latestCameraPose = new HashMap<String, Pose2d>();
 
   @Logged(name = "Target Poses", importance = Importance.CRITICAL)
-  private final List<Pose2d> targetPoses = new ArrayList<>();
+  public final List<Pose2d> targetPoses = new ArrayList<>();
 
   public Vision(List<VisionCamera> visionCameras) {
     for (VisionCamera visionCamera : visionCameras) {
@@ -139,12 +139,14 @@ public class Vision {
             });
       }
 
-      if (visionEstimation.isPresent()) {
-        Matrix<N3, N1> stdDevs =
-            calculateStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
-        visionEstimates.add(new VisionEstimate(visionEstimation.get(), stdDevs));
-        latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
-      }
+      // if (visionEstimation.isPresent()) {
+      Matrix<N3, N1> stdDevs =
+          calculateStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
+      // visionEstimates.add(new VisionEstimate(visionEstimation.get(), stdDevs));
+      visionEstimates.add(new VisionEstimate(visionEstimation.get(), SINGLE_TAG_STD_DEVS));
+
+      latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
+      // }
     }
 
     return visionEstimates;
