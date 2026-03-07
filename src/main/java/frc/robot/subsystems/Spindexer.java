@@ -25,7 +25,10 @@ public class Spindexer extends SubsystemBase {
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
   private final VelocityTorqueCurrentFOC m_vtcfReq = new VelocityTorqueCurrentFOC(0.0);
   private final double TOWER_OUTPUT = 1;
+  private final double TOWER_REVERSE_OUTPUT = -0.2;
+
   private final double SPINDEXER_OUTPUT = 0.7;
+  private final double SPINDEXER_REVERSE_OUTPUT = -0.2;
 
   public Spindexer() {
     super("Spindexer");
@@ -114,6 +117,14 @@ public class Spindexer extends SubsystemBase {
 
   public Command index() {
     return runSpindexer().andThen(runTower());
+  }
+
+  public Command reverseSpindexer() {
+    return runOnce(() -> setSpindexerOutput(SPINDEXER_REVERSE_OUTPUT));
+  }
+
+  public Command reverseTower() {
+    return runOnce(() -> setTowerOutput(TOWER_REVERSE_OUTPUT));
   }
 
   public Command stopMotorsCommand() {
