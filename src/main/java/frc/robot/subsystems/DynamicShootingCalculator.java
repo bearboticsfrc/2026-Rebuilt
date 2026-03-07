@@ -131,17 +131,16 @@ public class DynamicShootingCalculator {
 
     double lookaheadTurretToTargetDistance = turretToTarget;
 
-    // Iterate for moving
-    // for (int i = 0; i < 3; i++) {
-    //   timeOfFlight = timeOfFlightMap.get(lookaheadTurretToTargetDistance);
-    //   double offsetX = turretVelocityX * timeOfFlight / 4.0;
-    //   double offsetY = turretVelocityY * timeOfFlight / 4.0;
-    //   lookaheadPose =
-    //       new Pose2d(
-    //           turretPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
-    //           turretPose.getRotation());
-    //   lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
-    // }
+    for (int i = 0; i < 1; i++) {
+      timeOfFlight = timeOfFlightMap.get(lookaheadTurretToTargetDistance);
+      double offsetX = turretVelocityX * timeOfFlight / 4.0;
+      double offsetY = turretVelocityY * timeOfFlight / 4.0;
+      lookaheadPose =
+          new Pose2d(
+              turretPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
+              turretPose.getRotation());
+      lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
+    }
 
     // Calculate parameters accounted for imparted velocity
     turretAngle = target.minus(lookaheadPose.getTranslation()).getAngle();
