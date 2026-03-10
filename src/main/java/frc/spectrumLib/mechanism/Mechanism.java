@@ -16,6 +16,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
@@ -37,9 +38,12 @@ import java.util.function.DoubleSupplier;
 import lombok.*;
 
 /**
- * Control Modes Docs:
+ * Base class for a motor-driven mechanism. Handles common tasks like telemetry, current limits, and
+ * various control modes using TalonFX.
+ *
+ * <p>Control Modes Docs:
  * https://pro.docs.ctr-electronics.com/en/latest/docs/migration/migration-guide/control-requests-guide.html
- * Closed-loop & Motion Magic Docs:
+ * Closed-loop and Motion Magic Docs:
  * https://pro.docs.ctr-electronics.com/en/latest/docs/migration/migration-guide/closed-loop-guide.html
  */
 public abstract class Mechanism implements NTSendable, SpectrumSubsystem {
@@ -494,7 +498,7 @@ public abstract class Mechanism implements NTSendable, SpectrumSubsystem {
   /**
    * Closed-loop Velocity with torque control (requires Pro)
    *
-   * @param velocity rotations per second
+   * @param velocityRPS rotations per second
    */
   protected void setVelocityTCFOCrpm(DoubleSupplier velocityRPS) {
     if (isAttached()) {
@@ -531,13 +535,13 @@ public abstract class Mechanism implements NTSendable, SpectrumSubsystem {
   }
 
   /**
-   * Closed-loop Position Motion Magic with torque control (requires Pro) Dynamic allows you to set
-   * velocity, acceleration, and jerk during the command
+   * Closed-loop Position Motion Magic with torque control (requires Pro). Dynamic allows you to set
+   * velocity, acceleration, and jerk during the command.
    *
-   * @param rotations
-   * @param velocity
-   * @param acceleration
-   * @param jerk
+   * @param rotations The target position in rotations.
+   * @param velocity The maximum velocity in rotations per second.
+   * @param acceleration The maximum acceleration in rotations per second squared.
+   * @param jerk The maximum jerk in rotations per second cubed.
    */
   protected void setDynMMPositionFoc(
       DoubleSupplier rotations,
@@ -766,9 +770,9 @@ public abstract class Mechanism implements NTSendable, SpectrumSubsystem {
     @Getter private String name;
     @Getter private CanDeviceId id;
     @Getter private boolean attached = true;
-    @Getter private boolean opposeLeader = false;
+    @Getter private MotorAlignmentValue opposeLeader = MotorAlignmentValue.Aligned;
 
-    public FollowerConfig(String name, int id, String canbus, boolean opposeLeader) {
+    public FollowerConfig(String name, int id, String canbus, MotorAlignmentValue opposeLeader) {
       this.name = name;
       this.id = new CanDeviceId(id, canbus);
       this.opposeLeader = opposeLeader;

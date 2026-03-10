@@ -16,6 +16,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -26,12 +27,12 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
-import frc.robot.vision.Vision;
-import frc.robot.vision.Vision.VisionEstimate;
 import frc.robot.vision.VisionConstants;
-import java.util.Arrays;
+import frc.robot.vision.VisionOriginal;
+import frc.robot.vision.VisionOriginal.VisionEstimate;
 import java.util.List;
 import java.util.function.Supplier;
 import org.photonvision.EstimatedRobotPose;
@@ -47,7 +48,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
-  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.01, 0.01, 0.01);
+  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.1, 0.1, 0.05);
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -64,6 +65,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization =
       new SwerveRequest.SysIdSwerveTranslation();
 
+  // Buffer stores 1.5 seconds of pose history
+  private final TimeInterpolatableBuffer<Pose2d> poseHistory =
+      TimeInterpolatableBuffer.createBuffer(1.5);
+
   // private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization =
   //    new SwerveRequest.SysIdSwerveSteerGains();
   // private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
@@ -72,9 +77,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   /** Notifier for updating pose based on vision measurements. */
   private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
 
-  @Logged
-  private final Vision vision =
-      new Vision(Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA));
+  @Logged private final VisionOriginal vision = Robot.get().getVision();
+
+  // new VisionOriginal(Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA));
 
   @Logged(name = "PigeonPitch")
   public double getPigeonPitch() {
@@ -96,12 +101,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     return (Math.abs(getPigeonPitch()) >= 2.0 || Math.abs(getPigeonRoll()) >= 2);
   }
 
+  public Pose2d getRobotPose() {
+    return getState().Pose;
+  }
+
   public Pose2d getPose() {
     return getState().Pose;
   }
 
+  public ChassisSpeeds getCurrentRobotChassisSpeeds() {
+    return getState().Speeds;
+  }
+
   public ChassisSpeeds getChassisSpeeds() {
     return getState().Speeds;
+  }
+
+  public Pose2d getPoseAtTimestamp(double timestamp) {
+    return poseHistory.getSample(timestamp).orElse(this.getState().Pose);
   }
 
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
@@ -211,6 +228,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     setStateStdDevs(STD_DEVS);
   }
 
+  public void resetToFrontCameraPose() {
+    Pose2d visionPose = vision.latestCameraPose.get(VisionConstants.FRONT_CAMERA_NAME);
+    if (visionPose != null) {
+      resetPose(visionPose);
+    } else {
+      System.out.println("Tried to reset pose from front camera without a pose!!!!!!!!!!!!!");
+    }
+  }
+
   @Override
   public void resetPose(Pose2d newPose) {
     super.resetPose(newPose);
@@ -248,7 +274,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   }
 
   private void poseEstimationPeriodic() {
-    List<Vision.VisionEstimate> visionEstimates = vision.getEstimatedGlobalPoses();
+    List<VisionOriginal.VisionEstimate> visionEstimates = vision.getEstimatedGlobalPoses();
 
     for (VisionEstimate visionEstimate : visionEstimates) {
       // addVisionMeasurement(visionEstimate.pose(), visionEstimate.stdDevs());
@@ -322,6 +348,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
     RobotState.getInstance().setRobotPose(getPose());
     RobotState.getInstance().setRobotVelocity(getState().Speeds);
+    poseHistory.addSample(Utils.getCurrentTimeSeconds(), this.getState().Pose);
   }
 
   private void startSimThread() {

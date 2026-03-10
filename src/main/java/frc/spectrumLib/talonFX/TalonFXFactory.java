@@ -41,10 +41,19 @@ public class TalonFXFactory {
     return talon;
   }
 
-  // Create a new follower talon with same configuration as the leader talon
+  /**
+   * Follow the motor output of another Talon.
+   *
+   * @param followerId Device ID of the follower.
+   * @param leaderTalonFX The leader TalonFX to follow.
+   * @param motorAlignment Set to Aligned for motor invert to match the leader's configured Invert -
+   *     which is typical when leader and follower are mechanically linked and spin in the same
+   *     direction. Set to Opposed for motor invert to oppose the leader's configured Invert - this
+   *     is typical where the leader and follower mechanically spin in opposite directions..
+   */
   public static TalonFX createPermanentFollowerTalon(
-      CanDeviceId followerId, TalonFX leaderTalonFX, boolean opposeLeaderDirection) {
-    CANBus leaderCanBus = leaderTalonFX.getNetwork();
+      CanDeviceId followerId, TalonFX leaderTalonFX, MotorAlignmentValue motorAlignment) {
+    String leaderCanBus = leaderTalonFX.getNetwork().toString();
     int leaderId = leaderTalonFX.getDeviceID();
     if (!followerId.getBus().equals(leaderCanBus)) {
       throw new RuntimeException("Leader and Follwer Talons must be on the same CAN bus");
@@ -54,10 +63,7 @@ public class TalonFXFactory {
     leaderTalonFX.getConfigurator().refresh(followerConfig);
     final TalonFX talon = createConfigTalon(followerId, followerConfig);
 
-    MotorAlignmentValue alignment =
-        opposeLeaderDirection ? MotorAlignmentValue.Aligned : MotorAlignmentValue.Opposed;
-
-    talon.setControl(new Follower(leaderId, alignment));
+    talon.setControl(new Follower(leaderId, motorAlignment));
     return talon;
   }
 
@@ -100,7 +106,7 @@ public class TalonFXFactory {
   }
 
   private static TalonFX createTalon(CanDeviceId id) {
-    TalonFX talon = new TalonFX(id.getDeviceNumber(), id.getBus());
+    TalonFX talon = new TalonFX(id.getDeviceNumber(), new CANBus(id.getBus()));
     talon.clearStickyFaults();
 
     return talon;

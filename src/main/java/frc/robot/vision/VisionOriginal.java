@@ -27,7 +27,7 @@ import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-public class Vision {
+public class VisionOriginal {
   private final List<PhotonCamera> cameras = new ArrayList<>();
   private final List<PhotonPoseEstimator> photonEstimators = new ArrayList<>();
 
@@ -46,7 +46,7 @@ public class Vision {
   @Logged(name = "Target Poses", importance = Importance.CRITICAL)
   public final List<Pose2d> targetPoses = new ArrayList<>();
 
-  public Vision(List<VisionCamera> visionCameras) {
+  public VisionOriginal(List<VisionCamera> visionCameras) {
     for (VisionCamera visionCamera : visionCameras) {
       PhotonCamera camera = new PhotonCamera(visionCamera.getName());
 
@@ -142,8 +142,7 @@ public class Vision {
       // if (visionEstimation.isPresent()) {
       Matrix<N3, N1> stdDevs =
           calculateStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
-      // visionEstimates.add(new VisionEstimate(visionEstimation.get(), stdDevs));
-      visionEstimates.add(new VisionEstimate(visionEstimation.get(), SINGLE_TAG_STD_DEVS));
+      visionEstimates.add(new VisionEstimate(visionEstimation.get(), stdDevs));
 
       latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
       // }

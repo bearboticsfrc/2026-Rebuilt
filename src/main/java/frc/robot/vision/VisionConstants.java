@@ -18,10 +18,10 @@ public class VisionConstants {
 
   public static final double CULLING_AMBIGUITY = 0.2;
 
-  private static final String FRONT_CAMERA_NAME = "ThriftyFront";
-  private static final String REAR_CAMERA_NAME = "ThriftyRear";
-  private static final String LEFT_CAMERA_NAME = "ThriftyLeft";
-  private static final String RIGHT_CAMERA_NAME = "ThriftyRight";
+  public static final String FRONT_CAMERA_NAME = "ThriftyFront";
+  public static final String REAR_CAMERA_NAME = "ThriftyRear";
+  public static final String LEFT_CAMERA_NAME = "ThriftyLeft";
+  public static final String RIGHT_CAMERA_NAME = "ThriftyRight";
 
   public static final Transform3d ROBOT_TO_FRONT_CAMERA =
       new Transform3d(
@@ -56,8 +56,8 @@ public class VisionConstants {
       new VisionCamera(RIGHT_CAMERA_NAME, ROBOT_TO_RIGHT_CAMERA);
 
   // The standard deviations of our vision estimated poses, which affect correction rate
-  public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(0.0001, 0.0001, 0.0001);
-  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(0.001, 0.001, 0.001);
+  public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(0.4, 0.4, 2.0);
+  public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(0.1, 0.1, 0.5);
 
   public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT =
       AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);

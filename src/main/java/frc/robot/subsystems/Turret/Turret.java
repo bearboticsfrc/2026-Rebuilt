@@ -71,6 +71,8 @@ public class Turret extends SubsystemBase implements NTSendable {
   @Getter public Angle minRotations = Rotations.of(-.4);
   @Getter public Angle maxRotations = Rotations.of(.35);
 
+  @Getter public boolean attached = true;
+
   public Turret() {
     super("Turret");
 
@@ -226,6 +228,15 @@ public class Turret extends SubsystemBase implements NTSendable {
    */
   private double updatePositionRotations() {
     return motor.getPosition().getValueAsDouble();
+  }
+
+  /**
+   * Updates the position of the motor
+   *
+   * @return motor position in degrees
+   */
+  public double getPositionDegrees() {
+    return motor.getPosition().getValue().in(Degrees);
   }
 
   @Logged

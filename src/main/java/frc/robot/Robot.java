@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -52,8 +53,22 @@ import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.HubTracker;
+import frc.robot.vision.SpectrumVision;
+import frc.robot.vision.VisionConstants;
+import frc.robot.vision.VisionOriginal;
+import java.util.Arrays;
+import lombok.Getter;
 
 public class Robot extends TimedRobot implements AllianceReadyListener {
+
+  private static Robot instance = null;
+
+  public static Robot get() {
+    if (instance == null)
+      throw new RuntimeException("Trying to access Robot static get before initialized.");
+    return instance;
+  }
+
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
 
   private Command m_autonomousCommand;
@@ -66,27 +81,32 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final CommandPS5Controller copilot = new CommandPS5Controller(1);
 
-  @Logged private final HubTracker tracker = new HubTracker();
+  @Logged private final HubTracker tracker;
 
   @Logged private final Rollers rollers = new Rollers();
 
-  @Logged private final IntakeArm intakeArm = new IntakeArm();
+  @Logged private final IntakeArm intakeArm;
 
-  @Logged private final Spindexer spindexer = new Spindexer();
+  @Logged private final Spindexer spindexer;
 
-  @Logged private final Turret turret = new Turret();
+  @Logged @Getter private final Turret turret;
 
-  @Logged private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+  @Logged @Getter public final VisionOriginal vision;
+  @Logged @Getter public final SpectrumVision spectrumVision;
 
-  @Logged private final Flywheel flywheel = new Flywheel();
+  @Logged private final CommandSwerveDrivetrain drivetrain;
 
-  @Logged private final Hood hood = new Hood();
+  @Logged private final Flywheel flywheel;
 
-  @Logged private final Climber climber = new Climber();
+  @Logged private final Hood hood;
+
+  @Logged private final Climber climber;
 
   @Logged private DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
 
   @Logged private RobotState robotState = RobotState.getInstance();
+
+  @Getter public Field2d field2d = new Field2d();
 
   private Command introspectedAutoCommand;
 
@@ -97,11 +117,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
   private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
 
-  private final InterpolatedShootCommand interpolatedShootCommand =
-      new InterpolatedShootCommand(hood, flywheel, spindexer);
+  private final InterpolatedShootCommand interpolatedShootCommand;
 
-  private final DynamicShootingCommand dynamicShootingCommand =
-      new DynamicShootingCommand(hood, flywheel, spindexer, turret);
+  private final DynamicShootingCommand dynamicShootingCommand;
 
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -119,9 +137,30 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final Telemetry telemetry = new Telemetry(MaxSpeed);
 
-  private final AutoClimbCommand autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
+  private final AutoClimbCommand autoClimbCommand;
 
   public Robot() {
+    instance = this;
+
+    tracker = new HubTracker();
+    intake = new Intake();
+    intakeArm = new IntakeArm();
+    spindexer = new Spindexer();
+    turret = new Turret();
+    vision =
+        new VisionOriginal(
+            Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA));
+    spectrumVision = new SpectrumVision(new SpectrumVision.VisionConfig());
+    drivetrain = TunerConstants.createDrivetrain();
+    flywheel = new Flywheel();
+    hood = new Hood();
+    climber = new Climber();
+
+    interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer);
+
+    dynamicShootingCommand = new DynamicShootingCommand(hood, flywheel, spindexer, turret);
+
+    autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
 
     registerPathplannerCommands();
 
@@ -136,6 +175,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     AllianceColor.addListener(this);
 
     DriverStation.silenceJoystickConnectionWarning(true);
+  }
+
+  public CommandSwerveDrivetrain getSwerve() {
+    return drivetrain;
   }
 
   private boolean getTuningMode() {
@@ -315,11 +358,17 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .whileTrue(spindexer.reverseSpindexer().andThen(spindexer.reverseTower()))
         .onFalse(spindexer.stopMotorsCommand());
 
+    copilot.cross().onTrue(Commands.runOnce(() -> drivetrain.resetToFrontCameraPose()));
+
     copilot.L1().onTrue(turret.setAngle(Rotations.of(-.25)));
 
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
 
     copilot.L2().toggleOnTrue(Commands.idle(turret));
+  }
+
+  public void setupSmartDashboardData() {
+    SmartDashboard.putData("Field2d", field2d);
   }
 
   private boolean initialPoseSet = false;
