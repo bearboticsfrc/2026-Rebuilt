@@ -11,10 +11,9 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.units.measure.Distance;
 
 public class VisionConstants {
-  public static final Distance CULLING_DISTANCE = Meters.of(3.0); // Meters.of(2.5);
+  public static final double CULLING_DISTANCE = 4.0; // Meters
 
   public static final double CULLING_AMBIGUITY = 0.2;
 

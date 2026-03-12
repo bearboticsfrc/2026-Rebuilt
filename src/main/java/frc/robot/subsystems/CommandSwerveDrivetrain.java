@@ -27,23 +27,15 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
-import frc.robot.vision.VisionConstants;
-import frc.robot.vision.VisionOriginal;
-import frc.robot.vision.VisionOriginal.VisionEstimate;
-import java.util.List;
 import java.util.function.Supplier;
-import org.photonvision.EstimatedRobotPose;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements Subsystem so it can easily
  * be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
-
-  private static final double VISION_LOOP_PERIOD = 0.02;
   private static final double kSimLoopPeriod = 0.005; // 5ms
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
@@ -73,13 +65,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   //    new SwerveRequest.SysIdSwerveSteerGains();
   // private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
   //    new SwerveRequest.SysIdSwerveRotation();
-
-  /** Notifier for updating pose based on vision measurements. */
-  private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
-
-  @Logged private final VisionOriginal vision = Robot.get().getVision();
-
-  // new VisionOriginal(Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA));
 
   @Logged(name = "PigeonPitch")
   public double getPigeonPitch() {
@@ -189,7 +174,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       startSimThread();
     }
     configureAutoBuilder();
-    poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
     setStateStdDevs(STD_DEVS);
   }
 
@@ -224,23 +208,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       startSimThread();
     }
     configureAutoBuilder();
-    poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
     setStateStdDevs(STD_DEVS);
-  }
-
-  public void resetToFrontCameraPose() {
-    Pose2d visionPose = vision.latestCameraPose.get(VisionConstants.FRONT_CAMERA_NAME);
-    if (visionPose != null) {
-      resetPose(visionPose);
-    } else {
-      System.out.println("Tried to reset pose from front camera without a pose!!!!!!!!!!!!!");
-    }
   }
 
   @Override
   public void resetPose(Pose2d newPose) {
     super.resetPose(newPose);
-    // vision.resetSimPose(newPose);
   }
 
   private void configureAutoBuilder() {
@@ -271,27 +244,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       DriverStation.reportError(
           "Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
     }
-  }
-
-  private void poseEstimationPeriodic() {
-    List<VisionOriginal.VisionEstimate> visionEstimates = vision.getEstimatedGlobalPoses();
-
-    for (VisionEstimate visionEstimate : visionEstimates) {
-      // addVisionMeasurement(visionEstimate.pose(), visionEstimate.stdDevs());
-      addVisionMeasurement(visionEstimate.pose(), VisionConstants.SINGLE_TAG_STD_DEVS);
-    }
-  }
-
-  /**
-   * Adds vision-based pose estimation measurements to the drivetrain.
-   *
-   * @param estimatedRobotPose The estimated robot pose from vision processing.
-   */
-  private void addVisionMeasurement(EstimatedRobotPose estimatedRobotPose, Matrix<N3, N1> stdDevs) {
-    Pose2d estPose = estimatedRobotPose.estimatedPose.toPose2d();
-
-    addVisionMeasurement(
-        estPose, Utils.fpgaToCurrentTime(estimatedRobotPose.timestampSeconds), stdDevs);
   }
 
   /**
@@ -364,13 +316,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
               /* use the measured time delta, get battery voltage from WPILib */
               updateSimState(deltaTime, RobotController.getBatteryVoltage());
-
-              // Update camera simulation
-              vision.simulationPeriodic(getState().Pose);
-
-              var debugField = vision.getSimDebugField();
-              debugField.getObject("EstimatedRobot").setPose(getState().Pose);
-              // debugField.getObject("EstimatedRobotModules").setPoses(getState().Speeds);
             });
     m_simNotifier.startPeriodic(kSimLoopPeriod);
   }

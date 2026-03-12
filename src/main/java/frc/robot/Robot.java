@@ -55,7 +55,9 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.HubTracker;
 import frc.robot.vision.SpectrumVision;
 import frc.robot.vision.VisionConstants;
-import frc.robot.vision.VisionOriginal;
+import frc.robot.vision.VisionSystem;
+import frc.spectrumLib.Telemetry;
+import frc.spectrumLib.Telemetry.PrintPriority;
 import java.util.Arrays;
 import lombok.Getter;
 
@@ -91,7 +93,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged @Getter private final Turret turret;
 
-  @Logged @Getter public final VisionOriginal vision;
+  @Logged @Getter public final VisionSystem vision;
   @Logged @Getter public final SpectrumVision spectrumVision;
 
   @Logged private final CommandSwerveDrivetrain drivetrain;
@@ -135,26 +137,31 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
-  private final Telemetry telemetry = new Telemetry(MaxSpeed);
+  private final DriveTelemetry driveTelemetry = new DriveTelemetry(MaxSpeed);
 
   private final AutoClimbCommand autoClimbCommand;
 
   public Robot() {
     instance = this;
+    Telemetry.start(true, false, PrintPriority.NORMAL);
 
     tracker = new HubTracker();
     intake = new Intake();
     intakeArm = new IntakeArm();
     spindexer = new Spindexer();
     turret = new Turret();
-    vision =
-        new VisionOriginal(
-            Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA));
-    spectrumVision = new SpectrumVision(new SpectrumVision.VisionConfig());
     drivetrain = TunerConstants.createDrivetrain();
+
     flywheel = new Flywheel();
     hood = new Hood();
     climber = new Climber();
+    spectrumVision = new SpectrumVision(new SpectrumVision.VisionConfig());
+
+    vision =
+        new VisionSystem(
+            Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA), drivetrain);
+
+    Telemetry.print("All subsystems Initialized");
 
     interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer);
 
@@ -309,7 +316,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
-    drivetrain.registerTelemetry(telemetry::telemeterize);
+    drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
     turret.setDefaultCommand(
         turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
@@ -358,7 +365,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .whileTrue(spindexer.reverseSpindexer().andThen(spindexer.reverseTower()))
         .onFalse(spindexer.stopMotorsCommand());
 
-    copilot.cross().onTrue(Commands.runOnce(() -> drivetrain.resetToFrontCameraPose()));
+    copilot.cross().onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
 
     copilot.L1().onTrue(turret.setAngle(Rotations.of(-.25)));
 
