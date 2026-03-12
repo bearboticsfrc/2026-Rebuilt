@@ -47,7 +47,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
-  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.01, 0.01, 0.01);
+  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.1, 0.1, 0.05);
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -211,6 +211,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     setStateStdDevs(STD_DEVS);
   }
 
+  public void resetToRearCameraPose() {
+    Pose2d visionPose = vision.latestCameraPose.get(VisionConstants.REAR_CAMERA_NAME);
+    if (visionPose != null) {
+      resetPose(visionPose);
+    } else {
+      System.out.println("Tried to reset pose from rear camera without a pose!!!!!!!!!!!!!11");
+    }
+  }
+
   @Override
   public void resetPose(Pose2d newPose) {
     super.resetPose(newPose);
@@ -251,8 +260,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     List<Vision.VisionEstimate> visionEstimates = vision.getEstimatedGlobalPoses();
 
     for (VisionEstimate visionEstimate : visionEstimates) {
-      // addVisionMeasurement(visionEstimate.pose(), visionEstimate.stdDevs());
-      addVisionMeasurement(visionEstimate.pose(), VisionConstants.SINGLE_TAG_STD_DEVS);
+      addVisionMeasurement(visionEstimate.pose(), visionEstimate.stdDevs());
     }
   }
 

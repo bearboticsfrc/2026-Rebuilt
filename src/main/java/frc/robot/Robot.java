@@ -241,7 +241,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
           AllianceFlipUtil.apply(((PathPlannerAuto) selectedAutoCommand).getStartingPose());
       introspectedAutoCommand = selectedAutoCommand;
       drivetrain.resetPose(autoStartPose);
-      System.out.println("Setting autostartpose!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      System.out.println(
+          "**************** In disabledPeriodic ["
+              + DriverStation.getAlliance().get().name()
+              + "] Reseting pose to start of first auto: "
+              + introspectedAutoCommand.getName());
     }
   }
 
@@ -320,6 +324,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
 
     copilot.L2().toggleOnTrue(Commands.idle(turret));
+
+    copilot.cross().onTrue(Commands.runOnce(() -> drivetrain.resetToRearCameraPose()));
   }
 
   private boolean initialPoseSet = false;
@@ -328,8 +334,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void updateAlliance(Alliance alliance) {
     if (!initialPoseSet) {
       Command firstAuto = autoChooser.getSelected();
-      System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FirstAuto: " + firstAuto.getName());
       drivetrain.resetPose(AllianceFlipUtil.apply(((PathPlannerAuto) firstAuto).getStartingPose()));
+      System.out.println(
+          "**************** Alliance Set ["
+              + alliance.name()
+              + "] Reseting pose to start of first auto: "
+              + firstAuto.getName());
       initialPoseSet = true;
     }
   }

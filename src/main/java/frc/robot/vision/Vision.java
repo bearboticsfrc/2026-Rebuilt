@@ -34,6 +34,8 @@ public class Vision {
   public record VisionEstimate(EstimatedRobotPose pose, Matrix<N3, N1> stdDevs) {}
   ;
 
+  private static final Matrix<N3, N1> MAX_STD_DEVS =
+      VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
   private Matrix<N3, N1> curStdDevs;
 
   // Simulation
@@ -107,14 +109,16 @@ public class Vision {
     List<VisionEstimate> visionEstimates = new ArrayList<>();
 
     for (PhotonCamera camera : cameras) {
-      Optional<EstimatedRobotPose> visionEstimation = Optional.empty();
       List<PhotonPipelineResult> changes = camera.getAllUnreadResults();
       if (changes.isEmpty()) continue;
+
+      // we only care about the last result from this camera
       PhotonPipelineResult change = changes.get(changes.size() - 1);
-      // for (PhotonPipelineResult change : changes) {
-      // System.out.println(" Processing change for timestamp " + change.getTimestampSeconds());
       PhotonPoseEstimator photonPoseEstimator = photonEstimators.get(cameras.indexOf(camera));
-      visionEstimation = photonPoseEstimator.estimateCoprocMultiTagPose(change);
+      Optional<EstimatedRobotPose> visionEstimation =
+          photonPoseEstimator.estimateCoprocMultiTagPose(change);
+
+      // If there is no multi tag pose, revert to lowest ambiguity of single tag
       if (visionEstimation.isEmpty()) {
         visionEstimation = photonPoseEstimator.estimateLowestAmbiguityPose(change);
       }
@@ -139,14 +143,11 @@ public class Vision {
             });
       }
 
-      // if (visionEstimation.isPresent()) {
       Matrix<N3, N1> stdDevs =
           calculateStdDevs(photonPoseEstimator, visionEstimation, change.getTargets());
-      // visionEstimates.add(new VisionEstimate(visionEstimation.get(), stdDevs));
-      visionEstimates.add(new VisionEstimate(visionEstimation.get(), SINGLE_TAG_STD_DEVS));
+      visionEstimates.add(new VisionEstimate(visionEstimation.get(), stdDevs));
 
       latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
-      // }
     }
 
     return visionEstimates;
@@ -164,41 +165,38 @@ public class Vision {
       PhotonPoseEstimator photonEstimator,
       Optional<EstimatedRobotPose> estimatedPose,
       List<PhotonTrackedTarget> targets) {
-    if (estimatedPose.isEmpty()) {
-      // No pose input. Default to single-tag std devs
-      return SINGLE_TAG_STD_DEVS;
+
+    var estStdDevs = MULTI_TAG_STD_DEVS;
+    int numTags = 0;
+    double avgDist = 0;
+
+    // Precalculation - see how many tags we found, and calculate an average-distance metric
+    for (PhotonTrackedTarget tgt : targets) {
+      Optional<Pose3d> tagPose = photonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
+      if (tagPose.isEmpty()) continue;
+      numTags++;
+      avgDist +=
+          tagPose
+              .get()
+              .toPose2d()
+              .getTranslation()
+              .getDistance(estimatedPose.get().estimatedPose.toPose2d().getTranslation());
+    }
+
+    if (numTags == 0) {
+      // No tags visible.  Return Max Standard Deviations because we don't want to use this
+      // measurement
+      return MAX_STD_DEVS;
     } else {
-      // Pose present. Start running Heuristic
-      var estStdDevs = SINGLE_TAG_STD_DEVS;
-      int numTags = 0;
-      double avgDist = 0;
+      avgDist /= numTags;
+      if (numTags == 1 && avgDist > CULLING_DISTANCE) return MAX_STD_DEVS;
 
-      // Precalculation - see how many tags we found, and calculate an average-distance metric
-      for (var tgt : targets) {
-        var tagPose = photonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
-        if (tagPose.isEmpty()) continue;
-        numTags++;
-        avgDist +=
-            tagPose
-                .get()
-                .toPose2d()
-                .getTranslation()
-                .getDistance(estimatedPose.get().estimatedPose.toPose2d().getTranslation());
-      }
+      // One or more tags visible, run the full heuristic.
+      // Increase std devs if only one target is visible
+      if (numTags == 1) estStdDevs = SINGLE_TAG_STD_DEVS;
 
-      if (numTags == 0) {
-        // No tags visible. Default to single-tag std devs
-        return SINGLE_TAG_STD_DEVS;
-      } else {
-        // One or more tags visible, run the full heuristic.
-        avgDist /= numTags;
-        // Decrease std devs if multiple targets are visible
-        if (numTags > 1) estStdDevs = MULTI_TAG_STD_DEVS;
-        // Increase std devs based on (average) distance
-        if (numTags == 1 && avgDist > 4)
-          return VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
-        else return estStdDevs.times(1 + (avgDist * avgDist / 30));
-      }
+      // Increase std devs based on (average) distance
+      return estStdDevs.times(1 + (avgDist * avgDist / 30));
     }
   }
 
@@ -211,16 +209,9 @@ public class Vision {
     }
   }
 
-  private boolean isTooFar(PhotonPipelineResult result) {
-    return result.getBestTarget().bestCameraToTarget.getMeasureX().gt(CULLING_DISTANCE);
-  }
-
   private boolean isTooFar(EstimatedRobotPose estimate) {
-    return estimate.targetsUsed.get(0).getBestCameraToTarget().getMeasureX().gt(CULLING_DISTANCE);
-  }
-
-  private boolean isTooAmbiguous(PhotonPipelineResult result) {
-    return result.getBestTarget().poseAmbiguity > CULLING_AMBIGUITY;
+    return estimate.targetsUsed.get(0).getBestCameraToTarget().getTranslation().getNorm()
+        > CULLING_DISTANCE;
   }
 
   private boolean isTooAmbiguous(EstimatedRobotPose estimate) {
