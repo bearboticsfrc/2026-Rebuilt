@@ -66,19 +66,6 @@ public class RobotState {
     else return false;
   }
 
-  public boolean iSLeft() {
-    if (isBlueAlliance()
-        && !isInNeutralZone()
-        && robotPose.getY() > Field.getMyAllianceLine().getY()) {
-      return true;
-    } else if (isRedAlliance()
-        && !isInNeutralZone()
-        && robotPose.getY() < Field.getMyAllianceLine().getY()) {
-      return true;
-    }
-    return false;
-  }
-
   @Logged
   public boolean isInNeutralZone() {
     if (isBlueAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
@@ -87,27 +74,21 @@ public class RobotState {
   }
 
   @Logged
+  public boolean iSLeft() {
+    return (isBlueAlliance()
+        && robotPose.getY() > Field.getMyAllianceLine().getY() || 
+        isRedAlliance()
+        && robotPose.getY() < Field.getMyAllianceLine().getY());
+  }
+
+  @Logged
   public boolean isLeftNeutralZone() {
-    if (isBlueAlliance()
-        && isInNeutralZone()
-        && robotPose.getY() > Field.getMyAllianceLine().getY()) return true;
-    else if (isRedAlliance()
-        && isInNeutralZone()
-        && robotPose.getY() < Field.getMyAllianceLine().getY()) return true;
-    else return false;
-    // return(iSLeft() && isInNeutralZone());
+    return (iSLeft() && isInNeutralZone());
   }
 
   @Logged
   public boolean isRightNeutralZone() {
-    if (isBlueAlliance()
-        && isInNeutralZone()
-        && robotPose.getY() < Field.getMyAllianceLine().getY()) return true;
-    else if (isRedAlliance()
-        && isInNeutralZone()
-        && robotPose.getY() > Field.getMyAllianceLine().getY()) return true;
-    else return false;
-    // return(!iSLeft() && isInNeutralZone());
+    return(!iSLeft() && isInNeutralZone());
   }
 
   public Rotation2d getAngleToHub() {
