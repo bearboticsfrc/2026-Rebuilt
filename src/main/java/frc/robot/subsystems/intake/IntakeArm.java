@@ -47,17 +47,17 @@ public class IntakeArm extends SubsystemBase {
 
   private final CANBus canivore = new CANBus("Default Name");
 
-  private final TalonFX arm = new TalonFX(10, canivore);
+  private final TalonFX motor = new TalonFX(10, canivore);
 
   private final MotionMagicVoltage motionMagicVoltageRequest = new MotionMagicVoltage(0);
 
   /* device status signals */
-  private final StatusSignal<Angle> armPosition = arm.getPosition(false);
-  private final StatusSignal<AngularVelocity> armVelocity = arm.getVelocity(false);
-  private final StatusSignal<Current> armTorqueCurrent = arm.getTorqueCurrent(false);
-  private final StatusSignal<Voltage> armVoltage = arm.getMotorVoltage(false);
+  private final StatusSignal<Angle> armPosition = motor.getPosition(false);
+  private final StatusSignal<AngularVelocity> armVelocity = motor.getVelocity(false);
+  private final StatusSignal<Current> armTorqueCurrent = motor.getTorqueCurrent(false);
+  private final StatusSignal<Voltage> armVoltage = motor.getMotorVoltage(false);
 
-  private final StatusSignal<Double> armProfileVelocity = arm.getClosedLoopReferenceSlope(false);
+  private final StatusSignal<Double> armProfileVelocity = motor.getClosedLoopReferenceSlope(false);
 
   private final double ARM_GEAR_RATIO = 12;
 
@@ -65,7 +65,7 @@ public class IntakeArm extends SubsystemBase {
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
 
   /** Configs for arm */
-  private final TalonFXConfiguration armConfig =
+  private final TalonFXConfiguration config =
       motorInitialConfigs
           .clone()
           .withMotorOutput(
@@ -117,29 +117,29 @@ public class IntakeArm extends SubsystemBase {
   public IntakeArm() {
     super("IntakeArm");
 
-    StatusCode status = arm.getConfigurator().apply(armConfig);
+    StatusCode status = motor.getConfigurator().apply(config);
 
     for (int i = 0; i < 2; ++i) {
       if (status.isOK()) break;
-      status = arm.getConfigurator().apply(armConfig);
+      status = motor.getConfigurator().apply(config);
     }
     if (!status.isOK()) {
       DriverStation.reportError("ERROR Configuring IntakeArm arm motor: " + status, false);
     }
 
-    arm.setPosition(Setpoint.Initial.target);
+    motor.setPosition(Setpoint.Initial.target);
 
     optimizeCAN();
     System.out.println("IntakeArm Subsystem Initialized");
   }
 
   private void optimizeCAN() {
-    arm.getPosition().setUpdateFrequency(100);
-    arm.getVelocity().setUpdateFrequency(100);
-    arm.getSupplyCurrent().setUpdateFrequency(50);
-    arm.getDeviceTemp().setUpdateFrequency(10);
+    motor.getPosition().setUpdateFrequency(100);
+    motor.getVelocity().setUpdateFrequency(100);
+    motor.getSupplyCurrent().setUpdateFrequency(50);
+    motor.getDeviceTemp().setUpdateFrequency(10);
 
-    arm.optimizeBusUtilization();
+    motor.optimizeBusUtilization();
   }
 
   public Command extend() {
@@ -192,7 +192,7 @@ public class IntakeArm extends SubsystemBase {
         .andThen(
             run(
                 () -> {
-                  arm.setControl(motionMagicVoltageRequest);
+                  motor.setControl(motionMagicVoltageRequest);
                 }));
   }
 
@@ -206,7 +206,7 @@ public class IntakeArm extends SubsystemBase {
     return run(
         () -> {
           motionMagicVoltageRequest.withPosition(setpoint.get().target);
-          arm.setControl(motionMagicVoltageRequest);
+          motor.setControl(motionMagicVoltageRequest);
         });
   }
 
