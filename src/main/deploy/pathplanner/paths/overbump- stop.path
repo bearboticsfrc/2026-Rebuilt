@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.16472182596291,
-        "y": 5.542353780313838
+        "x": 4.694720743109341,
+        "y": 5.541442603176519
       },
       "isLocked": false,
       "linkedName": "overbump"
     },
     {
       "anchor": {
-        "x": 2.9651497860199716,
+        "x": 3.4757333333333333,
         "y": 5.542353780313838
       },
       "prevControl": {
-        "x": 4.168445078459351,
-        "y": 5.5811697574893016
+        "x": 3.225752846789581,
+        "y": 5.545477295536919
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "D bump stop"
+      "linkedName": "D stop"
     }
   ],
   "rotationTargets": [],
@@ -33,22 +33,22 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 1.75,
+    "maxAcceleration": 1.75,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": 2.6630007660670585
+    "velocity": 0.0,
+    "rotation": -90.98776039963985
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
     "velocity": 1.5,
-    "rotation": 0.0
+    "rotation": -91.03451265278618
   },
   "useDefaultConstraints": false
 }

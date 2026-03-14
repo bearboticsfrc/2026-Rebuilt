@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.4277786580414285,
-        "y": 5.739611829458326
+        "x": 5.874390862554568,
+        "y": 5.523942865583801
       },
       "isLocked": false,
       "linkedName": "D collect"
@@ -20,8 +20,8 @@
         "y": 5.542353780313838
       },
       "prevControl": {
-        "x": 7.105520684736091,
-        "y": 5.34827389443652
+        "x": 7.127942583160672,
+        "y": 5.329269662799005
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,14 +31,7 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "StopIntake",
-      "waypointRelativePos": 0.2889939230249767,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.5,
     "maxAcceleration": 2.5,
@@ -49,12 +42,12 @@
   },
   "goalEndState": {
     "velocity": 1.0,
-    "rotation": 0.0
+    "rotation": -91.03451265278618
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 2.0,
     "rotation": -91.84761026599462
   },
   "useDefaultConstraints": false

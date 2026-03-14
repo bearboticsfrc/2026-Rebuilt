@@ -224,11 +224,11 @@ public class VisionSystem {
       latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
     }
 
-    Optional<VisionEstimate> turretEstimate = getTurretPose();
-    if (turretEstimate.isPresent()) {
-      visionEstimates.add(turretEstimate.get());
-      updatedTargetPosesFromLimelight(turretLimelight.getRawFiducial());
-    }
+    // Optional<VisionEstimate> turretEstimate = getTurretPose();
+    // if (turretEstimate.isPresent()) {
+    //   visionEstimates.add(turretEstimate.get());
+    //   updatedTargetPosesFromLimelight(turretLimelight.getRawFiducial());
+    // }
 
     return visionEstimates;
   }

@@ -172,7 +172,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     registerPathplannerCommands();
 
-    autoChooser = AutoBuilder.buildAutoChooser("OStart - Outpost - Climb");
+    autoChooser = AutoBuilder.buildAutoChooser("Bread-N-Buttah");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();
@@ -319,8 +319,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    // turret.setDefaultCommand(
-    //     turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
+    turret.setDefaultCommand(
+        turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
   }
 
   public void configureBindings() {

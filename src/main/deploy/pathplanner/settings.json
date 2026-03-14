@@ -5,12 +5,11 @@
   "pathFolders": [
     "D Bump",
     "O - Outpost",
-    "O Bump",
-    "Simple Paths"
+    "O Bump"
   ],
   "autoFolders": [],
-  "defaultMaxVel": 2.5,
-  "defaultMaxAccel": 2.5,
+  "defaultMaxVel": 2.0,
+  "defaultMaxAccel": 2.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,

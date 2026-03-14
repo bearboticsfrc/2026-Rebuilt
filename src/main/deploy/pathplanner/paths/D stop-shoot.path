@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.9651497860199716,
+        "x": 3.4757333333333333,
         "y": 5.542353780313838
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9041797432239653,
-        "y": 5.425905848787448
+        "x": 3.1129036590824586,
+        "y": 5.5336562089718955
       },
       "isLocked": false,
-      "linkedName": "D bump stop"
+      "linkedName": "D stop"
     },
     {
       "anchor": {
-        "x": 2.1111982881597715,
-        "y": 4.196733238231099
+        "x": 2.2479333333333336,
+        "y": 5.542353780313838
       },
       "prevControl": {
-        "x": 2.6028673323823104,
-        "y": 5.231825962910129
+        "x": 2.7178299464480804,
+        "y": 5.556284422244268
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 2.0,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 178.75463573323174
+    "rotation": -88.56790381583538
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 2.6630007660670585
+    "rotation": -90.98776039963985
   },
   "useDefaultConstraints": true
 }

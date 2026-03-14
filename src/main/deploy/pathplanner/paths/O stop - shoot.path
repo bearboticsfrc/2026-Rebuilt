@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.175891583452211,
-        "y": 2.320627674750357
+        "x": 2.686433333333334,
+        "y": 2.427166666666666
       },
       "isLocked": false,
       "linkedName": "O stop"
     },
     {
       "anchor": {
-        "x": 2.162952924393723,
-        "y": 2.7993580599144083
+        "x": 2.1797222222222223,
+        "y": 2.4466555555555556
       },
       "prevControl": {
-        "x": 2.4217261055634807,
-        "y": 2.100670470756063
+        "x": 2.540266666666667,
+        "y": 2.43691111111111
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,8 +33,8 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 2.0,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -159.62356478616368
+    "rotation": 91.33221985386963
   },
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 90.47945358984157
   },
   "useDefaultConstraints": true
 }

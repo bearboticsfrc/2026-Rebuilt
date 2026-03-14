@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.838330941371454,
-        "y": 1.1071581916041067
+        "x": 7.136982300462909,
+        "y": 1.4819914449501943
       },
       "isLocked": false,
       "linkedName": "overbump O"
     },
     {
       "anchor": {
-        "x": 7.819441899832318,
-        "y": 1.345664309652683
+        "x": 7.412488888888889,
+        "y": 1.287066666666666
       },
       "prevControl": {
-        "x": 6.704422253922965,
-        "y": 1.1561483594864488
+        "x": 6.778255869251746,
+        "y": 1.7501038570669958
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 1.75,
-    "rotation": 107.6501242199304
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 1.75,
-    "rotation": 0.0
+    "rotation": 87.51885639514731
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
