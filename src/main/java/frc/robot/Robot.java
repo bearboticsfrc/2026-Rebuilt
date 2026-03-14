@@ -85,7 +85,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final HubTracker tracker;
 
-  @Logged private final Rollers rollers = new Rollers();
+  @Logged private final Rollers rollers;
 
   @Logged private final IntakeArm intakeArm;
 
@@ -145,7 +145,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     instance = this;
     Telemetry.start(true, false, PrintPriority.NORMAL);
     tracker = new HubTracker();
-    intake = new Intake();
+    rollers = new Rollers();
     intakeArm = new IntakeArm();
     spindexer = new Spindexer();
     turret = new Turret();
