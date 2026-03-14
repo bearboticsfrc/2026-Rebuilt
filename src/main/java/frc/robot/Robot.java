@@ -45,9 +45,9 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DynamicShootingCalculator;
-import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.Spindexer;
+import frc.robot.subsystems.intake.IntakeArm;
+import frc.robot.subsystems.intake.Rollers;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.turret.Turret;
@@ -68,7 +68,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final HubTracker tracker = new HubTracker();
 
-  @Logged private final Intake intake = new Intake();
+  @Logged private final Rollers rollers = new Rollers();
 
   @Logged private final IntakeArm intakeArm = new IntakeArm();
 
@@ -171,10 +171,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void registerPathplannerCommands() {
     // named commands for autonomous
     NamedCommands.registerCommand(
-        "Intake", new ScheduleCommand(intake.runRoller().andThen(intakeArm.extend())));
+        "Intake", new ScheduleCommand(rollers.run().andThen(intakeArm.extend())));
 
     NamedCommands.registerCommand(
-        "StopIntake", new ScheduleCommand(intake.stopRollerCommand().andThen(intakeArm.retract())));
+        "StopIntake", new ScheduleCommand(rollers.stop().andThen(intakeArm.retract())));
 
     NamedCommands.registerCommand(
         "Shoot",
@@ -185,7 +185,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         "ShootRoll",
         new ScheduleCommand(
                 getTurretCommand().alongWith(dynamicShootingCommand.shoot().withTimeout(5)))
-            .alongWith(intake.runRollerSlow()));
+            .alongWith(rollers.runSlow()));
 
     NamedCommands.registerCommand(
         "StopShoot", new ScheduleCommand(turret.stop().alongWith(dynamicShootingCommand.stop())));
@@ -277,13 +277,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     // pilot controlls
     pilot
         .leftTrigger()
-        .onTrue(intake.runRoller().andThen(intakeArm.extend()))
+        .onTrue(rollers.run().andThen(intakeArm.extend()))
         .onFalse(
             intakeArm
                 .retract()
                 .alongWith(
                     Commands.waitSeconds(1)
-                        .andThen(intake.stopRollerCommand())
+                        .andThen(rollers.stop())
                         .andThen(Commands.waitSeconds(2))));
 
     pilot

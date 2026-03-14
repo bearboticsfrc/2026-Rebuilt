@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.RPM;
 
@@ -13,11 +13,11 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Intake extends SubsystemBase {
+public class Rollers extends SubsystemBase {
 
   private final CANBus rio = new CANBus("rio");
 
-  private final TalonFX roller = new TalonFX(25, rio);
+  private final TalonFX motor = new TalonFX(25, rio);
 
   private final DutyCycleOut dutyReq = new DutyCycleOut(0.0);
 
@@ -25,18 +25,18 @@ public class Intake extends SubsystemBase {
 
   public final double ROLLER_SPEED_SLOW = 0.3;
 
-  public Intake() {
+  public Rollers() {
     super("Intake");
-    TalonFXConfiguration rollerConfig = new TalonFXConfiguration();
+    TalonFXConfiguration config = new TalonFXConfiguration();
 
-    rollerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    rollerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-    StatusCode status = roller.getConfigurator().apply(rollerConfig);
+    StatusCode status = motor.getConfigurator().apply(config);
 
     for (int i = 0; i < 2; ++i) {
       if (status.isOK()) break;
-      status = roller.getConfigurator().apply(rollerConfig);
+      status = motor.getConfigurator().apply(config);
     }
     if (!status.isOK()) {
       System.out.println("ERROR Configuring Intake roller motor: " + status);
@@ -45,28 +45,24 @@ public class Intake extends SubsystemBase {
     System.out.println("Intake Subsystem Initialized");
   }
 
-  public void setRollerOutput(double output) {
-    roller.setControl(dutyReq.withOutput(output));
+  public void setOutput(double output) {
+    motor.setControl(dutyReq.withOutput(output));
   }
 
-  public void stopRoller() {
-    roller.stopMotor();
+  public Command run() {
+    return runOnce(() -> setOutput(ROLLER_SPEED));
   }
 
-  public Command runRoller() {
-    return runOnce(() -> setRollerOutput(ROLLER_SPEED));
+  public Command runSlow() {
+    return runOnce(() -> setOutput(ROLLER_SPEED_SLOW));
   }
 
-  public Command runRollerSlow() {
-    return runOnce(() -> setRollerOutput(ROLLER_SPEED_SLOW));
-  }
-
-  public Command stopRollerCommand() {
-    return runOnce(() -> stopRoller());
+  public Command stop() {
+    return runOnce(() -> motor.stopMotor());
   }
 
   @Logged
   public double getRollerVelocityInRPM() {
-    return roller.getVelocity().getValue().in(RPM);
+    return motor.getVelocity().getValue().in(RPM);
   }
 }
