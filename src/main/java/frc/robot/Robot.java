@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import bearlib.fms.AllianceColor;
 import bearlib.fms.AllianceReadyListener;
 import bearlib.util.TunableNumber;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -36,12 +37,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AutoClimbCommand;
-import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
 import frc.robot.field.AllianceFlipUtil;
-import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -144,7 +144,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public Robot() {
     instance = this;
     Telemetry.start(true, false, PrintPriority.NORMAL);
-
     tracker = new HubTracker();
     intake = new Intake();
     intakeArm = new IntakeArm();
@@ -159,7 +158,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     vision =
         new VisionSystem(
-            Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA), drivetrain);
+            Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA),
+            drivetrain,
+            () -> turret.getPositionDegrees());
 
     Telemetry.print("All subsystems Initialized");
 
@@ -318,12 +319,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    turret.setDefaultCommand(
-        turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
+    // turret.setDefaultCommand(
+    //     turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
   }
 
   public void configureBindings() {
-
     // pilot controlls
     pilot
         .leftTrigger()
@@ -341,7 +341,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
-    pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
+    // pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
 
     // copilot controlls
     copilot.povUp().onTrue(climber.raise());
@@ -372,6 +372,23 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
 
     copilot.L2().toggleOnTrue(Commands.idle(turret));
+  }
+
+  public void bindDriveSysidTriggers() {
+    pilot.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
+    pilot.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
+
+    /*
+     * Joystick Y = quasistatic forward
+     * Joystick A = quasistatic reverse
+     * Joystick B = dynamic forward
+     * Joystick X = dyanmic reverse
+     */
+
+    pilot.y().whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+    pilot.a().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+    pilot.b().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+    pilot.x().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
   }
 
   public void setupSmartDashboardData() {
