@@ -88,6 +88,11 @@ public class VisionSystem {
 
   private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
 
+  @Logged
+  public String getLimelightLogMessage() {
+    return turretLimelight.getLogStatus();
+  }
+
   @Getter
   final LimelightConfig turretConfig =
       new LimelightConfig(limelight)
@@ -219,6 +224,12 @@ public class VisionSystem {
       latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
     }
 
+    Optional<VisionEstimate> turretEstimate = getTurretPose();
+    if (turretEstimate.isPresent()) {
+      visionEstimates.add(turretEstimate.get());
+      updatedTargetPosesFromLimelight(turretLimelight.getRawFiducial());
+    }
+
     return visionEstimates;
   }
 
@@ -268,7 +279,7 @@ public class VisionSystem {
     if (Math.abs(Math.toDegrees(megaTag1Pose3d.getRotation().getX())) > 5
         || Math.abs(Math.toDegrees(megaTag1Pose3d.getRotation().getY())) > 5) {
       turretLimelight.sendInvalidStatus("Roll/Pitch Rejection");
-      return null;
+      return Optional.empty();
     }
 
     /* ---------------- Integration tuning ---------------- */
@@ -301,7 +312,7 @@ public class VisionSystem {
       degStds = LARGE_VARIANCE;
     } else {
       turretLimelight.sendInvalidStatus("Confidence too low");
-      return null;
+      return Optional.empty();
     }
 
     /* ---------------- MT1-specific tightening ---------------- */
@@ -400,6 +411,15 @@ public class VisionSystem {
   private void updatedTargetPoses(List<PhotonTrackedTarget> targetList) {
     for (PhotonTrackedTarget trackedTarget : targetList) {
       int fiducialId = trackedTarget.getFiducialId();
+      Pose3d tagPose = VisionConstants.APRIL_TAG_FIELD_LAYOUT.getTagPose(fiducialId).get();
+
+      targetPoses.add(tagPose.toPose2d());
+    }
+  }
+
+  private void updatedTargetPosesFromLimelight(RawFiducial[] tags) {
+    for (RawFiducial tag : tags) {
+      int fiducialId = tag.id;
       Pose3d tagPose = VisionConstants.APRIL_TAG_FIELD_LAYOUT.getTagPose(fiducialId).get();
 
       targetPoses.add(tagPose.toPose2d());
