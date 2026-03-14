@@ -20,7 +20,7 @@ public class Spindexer extends SubsystemBase {
   private final CANBus canivore = new CANBus("Default Name");
 
   private final TalonFX spindexer = new TalonFX(7, canivore);
-  private final TalonFX tower = new TalonFX(23, canivore);
+  private final TalonFX kicker = new TalonFX(23, canivore);
 
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
   private final VelocityTorqueCurrentFOC m_vtcfReq = new VelocityTorqueCurrentFOC(0.0);
@@ -34,7 +34,7 @@ public class Spindexer extends SubsystemBase {
     super("Spindexer");
 
     TalonFXConfiguration spindexerConfig = new TalonFXConfiguration();
-    TalonFXConfiguration towerConfig = new TalonFXConfiguration();
+    TalonFXConfiguration kickerConfig = new TalonFXConfiguration();
 
     spindexerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     spindexerConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
@@ -46,14 +46,14 @@ public class Spindexer extends SubsystemBase {
     spindexerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
     spindexerConfig.withCurrentLimits(spindexerCurrentLimitsConfigs);
 
-    towerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    towerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    kickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    kickerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     CurrentLimitsConfigs towerCurrentLimitsConfigs = new CurrentLimitsConfigs();
     towerCurrentLimitsConfigs.StatorCurrentLimit = 240;
     towerCurrentLimitsConfigs.SupplyCurrentLimit = 140;
     towerCurrentLimitsConfigs.StatorCurrentLimitEnable = true;
     towerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
-    towerConfig.withCurrentLimits(towerCurrentLimitsConfigs);
+    kickerConfig.withCurrentLimits(towerCurrentLimitsConfigs);
 
     StatusCode status = spindexer.getConfigurator().apply(spindexerConfig);
 
@@ -65,10 +65,10 @@ public class Spindexer extends SubsystemBase {
       System.out.println("ERROR Configuring Spindexer spindexer motor: " + status);
     }
 
-    status = tower.getConfigurator().apply(towerConfig);
+    status = kicker.getConfigurator().apply(kickerConfig);
     for (int i = 0; i < 2; ++i) {
       if (status.isOK()) break;
-      status = tower.getConfigurator().apply(towerConfig);
+      status = kicker.getConfigurator().apply(kickerConfig);
     }
     if (!status.isOK()) {
       System.out.println("ERROR Configuring Spindexer tower motor: " + status);
@@ -85,12 +85,12 @@ public class Spindexer extends SubsystemBase {
 
     spindexer.optimizeBusUtilization();
 
-    tower.getPosition().setUpdateFrequency(50);
-    tower.getVelocity().setUpdateFrequency(50);
-    tower.getSupplyCurrent().setUpdateFrequency(50);
-    tower.getDeviceTemp().setUpdateFrequency(10);
+    kicker.getPosition().setUpdateFrequency(50);
+    kicker.getVelocity().setUpdateFrequency(50);
+    kicker.getSupplyCurrent().setUpdateFrequency(50);
+    kicker.getDeviceTemp().setUpdateFrequency(10);
 
-    tower.optimizeBusUtilization();
+    kicker.optimizeBusUtilization();
   }
 
   public void setSpindexerOutput(double output) {
@@ -98,13 +98,13 @@ public class Spindexer extends SubsystemBase {
     // spindexer.setControl(m_vtcfReq.withOutput(output));
   }
 
-  public void setTowerOutput(double output) {
-    tower.setControl(m_dutyReq.withOutput(output));
+  public void setKickerOutput(double output) {
+   kicker.setControl(m_dutyReq.withOutput(output));
     // tower.setControl(m_vtcfReq.withOutput(output));
   }
 
   public void stopMotors() {
-    tower.stopMotor();
+    kicker.stopMotor();
     spindexer.stopMotor();
   }
 
@@ -112,23 +112,23 @@ public class Spindexer extends SubsystemBase {
     return runOnce(() -> setSpindexerOutput(SPINDEXER_OUTPUT));
   }
 
-  public Command runTower() {
-    return runOnce(() -> setTowerOutput(TOWER_OUTPUT));
-  }
-
-  public Command index() {
-    return runSpindexer().andThen(runTower());
+  public Command runKicker() {
+    return runOnce(() -> setKickerOutput(TOWER_OUTPUT));
   }
 
   public Command reverseSpindexer() {
     return runOnce(() -> setSpindexerOutput(SPINDEXER_REVERSE_OUTPUT));
   }
 
-  public Command reverseTower() {
-    return runOnce(() -> setTowerOutput(TOWER_REVERSE_OUTPUT));
+  public Command reverseKicker() {
+    return runOnce(() -> setKickerOutput(TOWER_REVERSE_OUTPUT));
   }
 
-  public Command stopMotorsCommand() {
+  public Command run() {
+    return runSpindexer().andThen(runKicker());
+  }
+
+   public Command stop() {
     return runOnce(() -> stopMotors());
   }
 
@@ -138,7 +138,7 @@ public class Spindexer extends SubsystemBase {
   }
 
   @Logged
-  public double getTowerVelocityInRPM() {
-    return tower.getVelocity().getValue().in(RPM);
+  public double getKickerVelocityInRPM() {
+    return kicker.getVelocity().getValue().in(RPM);
   }
 }
