@@ -50,7 +50,7 @@ public class Rollers extends SubsystemBase {
   }
 
   public Command run() {
-    return runOnce(() -> setOutput(ROLLER_SPEED));
+    return runOnce(() -> setOutput(ROLLER_SPEED)).withName("RollersRun");
   }
 
   public Command runSlow() {
@@ -58,7 +58,7 @@ public class Rollers extends SubsystemBase {
   }
 
   public Command stop() {
-    return runOnce(() -> motor.stopMotor());
+    return runOnce(() -> motor.stopMotor()).withName("RollersStop");
   }
 
   @Logged

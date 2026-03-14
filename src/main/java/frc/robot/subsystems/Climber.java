@@ -326,7 +326,8 @@ public class Climber extends SubsystemBase {
                 .finallyDo(
                     () -> {
                       leader.setPosition(Rotations.of(0));
-                    }));
+                    }))
+        .withName("CalibrateClimber");
   }
 
   @Override

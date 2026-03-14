@@ -143,11 +143,11 @@ public class IntakeArm extends SubsystemBase {
   }
 
   public Command extend() {
-    return goToSetpoint(() -> Setpoint.Extended);
+    return goToSetpoint(() -> Setpoint.Extended).withName("IntakeArmExtend");
   }
 
   public Command retract() {
-    return goToSetpoint(() -> Setpoint.Retracted);
+    return goToSetpoint(() -> Setpoint.Retracted).withName("IntakeArmRetract");
   }
 
   public Command armOscillate() {

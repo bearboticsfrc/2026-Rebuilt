@@ -19,6 +19,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import dev.doglog.DogLog;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
@@ -183,6 +184,21 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     AllianceColor.addListener(this);
 
     DriverStation.silenceJoystickConnectionWarning(true);
+
+    // Set the scheduler to log when a command initializes, interrupts, or finishes
+    CommandScheduler scheduler = CommandScheduler.getInstance();
+    scheduler.onCommandInitialize(
+        command -> DogLog.log("Misc/Robot Status", "Initialized: " + command.getName()));
+    scheduler.onCommandInterrupt(
+        (command, interrupter) ->
+            DogLog.log(
+                "Misc/Robot Status",
+                "Interrupted: "
+                    + command.getName()
+                    + " , by: "
+                    + (interrupter.isPresent() ? interrupter.get().getName() : "")));
+    scheduler.onCommandFinish(
+        command -> DogLog.log("Misc/Robot Status", "Finished: " + command.getName()));
   }
 
   public CommandSwerveDrivetrain getSwerve() {
@@ -222,7 +238,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void registerPathplannerCommands() {
     // named commands for autonomous
     NamedCommands.registerCommand(
-        "Intake", new ScheduleCommand(rollers.run().andThen(intakeArm.extend())));
+        "Intake",
+        new ScheduleCommand(
+                rollers.run().andThen(intakeArm.extend()).withName("SequentialRollerArm"))
+            .withName("ScheduleIntake"));
 
     NamedCommands.registerCommand(
         "StopIntake", new ScheduleCommand(rollers.stop().andThen(intakeArm.retract())));
@@ -235,8 +254,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     NamedCommands.registerCommand(
         "ShootRoll",
         new ScheduleCommand(
-                getTurretCommand().alongWith(dynamicShootingCommand.shoot().withTimeout(5)))
-            .alongWith(rollers.runSlow()));
+            getTurretCommand()
+                .alongWith(dynamicShootingCommand.shoot().withTimeout(5))
+                .alongWith(rollers.runSlow())));
 
     NamedCommands.registerCommand(
         "StopShoot", new ScheduleCommand(turret.stop().alongWith(dynamicShootingCommand.stop())));
