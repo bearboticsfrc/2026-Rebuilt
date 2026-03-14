@@ -16,6 +16,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -28,26 +29,18 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotState;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
-import frc.robot.vision.Vision;
-import frc.robot.vision.Vision.VisionEstimate;
-import frc.robot.vision.VisionConstants;
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Supplier;
-import org.photonvision.EstimatedRobotPose;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements Subsystem so it can easily
  * be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
-
-  private static final double VISION_LOOP_PERIOD = 0.02;
   private static final double kSimLoopPeriod = 0.005; // 5ms
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
-  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.01, 0.01, 0.01);
+  private static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(0.1, 0.1, 0.05);
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -64,17 +57,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization =
       new SwerveRequest.SysIdSwerveTranslation();
 
-  // private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization =
-  //    new SwerveRequest.SysIdSwerveSteerGains();
-  // private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
-  //    new SwerveRequest.SysIdSwerveRotation();
+  // Buffer stores 1.5 seconds of pose history
+  private final TimeInterpolatableBuffer<Pose2d> poseHistory =
+      TimeInterpolatableBuffer.createBuffer(1.5);
 
-  /** Notifier for updating pose based on vision measurements. */
-  private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
-
-  @Logged
-  private final Vision vision =
-      new Vision(Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA));
+  private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization =
+      new SwerveRequest.SysIdSwerveSteerGains();
+  private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
+      new SwerveRequest.SysIdSwerveRotation();
 
   @Logged(name = "PigeonPitch")
   public double getPigeonPitch() {
@@ -96,12 +86,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     return (Math.abs(getPigeonPitch()) >= 2.0 || Math.abs(getPigeonRoll()) >= 2);
   }
 
+  public Pose2d getRobotPose() {
+    return getState().Pose;
+  }
+
   public Pose2d getPose() {
     return getState().Pose;
   }
 
+  public ChassisSpeeds getCurrentRobotChassisSpeeds() {
+    return getState().Speeds;
+  }
+
   public ChassisSpeeds getChassisSpeeds() {
     return getState().Speeds;
+  }
+
+  public Pose2d getPoseAtTimestamp(double timestamp) {
+    return poseHistory.getSample(timestamp).orElse(this.getState().Pose);
   }
 
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
@@ -117,41 +119,41 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
               output -> setControl(m_translationCharacterization.withVolts(output)), null, this));
 
   /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
-  // private final SysIdRoutine m_sysIdRoutineSteer =
-  //     new SysIdRoutine(
-  //         new SysIdRoutine.Config(
-  //             null, // Use default ramp rate (1 V/s)
-  //             Volts.of(7), // Use dynamic voltage of 7 V
-  //             null, // Use default timeout (10 s)
-  //             // Log state with SignalLogger class
-  //             state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
-  //         new SysIdRoutine.Mechanism(
-  //             volts -> setControl(m_steerCharacterization.withVolts(volts)), null, this));
+  private final SysIdRoutine m_sysIdRoutineSteer =
+      new SysIdRoutine(
+          new SysIdRoutine.Config(
+              null, // Use default ramp rate (1 V/s)
+              Volts.of(7), // Use dynamic voltage of 7 V
+              null, // Use default timeout (10 s)
+              // Log state with SignalLogger class
+              state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
+          new SysIdRoutine.Mechanism(
+              volts -> setControl(m_steerCharacterization.withVolts(volts)), null, this));
 
   /*
    * SysId routine for characterizing rotation.
    * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
    * See the documentation of SwerveRequest.SysIdSwerveRotation for info on importing the log to SysId.
    */
-  // private final SysIdRoutine m_sysIdRoutineRotation =
-  //     new SysIdRoutine(
-  //         new SysIdRoutine.Config(
-  //             /* This is in radians per second², but SysId only supports "volts per second" */
-  //             Volts.of(Math.PI / 6).per(Second),
-  //             /* This is in radians per second, but SysId only supports "volts" */
-  //             Volts.of(Math.PI),
-  //             null, // Use default timeout (10 s)
-  //             // Log state with SignalLogger class
-  //             state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
-  //         new SysIdRoutine.Mechanism(
-  //             output -> {
-  //               /* output is actually radians per second, but SysId only supports "volts" */
-  //               setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
-  //               /* also log the requested output for SysId */
-  //               SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
-  //             },
-  //             null,
-  //             this));
+  private final SysIdRoutine m_sysIdRoutineRotation =
+      new SysIdRoutine(
+          new SysIdRoutine.Config(
+              /* This is in radians per second², but SysId only supports "volts per second" */
+              Volts.of(Math.PI / 6).per(Second),
+              /* This is in radians per second, but SysId only supports "volts" */
+              Volts.of(Math.PI),
+              null, // Use default timeout (10 s)
+              // Log state with SignalLogger class
+              state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
+          new SysIdRoutine.Mechanism(
+              output -> {
+                /* output is actually radians per second, but SysId only supports "volts" */
+                setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
+                /* also log the requested output for SysId */
+                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+              },
+              null,
+              this));
 
   /* The SysId routine to test */
   private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
@@ -172,7 +174,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       startSimThread();
     }
     configureAutoBuilder();
-    poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
     setStateStdDevs(STD_DEVS);
   }
 
@@ -207,14 +208,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       startSimThread();
     }
     configureAutoBuilder();
-    poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
     setStateStdDevs(STD_DEVS);
   }
 
   @Override
   public void resetPose(Pose2d newPose) {
     super.resetPose(newPose);
-    // vision.resetSimPose(newPose);
   }
 
   private void configureAutoBuilder() {
@@ -245,27 +244,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
       DriverStation.reportError(
           "Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
     }
-  }
-
-  private void poseEstimationPeriodic() {
-    List<Vision.VisionEstimate> visionEstimates = vision.getEstimatedGlobalPoses();
-
-    for (VisionEstimate visionEstimate : visionEstimates) {
-      // addVisionMeasurement(visionEstimate.pose(), visionEstimate.stdDevs());
-      addVisionMeasurement(visionEstimate.pose(), VisionConstants.SINGLE_TAG_STD_DEVS);
-    }
-  }
-
-  /**
-   * Adds vision-based pose estimation measurements to the drivetrain.
-   *
-   * @param estimatedRobotPose The estimated robot pose from vision processing.
-   */
-  private void addVisionMeasurement(EstimatedRobotPose estimatedRobotPose, Matrix<N3, N1> stdDevs) {
-    Pose2d estPose = estimatedRobotPose.estimatedPose.toPose2d();
-
-    addVisionMeasurement(
-        estPose, Utils.fpgaToCurrentTime(estimatedRobotPose.timestampSeconds), stdDevs);
   }
 
   /**
@@ -322,6 +300,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
     RobotState.getInstance().setRobotPose(getPose());
     RobotState.getInstance().setRobotVelocity(getState().Speeds);
+    poseHistory.addSample(Utils.getCurrentTimeSeconds(), this.getState().Pose);
   }
 
   private void startSimThread() {
@@ -337,13 +316,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
               /* use the measured time delta, get battery voltage from WPILib */
               updateSimState(deltaTime, RobotController.getBatteryVoltage());
-
-              // Update camera simulation
-              vision.simulationPeriodic(getState().Pose);
-
-              var debugField = vision.getSimDebugField();
-              debugField.getObject("EstimatedRobot").setPose(getState().Pose);
-              // debugField.getObject("EstimatedRobotModules").setPoses(getState().Speeds);
             });
     m_simNotifier.startPeriodic(kSimLoopPeriod);
   }

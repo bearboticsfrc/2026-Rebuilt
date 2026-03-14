@@ -3,6 +3,7 @@ package frc.robot.field;
 import static edu.wpi.first.units.Units.Degrees;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
@@ -36,5 +37,15 @@ public class Field {
 
   public static Translation2d getMyAllianceLine() {
     return AllianceFlipUtil.apply(BLUE_ALLIANCE_LINE);
+  }
+
+  public static boolean poseOutOfField(Pose2d pose2D) {
+    double x = pose2D.getX();
+    double y = pose2D.getY();
+    return (x <= 0 || x >= Field.LENGTH) || (y <= 0 || y >= Field.WIDTH);
+  }
+
+  public static boolean poseOutOfField(Pose3d pose3D) {
+    return poseOutOfField(pose3D.toPose2d());
   }
 }

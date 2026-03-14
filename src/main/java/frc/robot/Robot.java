@@ -12,6 +12,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import bearlib.fms.AllianceColor;
 import bearlib.fms.AllianceReadyListener;
 import bearlib.util.TunableNumber;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -27,6 +28,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -35,12 +37,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AutoClimbCommand;
-import frc.robot.commands.DriveToPoseCommand;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
 import frc.robot.field.AllianceFlipUtil;
-import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -52,8 +53,24 @@ import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.HubTracker;
+import frc.robot.vision.SpectrumVision;
+import frc.robot.vision.VisionConstants;
+import frc.robot.vision.VisionSystem;
+import frc.spectrumLib.Telemetry;
+import frc.spectrumLib.Telemetry.PrintPriority;
+import java.util.Arrays;
+import lombok.Getter;
 
 public class Robot extends TimedRobot implements AllianceReadyListener {
+
+  private static Robot instance = null;
+
+  public static Robot get() {
+    if (instance == null)
+      throw new RuntimeException("Trying to access Robot static get before initialized.");
+    return instance;
+  }
+
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
 
   private Command m_autonomousCommand;
@@ -66,27 +83,32 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final CommandPS5Controller copilot = new CommandPS5Controller(1);
 
-  @Logged private final HubTracker tracker = new HubTracker();
+  @Logged private final HubTracker tracker;
 
-  @Logged private final Rollers rollers = new Rollers();
+  @Logged private final Rollers rollers;
 
-  @Logged private final IntakeArm intakeArm = new IntakeArm();
+  @Logged private final IntakeArm intakeArm;
 
-  @Logged private final Spindexer spindexer = new Spindexer();
+  @Logged private final Spindexer spindexer;
 
-  @Logged private final Turret turret = new Turret();
+  @Logged @Getter private final Turret turret;
 
-  @Logged private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+  @Logged @Getter public final VisionSystem vision;
+  @Logged @Getter public final SpectrumVision spectrumVision;
 
-  @Logged private final Flywheel flywheel = new Flywheel();
+  @Logged private final CommandSwerveDrivetrain drivetrain;
 
-  @Logged private final Hood hood = new Hood();
+  @Logged private final Flywheel flywheel;
 
-  @Logged private final Climber climber = new Climber();
+  @Logged private final Hood hood;
+
+  @Logged private final Climber climber;
 
   @Logged private DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
 
   @Logged private RobotState robotState = RobotState.getInstance();
+
+  @Getter public Field2d field2d = new Field2d();
 
   private Command introspectedAutoCommand;
 
@@ -97,11 +119,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
   private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
 
-  private final InterpolatedShootCommand interpolatedShootCommand =
-      new InterpolatedShootCommand(hood, flywheel, spindexer);
+  private final InterpolatedShootCommand interpolatedShootCommand;
 
-  private final DynamicShootingCommand dynamicShootingCommand =
-      new DynamicShootingCommand(hood, flywheel, spindexer, turret);
+  private final DynamicShootingCommand dynamicShootingCommand;
 
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -117,11 +137,38 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
-  private final Telemetry telemetry = new Telemetry(MaxSpeed);
+  private final DriveTelemetry driveTelemetry = new DriveTelemetry(MaxSpeed);
 
-  private final AutoClimbCommand autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
+  private final AutoClimbCommand autoClimbCommand;
 
   public Robot() {
+    instance = this;
+    Telemetry.start(true, false, PrintPriority.NORMAL);
+    tracker = new HubTracker();
+    rollers = new Rollers();
+    intakeArm = new IntakeArm();
+    spindexer = new Spindexer();
+    turret = new Turret();
+    drivetrain = TunerConstants.createDrivetrain();
+
+    flywheel = new Flywheel();
+    hood = new Hood();
+    climber = new Climber();
+    spectrumVision = new SpectrumVision(new SpectrumVision.VisionConfig());
+
+    vision =
+        new VisionSystem(
+            Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA),
+            drivetrain,
+            () -> turret.getPositionDegrees());
+
+    Telemetry.print("All subsystems Initialized");
+
+    interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer);
+
+    dynamicShootingCommand = new DynamicShootingCommand(hood, flywheel, spindexer, turret);
+
+    autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
 
     registerPathplannerCommands();
 
@@ -136,6 +183,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     AllianceColor.addListener(this);
 
     DriverStation.silenceJoystickConnectionWarning(true);
+  }
+
+  public CommandSwerveDrivetrain getSwerve() {
+    return drivetrain;
   }
 
   private boolean getTuningMode() {
@@ -266,14 +317,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
-    drivetrain.registerTelemetry(telemetry::telemeterize);
+    drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    turret.setDefaultCommand(
-        turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
+    // turret.setDefaultCommand(
+    //     turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure()));
   }
 
   public void configureBindings() {
-
     // pilot controlls
     pilot
         .leftTrigger()
@@ -291,7 +341,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
-    pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
+    // pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
 
     // copilot controlls
     copilot.povUp().onTrue(climber.raise());
@@ -315,11 +365,34 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .whileTrue(spindexer.reverseSpindexer().andThen(spindexer.reverseTower()))
         .onFalse(spindexer.stopMotorsCommand());
 
+    copilot.cross().onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
+
     copilot.L1().onTrue(turret.setAngle(Rotations.of(-.25)));
 
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
 
     copilot.L2().toggleOnTrue(Commands.idle(turret));
+  }
+
+  public void bindDriveSysidTriggers() {
+    pilot.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
+    pilot.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
+
+    /*
+     * Joystick Y = quasistatic forward
+     * Joystick A = quasistatic reverse
+     * Joystick B = dynamic forward
+     * Joystick X = dyanmic reverse
+     */
+
+    pilot.y().whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+    pilot.a().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+    pilot.b().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+    pilot.x().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+  }
+
+  public void setupSmartDashboardData() {
+    SmartDashboard.putData("Field2d", field2d);
   }
 
   private boolean initialPoseSet = false;

@@ -31,6 +31,8 @@ public class RobotState {
     return instance;
   }
 
+  public boolean updatePoseInAutonomous = true;
+
   public boolean isRedAlliance() {
     return DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red;
   }
