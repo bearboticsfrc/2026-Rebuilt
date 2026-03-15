@@ -41,15 +41,21 @@
           }
         },
         {
-          "type": "path",
+          "type": "wait",
           "data": {
-            "pathName": "O overbump - stop"
+            "waitTime": 0.25
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "O stop - outpost"
+            "pathName": "HM O overbump - stop"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "HM bump - outpost"
           }
         },
         {
@@ -61,7 +67,7 @@
         {
           "type": "named",
           "data": {
-            "name": "ShootRoll"
+            "name": "Shoot"
           }
         }
       ]
