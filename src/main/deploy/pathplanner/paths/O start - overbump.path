@@ -3,12 +3,12 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5473894436519258,
+        "x": 3.4826961483594863,
         "y": 2.4466555555555556
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.6730527817403695,
+        "x": 4.608359486447929,
         "y": 2.4758915834522113
       },
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 88.27783419108364
+    "rotation": 91.57975488141655
   },
   "useDefaultConstraints": false
 }
