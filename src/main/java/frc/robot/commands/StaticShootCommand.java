@@ -37,10 +37,10 @@ public class StaticShootCommand extends Command {
                 .alongWith(
                     Commands.waitUntil(() -> flywheel.isAtTarget())
                         .andThen(spindexer.runSpindexer())
-                        .andThen(spindexer.runTower())));
+                        .andThen(spindexer.runKicker())));
   }
 
   public Command stop() {
-    return flywheel.stopCommand().andThen(spindexer.stopMotorsCommand());
+    return flywheel.stopCommand().andThen(spindexer.stop());
   }
 }

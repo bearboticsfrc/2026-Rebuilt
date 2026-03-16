@@ -396,8 +396,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.circle().whileTrue(autoClimbCommand.climb());
     copilot
         .square()
-        .whileTrue(spindexer.reverseSpindexer().andThen(spindexer.reverseTower()))
-        .onFalse(spindexer.stopMotorsCommand());
+        .whileTrue(spindexer.reverseSpindexer().andThen(spindexer.reverseKicker()))
+        .onFalse(spindexer.stop());
 
     copilot.cross().onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
 

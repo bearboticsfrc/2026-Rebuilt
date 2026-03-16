@@ -34,7 +34,7 @@ public class DynamicShootingCommand {
         .alongWith(
             Commands.waitUntil(() -> flywheel.isAtTarget())
                 .andThen(spindexer.runSpindexer())
-                .andThen(spindexer.runTower()));
+                .andThen(spindexer.run()));
   }
 
   public Command turretShoot() {
@@ -45,13 +45,13 @@ public class DynamicShootingCommand {
         .alongWith(
             Commands.waitUntil(() -> flywheel.isAtTarget())
                 .andThen(spindexer.runSpindexer())
-                .andThen(spindexer.runTower()));
+                .andThen(spindexer.run()));
   }
 
   public Command stop() {
     return flywheel
         .stopCommand()
-        .alongWith(spindexer.stopMotorsCommand())
+        .alongWith(spindexer.stop())
         .alongWith(hood.stopCommand());
   }
 
@@ -59,7 +59,7 @@ public class DynamicShootingCommand {
     return turret
         .idle()
         .alongWith(flywheel.stopCommand())
-        .alongWith(spindexer.stopMotorsCommand())
+        .alongWith(spindexer.stop())
         .alongWith(hood.stopCommand());
   }
 }

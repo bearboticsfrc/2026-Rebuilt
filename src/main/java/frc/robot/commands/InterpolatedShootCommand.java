@@ -72,14 +72,14 @@ public class InterpolatedShootCommand {
                 .alongWith(
                     Commands.waitUntil(() -> flywheel.isAtTarget())
                         .andThen(spindexer.runSpindexer())
-                        .andThen(spindexer.runTower())))
+                        .andThen(spindexer.run())))
         .finallyDo(() -> solutionNotifier.stop());
   }
 
   public Command stop() {
     return flywheel
         .stopCommand()
-        .alongWith(spindexer.stopMotorsCommand())
+        .alongWith(spindexer.stop())
         .alongWith(hood.stopCommand());
   }
 }
