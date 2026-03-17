@@ -71,7 +71,7 @@ public class Spindexer extends SubsystemBase {
       status = kicker.getConfigurator().apply(kickerConfig);
     }
     if (!status.isOK()) {
-      System.out.println("ERROR Configuring Spindexer tower motor: " + status);
+      System.out.println("ERROR Configuring Spindexer kicker motor: " + status);
     }
 
     optimizeCAN();
@@ -100,7 +100,7 @@ public class Spindexer extends SubsystemBase {
 
   public void setKickerOutput(double output) {
    kicker.setControl(m_dutyReq.withOutput(output));
-    // tower.setControl(m_vtcfReq.withOutput(output));
+    // kicker.setControl(m_vtcfReq.withOutput(output));
   }
 
   public void stopMotors() {
@@ -128,17 +128,19 @@ public class Spindexer extends SubsystemBase {
     return runSpindexer().andThen(runKicker());
   }
 
-   public Command stop() {
+  public Command stop() {
     return runOnce(() -> stopMotors());
   }
 
   @Logged
-  public double getSpindexerVelocityInRPM() {
+  public double getSpindexerVelocity() {
+    //return spindexer velocity in RPM
     return spindexer.getVelocity().getValue().in(RPM);
   }
 
   @Logged
-  public double getKickerVelocityInRPM() {
+  public double getKickerVelocity() {
+    //return kicker velocity in RPM
     return kicker.getVelocity().getValue().in(RPM);
   }
 }
