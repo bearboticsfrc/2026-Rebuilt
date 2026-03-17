@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
+import java.util.function.Supplier;
 import lombok.*;
 
 public class RobotState {
@@ -43,6 +44,7 @@ public class RobotState {
 
   @Getter @Setter public Pose2d robotPose = new Pose2d();
   @Getter @Setter public ChassisSpeeds robotVelocity = new ChassisSpeeds();
+  @Getter @Setter public boolean shooting;
 
   @Logged
   public Rotation2d getRotation() {
@@ -75,10 +77,8 @@ public class RobotState {
 
   @Logged
   public boolean iSLeft() {
-    return (isBlueAlliance()
-        && robotPose.getY() > Field.getMyAllianceLine().getY() || 
-        isRedAlliance()
-        && robotPose.getY() < Field.getMyAllianceLine().getY());
+    return (isBlueAlliance() && robotPose.getY() > Field.getMyAllianceLine().getY()
+        || isRedAlliance() && robotPose.getY() < Field.getMyAllianceLine().getY());
   }
 
   @Logged
@@ -88,7 +88,7 @@ public class RobotState {
 
   @Logged
   public boolean isRightNeutralZone() {
-    return(!iSLeft() && isInNeutralZone());
+    return (!iSLeft() && isInNeutralZone());
   }
 
   public Rotation2d getAngleToHub() {
@@ -98,5 +98,10 @@ public class RobotState {
 
   public double getDistanceToHub() {
     return Field.getMyHub().getDistance((robotPose.transformBy(turretToRobot).getTranslation()));
+  }
+
+  public Supplier<Double> getLinearVelocity() {
+    // replace with actual ratio
+    return (isShooting()) ? () -> (getDistanceToHub() / 100) * 4.58 : () -> 4.58;
   }
 }
