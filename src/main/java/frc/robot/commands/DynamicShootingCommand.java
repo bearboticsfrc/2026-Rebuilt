@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.RobotState;
 import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
@@ -28,38 +29,21 @@ public class DynamicShootingCommand {
   }
 
   public Command shoot() {
-    return flywheel
-        .runAtSpeed(() -> calculator.getParameters().flywheelVelocity())
-        .alongWith(hood.goToSetpointRotationsDouble(() -> calculator.getParameters().hoodAngle()))
+    return Commands.runOnce(() -> RobotState.getInstance().setShooting(true))
         .alongWith(
-            Commands.waitUntil(() -> flywheel.isAtTarget())
-                .andThen(spindexer.runSpindexer())
-                .andThen(spindexer.run()));
-  }
-
-  public Command turretShoot() {
-    return turret
-        .setAngle(calculator.getParameters().turretAngle().getMeasure())
-        .alongWith(flywheel.runAtSpeed(() -> calculator.getParameters().flywheelVelocity()))
-        .alongWith(hood.goToSetpointRotationsDouble(() -> calculator.getParameters().hoodAngle()))
-        .alongWith(
-            Commands.waitUntil(() -> flywheel.isAtTarget())
-                .andThen(spindexer.runSpindexer())
-                .andThen(spindexer.run()));
+            flywheel
+                .runAtSpeed(() -> calculator.getParameters().flywheelVelocity())
+                .alongWith(
+                    hood.goToSetpointRotationsDouble(() -> calculator.getParameters().hoodAngle()))
+                .alongWith(
+                    Commands.waitUntil(() -> flywheel.isAtTarget())
+                        .andThen(spindexer.runSpindexer())
+                        .andThen(spindexer.run())));
   }
 
   public Command stop() {
-    return flywheel
-        .stopCommand()
-        .alongWith(spindexer.stop())
-        .alongWith(hood.stopCommand());
-  }
-
-  public Command turretStop() {
-    return turret
-        .idle()
-        .alongWith(flywheel.stopCommand())
-        .alongWith(spindexer.stop())
-        .alongWith(hood.stopCommand());
+    return Commands.runOnce(() -> RobotState.getInstance().setShooting(false))
+        .alongWith(
+            flywheel.stopCommand().alongWith(spindexer.stop()).alongWith(hood.stopCommand()));
   }
 }

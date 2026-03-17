@@ -99,8 +99,13 @@ public class Spindexer extends SubsystemBase {
   }
 
   public void setKickerOutput(double output) {
+<<<<<<< HEAD
    kicker.setControl(m_dutyReq.withOutput(output));
     // kicker.setControl(m_vtcfReq.withOutput(output));
+=======
+    kicker.setControl(m_dutyReq.withOutput(output));
+    // tower.setControl(m_vtcfReq.withOutput(output));
+>>>>>>> b45dab9bfedeca2f743805977d7e9d8039df53cb
   }
 
   public void stopMotors() {
