@@ -91,6 +91,11 @@ public class RobotState {
     return (!iSLeft() && isInNeutralZone());
   }
 
+  @Logged
+  public boolean inDeadZone(){
+    return (isInNeutralZone() && robotPose.getY() > 3.5 && robotPose.getY() < 4.7);
+  }
+
   public Rotation2d getAngleToHub() {
     return AllianceFlipUtil.apply(
         Field.getMyHub().minus((robotPose.transformBy(turretToRobot).getTranslation())).getAngle());
