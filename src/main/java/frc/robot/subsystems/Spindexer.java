@@ -24,8 +24,8 @@ public class Spindexer extends SubsystemBase {
 
   private final DutyCycleOut m_dutyReq = new DutyCycleOut(0.0);
   private final VelocityTorqueCurrentFOC m_vtcfReq = new VelocityTorqueCurrentFOC(0.0);
-  private final double TOWER_OUTPUT = 1;
-  private final double TOWER_REVERSE_OUTPUT = -0.2;
+  private final double KICKER_OUTPUT = 1;
+  private final double KICKER_REVERSE_OUTPUT = -0.2;
 
   private final double SPINDEXER_OUTPUT = 0.7;
   private final double SPINDEXER_REVERSE_OUTPUT = -0.2;
@@ -48,12 +48,12 @@ public class Spindexer extends SubsystemBase {
 
     kickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kickerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-    CurrentLimitsConfigs towerCurrentLimitsConfigs = new CurrentLimitsConfigs();
-    towerCurrentLimitsConfigs.StatorCurrentLimit = 240;
-    towerCurrentLimitsConfigs.SupplyCurrentLimit = 140;
-    towerCurrentLimitsConfigs.StatorCurrentLimitEnable = true;
-    towerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
-    kickerConfig.withCurrentLimits(towerCurrentLimitsConfigs);
+    CurrentLimitsConfigs kickerCurrentLimitsConfigs = new CurrentLimitsConfigs();
+    kickerCurrentLimitsConfigs.StatorCurrentLimit = 240;
+    kickerCurrentLimitsConfigs.SupplyCurrentLimit = 140;
+    kickerCurrentLimitsConfigs.StatorCurrentLimitEnable = true;
+    kickerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
+    kickerConfig.withCurrentLimits(kickerCurrentLimitsConfigs);
 
     StatusCode status = spindexer.getConfigurator().apply(spindexerConfig);
 
@@ -113,7 +113,7 @@ public class Spindexer extends SubsystemBase {
   }
 
   public Command runKicker() {
-    return runOnce(() -> setKickerOutput(TOWER_OUTPUT));
+    return runOnce(() -> setKickerOutput(KICKER_OUTPUT));
   }
 
   public Command reverseSpindexer() {
@@ -121,7 +121,7 @@ public class Spindexer extends SubsystemBase {
   }
 
   public Command reverseKicker() {
-    return runOnce(() -> setKickerOutput(TOWER_REVERSE_OUTPUT));
+    return runOnce(() -> setKickerOutput(KICKER_REVERSE_OUTPUT));
   }
 
   public Command run() {
