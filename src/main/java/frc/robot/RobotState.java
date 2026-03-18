@@ -92,7 +92,7 @@ public class RobotState {
   }
 
   @Logged
-  public boolean inDeadZone(){
+  public boolean inDeadZone() {
     return (isInNeutralZone() && robotPose.getY() > 3.5 && robotPose.getY() < 4.7);
   }
 

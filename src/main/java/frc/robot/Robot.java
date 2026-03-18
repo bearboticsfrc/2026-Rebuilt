@@ -95,6 +95,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged @Getter private final Turret turret;
 
   @Logged @Getter public final VisionSystem vision;
+
   @Logged @Getter public final SpectrumVision spectrumVision;
 
   @Logged private final CommandSwerveDrivetrain drivetrain;
@@ -329,9 +330,15 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
             () ->
                 drive
                     .withVelocityX(
-                        -pilot.getLeftY() * RobotState.getInstance().getLinearVelocity().get()) // Drive forward with negative Y (forward)
+                        -pilot.getLeftY()
+                            * RobotState.getInstance()
+                                .getLinearVelocity()
+                                .get()) // Drive forward with negative Y (forward)
                     .withVelocityY(
-                        -pilot.getLeftX() *  RobotState.getInstance().getLinearVelocity().get()) // Drive left with negative X (left)
+                        -pilot.getLeftX()
+                            * RobotState.getInstance()
+                                .getLinearVelocity()
+                                .get()) // Drive left with negative X (left)
                     .withRotationalRate(
                         -pilot.getRightX()
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
@@ -344,6 +351,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   }
 
   public void configureBindings() {
+    
     // pilot controlls
     pilot
         .leftTrigger()
@@ -361,7 +369,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
-    // pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
+    pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
 
     // copilot controlls
     copilot.povUp().onTrue(climber.raise());
