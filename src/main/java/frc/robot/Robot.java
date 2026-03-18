@@ -47,11 +47,11 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DynamicShootingCalculator;
-import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.intake.IntakeArm;
 import frc.robot.subsystems.intake.Rollers;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
+import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.HubTracker;
 import frc.robot.vision.SpectrumVision;
@@ -235,7 +235,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void robotInit() {}
 
   public void registerPathplannerCommands() {
-    
+
     // named commands for autonomous
     NamedCommands.registerCommand(
         "Intake",
@@ -350,7 +350,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   }
 
   public void configureBindings() {
-    
+
     // pilot controlls
     pilot
         .leftTrigger()
@@ -367,7 +367,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .rightTrigger()
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
-
 
     // copilot controlls
     copilot.povUp().onTrue(climber.raise());

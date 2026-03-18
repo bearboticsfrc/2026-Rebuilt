@@ -6,9 +6,9 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
-import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
+import frc.robot.subsystems.spindexer.Spindexer;
 import lombok.Getter;
 
 public class InterpolatedShootCommand {
@@ -77,9 +77,6 @@ public class InterpolatedShootCommand {
   }
 
   public Command stop() {
-    return flywheel
-        .stopCommand()
-        .alongWith(spindexer.stop())
-        .alongWith(hood.stopCommand());
+    return flywheel.stopCommand().alongWith(spindexer.stop()).alongWith(hood.stopCommand());
   }
 }

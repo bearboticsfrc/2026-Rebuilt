@@ -99,7 +99,7 @@ public class Spindexer extends SubsystemBase {
   }
 
   public void setKickerOutput(double output) {
-   kicker.setControl(m_dutyReq.withOutput(output));
+    kicker.setControl(m_dutyReq.withOutput(output));
     // kicker.setControl(m_vtcfReq.withOutput(output));
   }
 

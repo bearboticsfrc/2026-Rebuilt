@@ -2,9 +2,9 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.subsystems.Spindexer;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
+import frc.robot.subsystems.spindexer.Spindexer;
 import java.util.function.DoubleSupplier;
 
 public class StaticShootCommand extends Command {
