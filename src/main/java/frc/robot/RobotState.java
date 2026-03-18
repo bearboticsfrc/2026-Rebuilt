@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
+import frc.robot.util.HubTracker;
+
 import java.util.function.Supplier;
 import lombok.*;
 
@@ -45,8 +47,7 @@ public class RobotState {
   @Getter @Setter public Pose2d robotPose = new Pose2d();
   @Getter @Setter public ChassisSpeeds robotVelocity = new ChassisSpeeds();
   @Getter @Setter public boolean shooting;
-
-  @Logged
+  
   public Rotation2d getRotation() {
     return robotPose.getRotation();
   }
@@ -106,7 +107,10 @@ public class RobotState {
   }
 
   public Supplier<Double> getLinearVelocity() {
-    // replace with actual ratio
     return (isShooting()) ? () -> (getDistanceToHub() / 100) * 4.58 : () -> 4.58;
+  }
+
+  public boolean hubActive(){
+    return HubTracker.isActive();
   }
 }

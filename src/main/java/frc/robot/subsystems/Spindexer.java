@@ -134,13 +134,11 @@ public class Spindexer extends SubsystemBase {
 
   @Logged
   public double getSpindexerVelocity() {
-    //return spindexer velocity in RPM
     return spindexer.getVelocity().getValue().in(RPM);
   }
 
   @Logged
   public double getKickerVelocity() {
-    //return kicker velocity in RPM
     return kicker.getVelocity().getValue().in(RPM);
   }
 }

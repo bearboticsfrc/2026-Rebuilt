@@ -78,8 +78,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final SendableChooser<Command> autoChooser;
 
-  // @Logged(importance = Importance.CRITICAL)
-
   private final CommandXboxController pilot = new CommandXboxController(0);
 
   private final CommandPS5Controller copilot = new CommandPS5Controller(1);
@@ -237,6 +235,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void robotInit() {}
 
   public void registerPathplannerCommands() {
+    
     // named commands for autonomous
     NamedCommands.registerCommand(
         "Intake",
