@@ -47,7 +47,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DynamicShootingCalculator;
-import frc.robot.subsystems.Spindexer;
+import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.intake.IntakeArm;
 import frc.robot.subsystems.intake.Rollers;
 import frc.robot.subsystems.shooter.Flywheel;
@@ -368,7 +368,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
-    pilot.a().whileTrue(new DriveToPoseCommand(drivetrain, () -> Field.getMyOutputPose()));
 
     // copilot controlls
     copilot.povUp().onTrue(climber.raise());
