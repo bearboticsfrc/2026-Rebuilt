@@ -54,7 +54,7 @@ public class Rollers extends SubsystemBase {
   }
 
   public Command runSlow() {
-    return runOnce(() -> setOutput(ROLLER_SPEED_SLOW));
+    return runOnce(() -> setOutput(ROLLER_SPEED_SLOW)).withName("RollersRunSlow");
   }
 
   public Command stop() {

@@ -10,6 +10,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.RobotState;
 import frc.robot.field.Field;
+import lombok.Getter;
 
 public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
@@ -17,6 +18,9 @@ public class DynamicShootingCalculator {
   private Rotation2d lastTurretAngle = new Rotation2d();
 
   @Logged public Rotation2d turretAngle = new Rotation2d();
+
+  @Logged @Getter public Pose2d lookaheadPose = new Pose2d();
+
   private double hoodAngle = 0;
   private double flywheelVelocity = 0;
   private double turretVelocity = 0;
@@ -88,13 +92,14 @@ public class DynamicShootingCalculator {
 
     ChassisSpeeds robotRelativeVelocity = RobotState.getInstance().robotVelocity;
 
+    double phaseDelay = 0.03;
     // apply robot velocities to current pose
     Pose2d estimatedPose =
         currentPose.exp(
             new Twist2d(
-                robotRelativeVelocity.vxMetersPerSecond,
-                robotRelativeVelocity.vyMetersPerSecond,
-                robotRelativeVelocity.omegaRadiansPerSecond));
+                robotRelativeVelocity.vxMetersPerSecond * phaseDelay,
+                robotRelativeVelocity.vyMetersPerSecond * phaseDelay,
+                robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
 
     // get distance to Hub
     Translation2d target;
@@ -104,7 +109,7 @@ public class DynamicShootingCalculator {
     else if (RobotState.getInstance().isRightNeutralZone()) target = Field.getMyRight();
     else target = Field.getMyHub();
 
-    Pose2d turretPose = estimatedPose.transformBy(RobotState.getInstance().turretToRobot);
+    Pose2d turretPose = estimatedPose.transformBy(RobotState.turretToRobot);
 
     double turretToTarget = target.getDistance(turretPose.getTranslation());
 
@@ -116,25 +121,26 @@ public class DynamicShootingCalculator {
     double turretVelocityX =
         robotVelocity.vxMetersPerSecond
             - robotVelocity.omegaRadiansPerSecond
-                * (RobotState.getInstance().turretToRobot.getX() * Math.sin(robotAngle)
-                    + RobotState.getInstance().turretToRobot.getY() * Math.cos(robotAngle));
+                * (RobotState.turretToRobot.getX() * Math.sin(robotAngle)
+                    + RobotState.turretToRobot.getY() * Math.cos(robotAngle));
     double turretVelocityY =
         robotVelocity.vyMetersPerSecond
             + robotVelocity.omegaRadiansPerSecond
-                * (RobotState.getInstance().turretToRobot.getX() * Math.cos(robotAngle)
-                    - RobotState.getInstance().turretToRobot.getY() * Math.sin(robotAngle));
+                * (RobotState.turretToRobot.getX() * Math.cos(robotAngle)
+                    - RobotState.turretToRobot.getY() * Math.sin(robotAngle));
 
     // Account for imparted velocity by robot (turret) to offset
     double timeOfFlight;
 
-    Pose2d lookaheadPose = turretPose;
+    lookaheadPose = turretPose;
 
     double lookaheadTurretToTargetDistance = turretToTarget;
 
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 5; i++) {
       timeOfFlight = timeOfFlightMap.get(lookaheadTurretToTargetDistance);
-      double offsetX = turretVelocityX * timeOfFlight / 4.0;
-      double offsetY = turretVelocityY * timeOfFlight / 4.0;
+      timeOfFlight = 1.0;
+      double offsetX = turretVelocityX * timeOfFlight;
+      double offsetY = turretVelocityY * timeOfFlight;
       lookaheadPose =
           new Pose2d(
               turretPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
@@ -143,9 +149,8 @@ public class DynamicShootingCalculator {
     }
 
     // Calculate parameters accounted for imparted velocity
-    turretAngle = target.minus(lookaheadPose.getTranslation()).getAngle();
     turretAngle =
-        turretAngle.minus(lookaheadPose.getRotation()); // .minus(new Rotation2d(Degrees.of(180)));
+        target.minus(lookaheadPose.getTranslation()).getAngle().minus(lookaheadPose.getRotation());
 
     hoodAngle = (hoodAngleMap.get(lookaheadTurretToTargetDistance));
     flywheelVelocity = flywheelSpeedMap.get(lookaheadTurretToTargetDistance);

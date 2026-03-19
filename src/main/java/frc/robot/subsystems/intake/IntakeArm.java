@@ -151,6 +151,7 @@ public class IntakeArm extends SubsystemBase {
   }
 
   public Command armOscillate() {
+
     return goToSetpoint(() -> Setpoint.OscillateMin)
         .withTimeout(.75)
         .andThen(goToSetpoint(() -> Setpoint.OscillateMax).withTimeout(.75))

@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
+import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.util.HubTracker;
 import java.util.function.Supplier;
 import lombok.*;
@@ -43,7 +44,7 @@ public class RobotState {
     return DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue;
   }
 
-  @Getter @Setter public Pose2d robotPose = new Pose2d();
+  @Logged @Getter @Setter public Pose2d robotPose = new Pose2d();
   @Getter @Setter public ChassisSpeeds robotVelocity = new ChassisSpeeds();
   @Getter @Setter public boolean shooting;
 
@@ -105,8 +106,19 @@ public class RobotState {
     return Field.getMyHub().getDistance((robotPose.transformBy(turretToRobot).getTranslation()));
   }
 
+  public double getLookaheadDistanceToHub() {
+    return Field.getMyHub()
+        .getDistance(
+            (DynamicShootingCalculator.getInstance()
+                .getLookaheadPose()
+                .transformBy(turretToRobot)
+                .getTranslation()));
+  }
+
+  double maxSpeed = 2.0; // 4.58;
+
   public Supplier<Double> getLinearVelocity() {
-    return (isShooting()) ? () -> (getDistanceToHub() / 100) * 4.58 : () -> 4.58;
+    return (isShooting()) ? () -> (getDistanceToHub() / 100) * maxSpeed : () -> maxSpeed;
   }
 
   public boolean hubActive() {

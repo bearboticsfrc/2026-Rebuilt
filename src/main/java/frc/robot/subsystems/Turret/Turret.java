@@ -2,28 +2,37 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.field.AllianceFlipUtil;
+import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.spectrumLib.CachedDouble;
 import frc.spectrumLib.util.Conversions;
 import java.util.function.Supplier;
@@ -37,14 +46,14 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   // MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC = new MotionMagicTorqueCurrentFOC(0);
   private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
+  private PositionVoltage positionVoltage = new PositionVoltage(0);
   private PositionVoltage positionHold = new PositionVoltage(0).withSlot(1);
 
   /* Turret config values */
   @Getter private double currentLimit = 44;
   @Getter private double torqueCurrentLimit = 400;
 
-  @Getter private double gearRatio = 10.44; //  4.35;
-
+  @Getter private double gearRatio = 10.44;
   @Getter private double statorLimit = 200;
 
   private final CachedDouble cachedRotations;
@@ -52,26 +61,13 @@ public class Turret extends SubsystemBase implements NTSendable {
   private final CachedDouble cachedVelocity;
   private final CachedDouble cachedCurrent;
 
-  //   public TurretConfig() {
-  //     super("Turret", 5, Rio.CANIVORE);
-  //     configPIDGains(0, velocityKp, 0, 0);
-  //     configFeedForwardGains(velocityKs, velocityKv, 0, 0);
-  //     configGearRatio(1);
-  //     configSupplyCurrentLimit(currentLimit, true);
-  //     configStatorCurrentLimit(torqueCurrentLimit, true);
-  //     configForwardTorqueCurrentLimit(torqueCurrentLimit);
-  //     configReverseTorqueCurrentLimit(torqueCurrentLimit);
-  //     configNeutralBrakeMode(true);
-  //     configCounterClockwise_Positive();
-  //     setAttached(true);
-  //   }
-  // }
-
   // set these small to start
   @Getter public Angle minRotations = Rotations.of(-.4);
   @Getter public Angle maxRotations = Rotations.of(.35);
 
   @Getter public boolean attached = true;
+
+  private DCMotorSim motorSimModel;
 
   public Turret() {
     super("Turret");
@@ -88,9 +84,9 @@ public class Turret extends SubsystemBase implements NTSendable {
     // increase in P
     config.Slot0.kD = 3; // .8981; //   start with d = p / 100 and increase until oscillation stops
 
-    config.Slot0.kA = 0; // .077265;
+    config.Slot0.kA = 0.05; // .077265;
     config.Slot0.kS = .6; // .2; // start with .4; tune up if mechanism stalls at end of moves
-    config.Slot0.kV = 0.54; // ( 0.124 x 4.34 = .54  V/mechanism-RPS )
+    config.Slot0.kV = 1.25; // 0.54; // ( 0.124 x 4.34 = .54  V/mechanism-RPS )
 
     config.Slot1.kP = 150;
     config.Slot1.kD = 12;
@@ -98,11 +94,13 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.Slot1.kS = 0;
     config.Slot1.kV = 0;
 
-    var motionMagicConfigs = config.MotionMagic;
-    motionMagicConfigs.MotionMagicCruiseVelocity = 1.8; // Target cruise velocity of 80 rps
-    motionMagicConfigs.MotionMagicAcceleration =
-        3.6; // Target acceleration of 160 rps/s (0.5 seconds)
-    motionMagicConfigs.MotionMagicJerk = 25; // Target jerk of 1600 rps/s/s (0.1 seconds)
+    // var motionMagicConfigs = config.MotionMagic;
+    config.MotionMagic.MotionMagicCruiseVelocity =
+        200; // 6.0; // 1.8; // Target cruise velocity of 80 rps
+    config.MotionMagic.MotionMagicAcceleration =
+        400; // 12.0; // 3.6; // Target acceleration of 160 rps/s (0.5 seconds)
+    config.MotionMagic.MotionMagicJerk =
+        800; // 40; // 25; // Target jerk of 1600 rps/s/s (0.1 seconds)
 
     config.Feedback.RotorToSensorRatio = 1.0;
     config.Feedback.SensorToMechanismRatio = gearRatio;
@@ -122,12 +120,7 @@ public class Turret extends SubsystemBase implements NTSendable {
 
     // motionMagicVoltage.withFeedForward(Volts.of(1));
 
-    StatusCode status = motor.getConfigurator().apply(config);
-
-    for (int i = 0; i < 2; i++) {
-      if (status.isOK()) break;
-      status = motor.getConfigurator().apply(config);
-    }
+    tryUntilOk(5, () -> motor.getConfigurator().apply(config), getName());
 
     motor.setPosition(0);
 
@@ -136,23 +129,23 @@ public class Turret extends SubsystemBase implements NTSendable {
     cachedRotations = new CachedDouble(this::updatePositionRotations);
     cachedVelocity = new CachedDouble(this::updateVelocityRPM);
 
-    if (!status.isOK()) {
-      System.out.println("ERROR Configuring Turret motor: " + status);
-    }
-
     optimizeCAN();
 
-    System.out.println("Turret Subsystem Initialized");
+    if (Robot.isSimulation()) {
+      simulationInit();
+    }
+
+    System.out.println(getName() + " Subsystem Initialized");
   }
 
   private void optimizeCAN() {
-    motor.getPosition().setUpdateFrequency(100);
-    motor.getVelocity().setUpdateFrequency(100);
+    motor.getPosition().setUpdateFrequency(1000);
+    motor.getVelocity().setUpdateFrequency(1000);
     motor.getSupplyCurrent().setUpdateFrequency(50);
     motor.getDeviceTemp().setUpdateFrequency(4);
-    motor.getClosedLoopReference().setUpdateFrequency(100);
+    motor.getClosedLoopReference().setUpdateFrequency(1000);
 
-    motor.optimizeBusUtilization();
+    // motor.optimizeBusUtilization();
   }
 
   private Angle wrapDegreesToSoftLimits(Angle targetAngle) {
@@ -249,6 +242,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     return motor.getPosition().getValue();
   }
 
+  @Logged
   public double getVelocityRPM() {
     return cachedVelocity.getAsDouble();
   }
@@ -270,7 +264,12 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   @Logged
   public double getMotionMagicSetpointRotations() {
-    return motionMagicVoltage.Position;
+    if (Robot.isSimulation()) {
+      return positionVoltage.Position;
+
+    } else {
+      return motionMagicVoltage.Position;
+    }
   }
 
   @Logged
@@ -299,7 +298,11 @@ public class Turret extends SubsystemBase implements NTSendable {
   private void controlMotor(Angle angle) {
     // double errorDeg = Math.abs(motor.getPosition().getValue().minus(angle).in(Degrees));
     // if (errorDeg > 2.0) {
-    motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle)));
+    if (Robot.isSimulation()) {
+      motor.setControl(positionVoltage.withPosition(wrapDegreesToSoftLimits(angle)));
+    } else {
+      motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle)));
+    }
     // } else {
     //  motor.setControl(positionHold.withPosition(wrapDegreesToSoftLimits(angle)));
     // }
@@ -328,16 +331,58 @@ public class Turret extends SubsystemBase implements NTSendable {
   public Translation2d getTargetedHubPosition() {
     Transform2d targetTransform =
         new Transform2d(
-            new Translation2d(RobotState.getInstance().getDistanceToHub(), 0.0),
+            new Translation2d(RobotState.getInstance().getLookaheadDistanceToHub(), 0.0),
             Rotation2d.k180deg);
 
     Pose2d turretPose =
-        RobotState.getInstance()
-            .robotPose
-            .transformBy(RobotState.turretToRobot)
+        DynamicShootingCalculator.getInstance()
+            .getLookaheadPose()
+            // .transformBy(RobotState.turretToRobot)
             .transformBy(new Transform2d(0, 0, new Rotation2d(getAngle())));
 
     Translation2d targetPos = turretPose.transformBy(targetTransform).getTranslation();
     return targetPos;
+  }
+
+  // Simulation
+  public void simulationInit() {
+    var talonFXSim = motor.getSimState();
+
+    // Match your InvertedValue.Clockwise_Positive config
+    talonFXSim.Orientation = ChassisReference.Clockwise_Positive;
+    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX44);
+
+    motorSimModel =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.025, gearRatio),
+            DCMotor.getKrakenX44Foc(1));
+
+    var simConfig = new TalonFXConfiguration();
+    motor.getConfigurator().refresh(simConfig);
+    System.out.println("cruise = " + simConfig.MotionMagic.MotionMagicCruiseVelocity);
+    simConfig.Slot0.kS = 0.0;
+    motor.getConfigurator().apply(simConfig);
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    var talonFXSim = motor.getSimState();
+
+    // set the supply voltage of the TalonFX
+    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+    // get the motor voltage of the TalonFX
+    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
+
+    // use the motor voltage to calculate new position and velocity
+    // using WPILib's DCMotorSim class for physics simulation
+    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
+    motorSimModel.update(0.020); // assume 20 ms loop time
+
+    // apply the new rotor position and velocity to the TalonFX;
+    // note that this is rotor position/velocity (before gear ratio), but
+    // DCMotorSim returns mechanism position/velocity (after gear ratio)
+    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
+    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
   }
 }
