@@ -2,10 +2,10 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
+import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -13,10 +13,17 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Robot;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -46,10 +53,12 @@ public class Hood extends SubsystemBase {
 
   private static final int kNumConfigAttempts = 2;
 
-  private static final double kGearRatio = 1.2;
+  private static final double gearRatio = 1.2;
   private static final Distance kDrumRadius = Meters.of(0.028575);
   private final Angle MIN_ANGLE = Degrees.of(32);
   private final Angle MAX_ANGLE = Degrees.of(69.5);
+
+  private DCMotorSim motorSimModel;
 
   /* leader and follower motors */
   private final CANBus kCANBus = new CANBus("Default Name");
@@ -57,7 +66,6 @@ public class Hood extends SubsystemBase {
 
   /* device status signals */
   private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
-  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
   private final StatusSignal<Current> motorTorqueCurrent = motor.getTorqueCurrent(false);
   private final StatusSignal<Double> motorProfileVelocity =
       motor.getClosedLoopReferenceSlope(false);
@@ -92,7 +100,7 @@ public class Hood extends SubsystemBase {
                   .withKA(0)
                   .withKG(0.28)
                   .withGravityType(GravityTypeValue.Elevator_Static))
-          .withFeedback(motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(kGearRatio))
+          .withFeedback(motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(gearRatio))
           .withSoftwareLimitSwitch(
               new SoftwareLimitSwitchConfigs()
                   .withForwardSoftLimitThreshold(1.4)
@@ -108,25 +116,20 @@ public class Hood extends SubsystemBase {
 
   public Hood() {
     super("Hood");
-    StatusCode status = motor.getConfigurator().apply(motorConfigs);
 
-    for (int i = 0; i < kNumConfigAttempts; ++i) {
-      if (status.isOK()) break;
-
-      status = motor.getConfigurator().apply(motorConfigs);
-    }
-    if (!status.isOK()) {
-      System.out.println("ERROR Configuring Hood motor: " + status);
-    }
+    tryUntilOk(5, () -> motor.getConfigurator().apply(motorConfigs), getName());
 
     motor.setPosition(Rotations.of(0.0));
     optimizeCAN();
+    if (Robot.isSimulation()) {
+      simulationInit();
+    }
+
     System.out.println("Hood Subsystem Initialized");
   }
 
   private void optimizeCAN() {
     motor.getPosition().setUpdateFrequency(100);
-    motor.getVelocity().setUpdateFrequency(100);
     motor.getSupplyCurrent().setUpdateFrequency(50);
     motor.getDeviceTemp().setUpdateFrequency(4);
     motor.getClosedLoopReferenceSlope().setUpdateFrequency(100);
@@ -145,13 +148,6 @@ public class Hood extends SubsystemBase {
   @Logged
   public double getRotations() {
     return motorPosition.getValue().in(Rotations);
-  }
-
-  /**
-   * @return The Velocity of the hood
-   */
-  public AngularVelocity getVelocity() {
-    return motorVelocity.getValue();
   }
 
   /**
@@ -176,13 +172,17 @@ public class Hood extends SubsystemBase {
     return motorProfileVelocity.getValue();
   }
 
+  private void controlMotor(Angle angle) {
+    motor.setControl(setpointRequest.withPosition(angle).withEnableFOC(true));
+  }
+
   /**
    * Holds the hood at the current position using PID.
    *
    * @return Command to run
    */
   public Command holdPosition() {
-    return runOnce(() -> setpointRequest.withPosition(motorPosition.getValue()))
+    return runOnce(() -> controlMotor(motorPosition.getValue()))
         .andThen(
             run(
                 () -> {
@@ -200,7 +200,7 @@ public class Hood extends SubsystemBase {
   }
 
   // Stop the hood motor
-  public void stop() {
+  private void stop() {
     motor.stopMotor();
   }
 
@@ -211,33 +211,67 @@ public class Hood extends SubsystemBase {
    * @return Command to run
    */
   public Command goToSetpoint(Supplier<Setpoint> setpoint) {
-    return run(
-        () -> {
-          setpointRequest.withPosition(setpoint.get().target);
-          motor.setControl(setpointRequest);
-        });
+    return run(() -> controlMotor(setpoint.get().target));
   }
 
   public Command goToSetpointAngle(Supplier<Angle> value) {
-    return run(
-        () -> {
-          setpointRequest.withPosition(value.get());
-          motor.setControl(setpointRequest);
-        });
+    return run(() -> controlMotor(value.get()));
   }
 
   public Command goToSetpointRotationsDouble(DoubleSupplier value) {
-    return run(
-        () -> {
-          setpointRequest.withPosition(Rotations.of(value.getAsDouble()));
-          motor.setControl(setpointRequest);
-        });
+    return run(() -> controlMotor(Rotations.of(value.getAsDouble())));
   }
 
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(
-        motorPosition, motorVelocity, motorTorqueCurrent, motorProfileVelocity);
+    BaseStatusSignal.refreshAll(motorPosition, motorTorqueCurrent, motorProfileVelocity);
+  }
+
+  //
+  // Simulation
+  //
+  public void simulationInit() {
+    var talonFXSim = motor.getSimState();
+
+    // Match your InvertedValue.Clockwise_Positive config
+    talonFXSim.Orientation = ChassisReference.CounterClockwise_Positive;
+    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX44);
+
+    motorSimModel =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.005, gearRatio),
+            DCMotor.getKrakenX44Foc(1));
+
+    var simConfig = new TalonFXConfiguration();
+    motor.getConfigurator().refresh(simConfig);
+    simConfig.Slot0.kS = 0.0;
+    simConfig.Slot0.kG = 0.0;
+    simConfig.Slot0.kP = 0.5;
+    simConfig.Slot0.kD = 1.0; // 0.35;
+
+    motor.getConfigurator().apply(simConfig);
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    var talonFXSim = motor.getSimState();
+
+    // set the supply voltage of the TalonFX
+    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+    // get the motor voltage of the TalonFX
+    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
+
+    // use the motor voltage to calculate new position and velocity
+    // using WPILib's DCMotorSim class for physics simulation
+    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
+    motorSimModel.update(0.020); // assume 20 ms loop time
+
+    // apply the new rotor position and velocity to the TalonFX;
+    // note that this is rotor position/velocity (before gear ratio), but
+    // DCMotorSim returns mechanism position/velocity (after gear ratio)
+    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
+    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
   }
 }

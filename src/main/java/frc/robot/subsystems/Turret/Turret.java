@@ -5,7 +5,9 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -24,27 +26,26 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.CAN;
 import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.subsystems.DynamicShootingCalculator;
-import frc.spectrumLib.CachedDouble;
-import frc.spectrumLib.util.Conversions;
 import java.util.function.Supplier;
 import lombok.Getter;
 
 public class Turret extends SubsystemBase implements NTSendable {
+  private final CANBus canivore = new CANBus(CAN.NAME);
 
-  private final CANBus canivore = new CANBus("Default Name");
+  private final TalonFX motor = new TalonFX(CAN.TURRET, canivore);
 
-  private final TalonFX motor = new TalonFX(22, canivore);
-
-  // MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC = new MotionMagicTorqueCurrentFOC(0);
   private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
   private PositionVoltage positionVoltage = new PositionVoltage(0);
   private PositionVoltage positionHold = new PositionVoltage(0).withSlot(1);
@@ -56,10 +57,12 @@ public class Turret extends SubsystemBase implements NTSendable {
   @Getter private double gearRatio = 10.44;
   @Getter private double statorLimit = 200;
 
-  private final CachedDouble cachedRotations;
-  private final CachedDouble cachedVoltage;
-  private final CachedDouble cachedVelocity;
-  private final CachedDouble cachedCurrent;
+  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
+  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
+  private final StatusSignal<Voltage> motorVoltage = motor.getMotorVoltage(false);
+  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
+  private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
+  private final StatusSignal<Double> setpoint = motor.getClosedLoopReference(false);
 
   // set these small to start
   @Getter public Angle minRotations = Rotations.of(-.4);
@@ -124,11 +127,6 @@ public class Turret extends SubsystemBase implements NTSendable {
 
     motor.setPosition(0);
 
-    cachedCurrent = new CachedDouble(this::updateCurrent);
-    cachedVoltage = new CachedDouble(this::updateVoltage);
-    cachedRotations = new CachedDouble(this::updatePositionRotations);
-    cachedVelocity = new CachedDouble(this::updateVelocityRPM);
-
     optimizeCAN();
 
     if (Robot.isSimulation()) {
@@ -139,13 +137,20 @@ public class Turret extends SubsystemBase implements NTSendable {
   }
 
   private void optimizeCAN() {
-    motor.getPosition().setUpdateFrequency(1000);
-    motor.getVelocity().setUpdateFrequency(1000);
+    if (Robot.isSimulation()) {
+      motor.getPosition().setUpdateFrequency(1000);
+      motor.getVelocity().setUpdateFrequency(1000);
+      motor.getClosedLoopReference().setUpdateFrequency(1000);
+    } else {
+      motor.getPosition().setUpdateFrequency(50);
+      motor.getVelocity().setUpdateFrequency(50);
+      motor.getClosedLoopReference().setUpdateFrequency(50);
+    }
+
     motor.getSupplyCurrent().setUpdateFrequency(50);
     motor.getDeviceTemp().setUpdateFrequency(4);
-    motor.getClosedLoopReference().setUpdateFrequency(1000);
 
-    // motor.optimizeBusUtilization();
+    motor.optimizeBusUtilization();
   }
 
   private Angle wrapDegreesToSoftLimits(Angle targetAngle) {
@@ -171,20 +176,24 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   @Override
   public void periodic() {
-    updateCurrent();
-    updatePositionRotations();
-    updateVelocityRPM();
-    updateVoltage();
+    /* refresh all status signals */
+    BaseStatusSignal.refreshAll(
+        motorPosition,
+        motorVelocity,
+        setpoint,
+        motorStatorCurrent,
+        motorSupplyCurrent,
+        motorVoltage);
   }
 
   @Override
   public void initSendable(NTSendableBuilder builder) {
     builder.addStringProperty("CurrentCommand", this::getCurrentCommandName, null);
-    builder.addDoubleProperty("Motor Voltage", this::getVoltage, null);
-    builder.addDoubleProperty("Rotations", this::getPositionRotations, null);
-    builder.addDoubleProperty("setPoint", this::getSetpointRotations, null);
-    builder.addDoubleProperty("Velocity RPM", this::getVelocityRPM, null);
-    builder.addDoubleProperty("StatorCurrent", this::getStatorCurrent, null);
+    // builder.addDoubleProperty("Motor Voltage", this::getVoltage, null);
+    // builder.addDoubleProperty("Rotations", this::getPositionRotations, null);
+    builder.addDoubleProperty("setPointDegrees", this::getSetpointDegrees, null);
+    // builder.addDoubleProperty("Velocity RPM", this::getVelocityRPM, null);
+    // builder.addDoubleProperty("StatorCurrent", this::getStatorCurrent, null);
   }
 
   protected String getCurrentCommandName() {
@@ -197,30 +206,8 @@ public class Turret extends SubsystemBase implements NTSendable {
   }
 
   @Logged
-  public double getVoltage() {
-    return cachedVoltage.getAsDouble();
-  }
-
-  public double updateVoltage() {
-    return motor.getMotorVoltage().getValueAsDouble();
-  }
-
-  /**
-   * Update the value of the stator current for the motor
-   *
-   * @return
-   */
-  public double updateCurrent() {
-    return motor.getStatorCurrent().getValueAsDouble();
-  }
-
-  /**
-   * Updates the position of the motor
-   *
-   * @return motor position in rotations
-   */
-  private double updatePositionRotations() {
-    return motor.getPosition().getValueAsDouble();
+  public Voltage getVoltage() {
+    return motorVoltage.getValue();
   }
 
   /**
@@ -229,44 +216,48 @@ public class Turret extends SubsystemBase implements NTSendable {
    * @return motor position in degrees
    */
   public double getPositionDegrees() {
-    return motor.getPosition().getValue().in(Degrees);
+    return motorPosition.getValue().in(Degrees);
   }
 
   @Logged
-  public double getPositionRotations() {
-    return cachedRotations.getAsDouble();
+  public double getPosition() {
+    return motorPosition.getValueAsDouble();
   }
 
   @Logged
   public Angle getAngle() {
-    return motor.getPosition().getValue();
+    return motorPosition.getValue();
   }
 
   @Logged
-  public double getVelocityRPM() {
-    return cachedVelocity.getAsDouble();
+  public AngularVelocity getVelocity() {
+    return motorVelocity.getValue();
   }
 
   @Logged
-  public double getStatorCurrent() {
-    return cachedCurrent.getAsDouble();
+  public Current getStatorCurrent() {
+    return motorStatorCurrent.getValue();
   }
 
   @Logged
-  public double getSetpoint() {
-    return motor.getClosedLoopReference().getValueAsDouble() * 360.0;
+  public Current getSupplyCurrent() {
+    return motorSupplyCurrent.getValue();
+  }
+
+  @Logged
+  public double getSetpointDegrees() {
+    return setpoint.getValueAsDouble() * 360.0;
   }
 
   @Logged
   public double getSetpointRotations() {
-    return motor.getClosedLoopReference().getValueAsDouble();
+    return setpoint.getValueAsDouble();
   }
 
   @Logged
   public double getMotionMagicSetpointRotations() {
     if (Robot.isSimulation()) {
       return positionVoltage.Position;
-
     } else {
       return motionMagicVoltage.Position;
     }
@@ -277,22 +268,8 @@ public class Turret extends SubsystemBase implements NTSendable {
     return positionHold.Position;
   }
 
-  // Get Velocity in RPM
-  private double updateVelocityRPM() {
-    return Conversions.RPStoRPM(updateVelocityRPS());
-  }
-
-  /**
-   * Updates the velocity of the motor
-   *
-   * @return motor velocity in rotations/sec which are the CTRE native units
-   */
-  private double updateVelocityRPS() {
-    return motor.getVelocity().getValueAsDouble();
-  }
-
   public Command stop() {
-    return Commands.runOnce(() -> motor.stopMotor());
+    return runOnce(() -> motor.stopMotor()).withName(this.getName() + ".Stop");
   }
 
   private void controlMotor(Angle angle) {
@@ -309,12 +286,11 @@ public class Turret extends SubsystemBase implements NTSendable {
   }
 
   public Command setAngle(Angle angle) {
-    return Commands.run(() -> controlMotor(angle), this).withName(this.getName() + " SetAngle");
+    return run(() -> controlMotor(angle)).withName(this.getName() + ".SetAngle");
   }
 
   public Command setAngle(Supplier<Angle> angle) {
-    return Commands.run(() -> controlMotor(angle.get()), this)
-        .withName(this.getName() + " SetAngleSupplier");
+    return run(() -> controlMotor(angle.get())).withName(this.getName() + ".SetAngleSupplier");
   }
 
   // set angle for turret relative to field element
@@ -344,7 +320,9 @@ public class Turret extends SubsystemBase implements NTSendable {
     return targetPos;
   }
 
+  //
   // Simulation
+  //
   public void simulationInit() {
     var talonFXSim = motor.getSimState();
 
@@ -359,7 +337,6 @@ public class Turret extends SubsystemBase implements NTSendable {
 
     var simConfig = new TalonFXConfiguration();
     motor.getConfigurator().refresh(simConfig);
-    System.out.println("cruise = " + simConfig.MotionMagic.MotionMagicCruiseVelocity);
     simConfig.Slot0.kS = 0.0;
     motor.getConfigurator().apply(simConfig);
   }
