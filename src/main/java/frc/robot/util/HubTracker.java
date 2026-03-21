@@ -184,6 +184,13 @@ public class HubTracker {
     }
   }
 
+  public static boolean overrideAutoWinner(){
+    if (getAutoWinner() == Optional.of(Alliance.Blue)){
+      
+    }
+
+  }
+
   /**
    * Counts up from 0 to 160 seconds as match progresses. Returns -1 if not match isn't running or
    * if in between auto and teleop
