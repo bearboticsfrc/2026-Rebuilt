@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import com.ctre.phoenix6.StatusCode;
+import edu.wpi.first.wpilibj.DriverStation;
 import java.util.function.Supplier;
 
 public class PhoenixUtil {
@@ -13,8 +14,7 @@ public class PhoenixUtil {
       status = command.get();
     }
     if (!status.isOK()) {
-
-      System.out.println("ERROR Configuring " + name + " motor: " + status);
+      DriverStation.reportError("ERROR Configuring " + name + " motor: " + status, false);
     }
   }
 }

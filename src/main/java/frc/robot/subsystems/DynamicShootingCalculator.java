@@ -4,6 +4,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
@@ -16,6 +17,7 @@ public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
 
   private Rotation2d lastTurretAngle = new Rotation2d();
+  private Translation2d lastTarget = Field.getMyHub();
 
   @Logged public Rotation2d turretAngle = new Rotation2d();
 
@@ -24,6 +26,8 @@ public class DynamicShootingCalculator {
   private double hoodAngle = 0;
   private double flywheelVelocity = 0;
   private double turretVelocity = 0;
+
+  private static final Transform2d turretToRobot = RobotState.turretToRobot;
 
   public static DynamicShootingCalculator getInstance() {
     if (instance == null) instance = new DynamicShootingCalculator();
@@ -82,7 +86,7 @@ public class DynamicShootingCalculator {
     timeOfFlightMap.put(4.0, 1.15);
   }
 
-  public LaunchingParameters getParameters() {
+  public LaunchingParameters getParameters_old() {
     if (latestParameters != null) {
       return latestParameters;
     }
@@ -109,7 +113,7 @@ public class DynamicShootingCalculator {
     else if (RobotState.getInstance().isRightNeutralZone()) target = Field.getMyRight();
     else target = Field.getMyHub();
 
-    Pose2d turretPose = estimatedPose.transformBy(RobotState.turretToRobot);
+    Pose2d turretPose = estimatedPose.transformBy(turretToRobot);
 
     double turretToTarget = target.getDistance(turretPose.getTranslation());
 
@@ -118,16 +122,15 @@ public class DynamicShootingCalculator {
 
     double robotAngle = estimatedPose.getRotation().getRadians();
 
+    double rx_field =
+        turretToRobot.getX() * Math.cos(robotAngle) - turretToRobot.getY() * Math.sin(robotAngle);
+    double ry_field =
+        turretToRobot.getX() * Math.sin(robotAngle) + turretToRobot.getY() * Math.cos(robotAngle);
+
     double turretVelocityX =
-        robotVelocity.vxMetersPerSecond
-            - robotVelocity.omegaRadiansPerSecond
-                * (RobotState.turretToRobot.getX() * Math.sin(robotAngle)
-                    + RobotState.turretToRobot.getY() * Math.cos(robotAngle));
+        robotVelocity.vxMetersPerSecond - robotVelocity.omegaRadiansPerSecond * (ry_field);
     double turretVelocityY =
-        robotVelocity.vyMetersPerSecond
-            + robotVelocity.omegaRadiansPerSecond
-                * (RobotState.turretToRobot.getX() * Math.cos(robotAngle)
-                    - RobotState.turretToRobot.getY() * Math.sin(robotAngle));
+        robotVelocity.vyMetersPerSecond + robotVelocity.omegaRadiansPerSecond * (rx_field);
 
     // Account for imparted velocity by robot (turret) to offset
     double timeOfFlight;
@@ -138,13 +141,14 @@ public class DynamicShootingCalculator {
 
     for (int i = 0; i < 5; i++) {
       timeOfFlight = timeOfFlightMap.get(lookaheadTurretToTargetDistance);
-      timeOfFlight = 1.0;
       double offsetX = turretVelocityX * timeOfFlight;
       double offsetY = turretVelocityY * timeOfFlight;
       lookaheadPose =
           new Pose2d(
               turretPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
-              turretPose.getRotation());
+              turretPose
+                  .getRotation()
+                  .plus(new Rotation2d(robotVelocity.omegaRadiansPerSecond * timeOfFlight)));
       lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
     }
 
@@ -171,5 +175,109 @@ public class DynamicShootingCalculator {
 
   public void clearLaunchingParameters() {
     latestParameters = null;
+  }
+
+  public LaunchingParameters getParameters() {
+    if (latestParameters != null) {
+      return latestParameters;
+    }
+
+    // --- Pose estimation with latency compensation ---
+    Pose2d currentPose = RobotState.getInstance().robotPose;
+    ChassisSpeeds robotRelVel = RobotState.getInstance().robotVelocity;
+    ChassisSpeeds fieldVel = RobotState.getInstance().getFieldVelocity();
+
+    final double PHASE_DELAY_S = 0.03;
+    Pose2d estimatedPose =
+        currentPose.exp(
+            new Twist2d(
+                robotRelVel.vxMetersPerSecond * PHASE_DELAY_S,
+                robotRelVel.vyMetersPerSecond * PHASE_DELAY_S,
+                robotRelVel.omegaRadiansPerSecond * PHASE_DELAY_S));
+
+    // --- Turret pose in field frame ---
+    Pose2d turretPose = estimatedPose.transformBy(turretToRobot);
+
+    // --- Field-frame turret velocity (robot translation + rotation contribution) ---
+    double robotAngle = estimatedPose.getRotation().getRadians();
+    double rx_field =
+        turretToRobot.getX() * Math.cos(robotAngle) - turretToRobot.getY() * Math.sin(robotAngle);
+    double ry_field =
+        turretToRobot.getX() * Math.sin(robotAngle) + turretToRobot.getY() * Math.cos(robotAngle);
+
+    double turretVelX = fieldVel.vxMetersPerSecond - fieldVel.omegaRadiansPerSecond * ry_field;
+    double turretVelY = fieldVel.vyMetersPerSecond + fieldVel.omegaRadiansPerSecond * rx_field;
+
+    // --- Target selection ---
+    Translation2d target = selectTarget();
+
+    // --- Iterative lookahead: converge on self-consistent (distance, timeOfFlight) ---
+    double lookaheadDistance = target.getDistance(turretPose.getTranslation());
+    lookaheadPose = turretPose;
+
+    final int MAX_ITERATIONS = 5;
+    final double CONVERGENCE_THRESHOLD_M = 0.001;
+
+    for (int i = 0; i < MAX_ITERATIONS; i++) {
+      double timeOfFlight = timeOfFlightMap.get(lookaheadDistance);
+
+      // Propagate turret position and robot heading over timeOfFlight
+      double propagatedAngle = robotAngle + fieldVel.omegaRadiansPerSecond * timeOfFlight;
+
+      // Recompute field-frame turret velocity at propagated angle for better accuracy
+      double rx_prop =
+          turretToRobot.getX() * Math.cos(propagatedAngle)
+              - turretToRobot.getY() * Math.sin(propagatedAngle);
+      double ry_prop =
+          turretToRobot.getX() * Math.sin(propagatedAngle)
+              + turretToRobot.getY() * Math.cos(propagatedAngle);
+      double velX = fieldVel.vxMetersPerSecond - fieldVel.omegaRadiansPerSecond * ry_prop;
+      double velY = fieldVel.vyMetersPerSecond + fieldVel.omegaRadiansPerSecond * rx_prop;
+
+      lookaheadPose =
+          new Pose2d(
+              turretPose
+                  .getTranslation()
+                  .plus(new Translation2d(velX * timeOfFlight, velY * timeOfFlight)),
+              new Rotation2d(propagatedAngle));
+
+      double newDistance = target.getDistance(lookaheadPose.getTranslation());
+
+      if (Math.abs(newDistance - lookaheadDistance) < CONVERGENCE_THRESHOLD_M) {
+        lookaheadDistance = newDistance;
+        break;
+      }
+      lookaheadDistance = newDistance;
+    }
+
+    // --- Turret angle in robot frame at predicted pose ---
+    Rotation2d turretAngle =
+        target.minus(lookaheadPose.getTranslation()).getAngle().minus(lookaheadPose.getRotation());
+
+    // --- Turret angular velocity via finite difference, guarded against zone transitions ---
+    double turretAngleDeltaRad = turretAngle.minus(lastTurretAngle).getRadians();
+    boolean targetChanged = !selectTarget().equals(lastTarget);
+    double turretVelocity =
+        targetChanged ? 0.0 : turretAngleFilter.calculate(turretAngleDeltaRad / 0.02);
+
+    lastTurretAngle = turretAngle;
+    lastTarget = target;
+
+    // --- Lookup shot parameters ---
+    double hoodAngle = hoodAngleMap.get(lookaheadDistance);
+    double flywheelVelocity = flywheelSpeedMap.get(lookaheadDistance);
+    boolean inRange = lookaheadDistance >= minDistance && lookaheadDistance <= maxDistance;
+
+    latestParameters =
+        new LaunchingParameters(inRange, turretAngle, turretVelocity, hoodAngle, flywheelVelocity);
+    return latestParameters;
+  }
+
+  private Translation2d selectTarget() {
+    RobotState state = RobotState.getInstance();
+    if (state.isInAllianceZone()) return Field.getMyHub();
+    if (state.isLeftNeutralZone()) return Field.getMyLeft();
+    if (state.isRightNeutralZone()) return Field.getMyRight();
+    return Field.getMyHub();
   }
 }
