@@ -65,9 +65,21 @@ wpi.java.debugJni = false
 // Set this to true to enable desktop support.
 def includeDesktopSupport = false
 
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
 dependencies {
+    // FoxFlow: type-safe compile-time state machine library.
+    // Run `./gradlew publishToMavenLocal` in the FoxFlow repo before building.
+    implementation 'bot.den:foxflow:dev'
+    annotationProcessor 'bot.den:foxflow-annotations:dev'
+    // foxflow-annotations uses WPILib types during code generation.
+    annotationProcessor wpi.java.deps.wpilib()
+
     annotationProcessor wpi.java.deps.wpilibAnnotations()
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()

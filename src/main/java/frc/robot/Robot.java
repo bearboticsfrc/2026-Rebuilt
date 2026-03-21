@@ -43,6 +43,10 @@ import frc.robot.commands.AutoClimbCommand;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
 import frc.robot.field.AllianceFlipUtil;
+import frc.robot.state.GameStateMachineSetup;
+import frc.robot.state.IntakeState;
+import frc.robot.state.ShooterState;
+import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -141,6 +145,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final AutoClimbCommand autoClimbCommand;
 
+  private final GameStateMachineSetup gameStateMachine =
+      new GameStateMachineSetup(pilot, intake, intakeArm, flywheel, dynamicShootingCommand);
+
   public Robot() {
     instance = this;
     Telemetry.start(true, false, PrintPriority.NORMAL);
@@ -226,7 +233,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Override
   public void robotPeriodic() {
     DriverStation.getAlliance().ifPresent(AllianceColor::setAllianceColor);
-    drivetrain.updatePoses();
+    RobotState.getInstance().updatePose();
+    // Resolve state machine transitions before the scheduler runs so that commands
+    // scheduled by a transition execute on this same loop cycle.
+    gameStateMachine.poll();
     CommandScheduler.getInstance().run();
     DynamicShootingCalculator.getInstance().clearLaunchingParameters();
   }
@@ -358,21 +368,17 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void configureBindings() {
 
     // pilot controlls
-    pilot
-        .leftTrigger()
-        .onTrue(rollers.run().andThen(intakeArm.extend()))
-        .onFalse(
-            intakeArm
-                .retract()
-                .alongWith(
-                    Commands.waitSeconds(1)
-                        .andThen(rollers.stop())
-                        .andThen(Commands.waitSeconds(2))));
+    // Intake and shooter bindings are handled by GameStateMachineSetup via transitionWhen().
+    // Use the state machine's triggers for any feedback that should react to those states:
+    gameStateMachine
+        .shooterStateTrigger(ShooterState.SHOOTING)
+        .onTrue(Commands.print("Shooter: SHOOTING"))
+        .onFalse(Commands.print("Shooter: no longer SHOOTING"));
 
-    pilot
-        .rightTrigger()
-        .onTrue(dynamicShootingCommand.shoot())
-        .onFalse(dynamicShootingCommand.stop());
+    gameStateMachine
+        .intakeStateTrigger(IntakeState.INTAKING)
+        .onTrue(Commands.print("Intake: INTAKING"))
+        .onFalse(Commands.print("Intake: no longer INTAKING"));
 
     // copilot controlls
     copilot.povUp().onTrue(climber.raise());
