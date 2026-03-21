@@ -298,8 +298,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
               });
     }
+  }
+
+  public void updatePoses() {
     RobotState.getInstance().setRobotPose(getPose());
     RobotState.getInstance().setRobotVelocity(getState().Speeds);
+    RobotState.getInstance().updatePose();
     poseHistory.addSample(Utils.getCurrentTimeSeconds(), this.getState().Pose);
   }
 
