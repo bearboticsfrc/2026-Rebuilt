@@ -8,7 +8,11 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.introspect.TypeResolutionContext.Empty;
+
 public class HubTracker {
+
+  private static Optional<Alliance> autoWinner = getAutoWinner();
 
   @Logged
   public boolean hubStatus() {
@@ -52,6 +56,39 @@ public class HubTracker {
   @Logged(name = "Auto Winner")
   public String getAutoWinnerString() {
     return getAutoWinner().isPresent() ? getAutoWinner().get().toString() : "Not Set";
+  }
+
+  @Logged(name = "Override Auto Winner")
+  public static boolean overrideAutoWinner(){
+    while (true) {
+    if (getAutoWinner() == Optional.of(Alliance.Blue)){
+      autoWinner = Optional.of(Alliance.Red);
+    }
+    if(getAutoWinner() == Optional.of(Alliance.Red)){
+      autoWinner = Optional.of(Alliance.Blue);
+    }
+    else{
+      autoWinner = getAutoWinner();
+    }
+    }
+  }
+
+  @Logged (name = "Blue Won Auto")
+  public static boolean blueWonAuto(){
+    while (true) {
+      if (getAutoWinner() == null){
+        autoWinner = Optional.of(Alliance.Blue);
+      }
+    }
+  }
+
+  @Logged (name = "Red Won Auto")
+  public static boolean redWonAuto(){
+    while (true) {
+      if (getAutoWinner() == null){
+        autoWinner = Optional.of(Alliance.Red);
+      }
+    }
   }
 
   /**
@@ -102,7 +139,6 @@ public class HubTracker {
    * Alliance}. Will return {@code false} if disabled or in between auto and teleop.
    */
   public static boolean isActive(Alliance alliance, Shift shift) {
-    Optional<Alliance> autoWinner = getAutoWinner();
     switch (shift.activeType) {
       case BOTH:
         return true;
@@ -184,12 +220,6 @@ public class HubTracker {
     }
   }
 
-  public static boolean overrideAutoWinner(){
-    if (getAutoWinner() == Optional.of(Alliance.Blue)){
-      
-    }
-
-  }
 
   /**
    * Counts up from 0 to 160 seconds as match progresses. Returns -1 if not match isn't running or
