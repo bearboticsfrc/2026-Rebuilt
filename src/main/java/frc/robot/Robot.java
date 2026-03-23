@@ -60,6 +60,7 @@ import frc.robot.vision.VisionSystem;
 import frc.spectrumLib.Telemetry;
 import frc.spectrumLib.Telemetry.PrintPriority;
 import java.util.Arrays;
+import java.util.function.Supplier;
 import lombok.Getter;
 
 public class Robot extends TimedRobot implements AllianceReadyListener {
@@ -124,7 +125,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private final DynamicShootingCommand dynamicShootingCommand;
 
   private double MaxSpeed =
-      TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) / 4.0; // kSpeedAt12Volts desired top speed
+      TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
 
   private double MaxAngularRate =
       RotationsPerSecond.of(0.75)
@@ -213,6 +214,19 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     return RobotState.getInstance().getDistanceToHub();
   }
 
+  // TODO: Make max speed relative to distance to hub, so that we can be more precise when close to
+  // the hub and faster when far away
+  public Supplier<Double> getMaxLinearVelocity() {
+    return () -> (RobotState.getInstance().isShooting()) ? 1.0 : MaxSpeed;
+  }
+
+  public Supplier<Double> getMaxAngularVelocity() {
+    return () ->
+        (RobotState.getInstance().isShooting())
+            ? RotationsPerSecond.of(0.25).in(RadiansPerSecond)
+            : MaxAngularRate;
+  }
+
   public void configureLogging() {
     Shuffleboard.stopRecording();
 
@@ -274,7 +288,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   // set turret
   private Command getTurretCommand() {
-    return turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure());
+    return turret
+        .setAngle(
+            () -> calculator.getParameters().turretAngle().getMeasure(),
+            () -> calculator.getParameters().turretVelocity())
+        .withName("TurretCommand");
   }
 
   @Override
@@ -336,18 +354,15 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                 drive
                     .withVelocityX(
                         -pilot.getLeftY()
-                            * RobotState.getInstance()
-                                .getLinearVelocity()
+                            * getMaxLinearVelocity()
                                 .get()) // Drive forward with negative Y (forward)
                     .withVelocityY(
                         -pilot.getLeftX()
-                            * RobotState.getInstance()
-                                .getLinearVelocity()
-                                .get()) // Drive left with negative X (left)
+                            * getMaxLinearVelocity().get()) // Drive left with negative X (left)
                     .withRotationalRate(
                         -pilot.getRightX()
-                            * MaxAngularRate
-                            / 3.0) // Drive counterclockwise with negative X (left)
+                            * getMaxAngularVelocity()
+                                .get()) // Drive counterclockwise with negative X (left)
             ));
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);

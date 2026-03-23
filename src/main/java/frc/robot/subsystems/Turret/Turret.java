@@ -1,7 +1,9 @@
 package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
@@ -72,6 +74,8 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   private DCMotorSim motorSimModel;
 
+  private Voltage kV;
+
   public Turret() {
     super("Turret");
 
@@ -90,6 +94,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.Slot0.kA = 0.05; // .077265;
     config.Slot0.kS = .6; // .2; // start with .4; tune up if mechanism stalls at end of moves
     config.Slot0.kV = 1.25; // 0.54; // ( 0.124 x 4.34 = .54  V/mechanism-RPS )
+    kV = Volts.of(5.0);
 
     config.Slot1.kP = 150;
     config.Slot1.kD = 12;
@@ -285,12 +290,33 @@ public class Turret extends SubsystemBase implements NTSendable {
     // }
   }
 
+  private void controlMotor(Angle angle, AngularVelocity velocity) {
+    Voltage velocityFeedForward = kV.times(velocity.in(RotationsPerSecond));
+
+    if (Robot.isSimulation()) {
+      motor.setControl(
+          positionVoltage
+              .withPosition(wrapDegreesToSoftLimits(angle))
+              .withFeedForward(velocityFeedForward));
+    } else {
+      motor.setControl(
+          motionMagicVoltage
+              .withPosition(wrapDegreesToSoftLimits(angle))
+              .withFeedForward(velocityFeedForward));
+    }
+  }
+
   public Command setAngle(Angle angle) {
     return run(() -> controlMotor(angle)).withName(this.getName() + ".SetAngle");
   }
 
   public Command setAngle(Supplier<Angle> angle) {
     return run(() -> controlMotor(angle.get())).withName(this.getName() + ".SetAngleSupplier");
+  }
+
+  public Command setAngle(Supplier<Angle> angle, Supplier<AngularVelocity> velocity) {
+    return run(() -> controlMotor(angle.get(), velocity.get()))
+        .withName(this.getName() + ".SetAngleSupplierWithVelocity");
   }
 
   // set angle for turret relative to field element
@@ -314,10 +340,61 @@ public class Turret extends SubsystemBase implements NTSendable {
         DynamicShootingCalculator.getInstance()
             .getLookaheadPose()
             // .transformBy(RobotState.turretToRobot)
-            .transformBy(new Transform2d(0, 0, new Rotation2d(getAngle())));
+            .transformBy(
+                new Transform2d(0, 0, new Rotation2d(getAngle()).plus(Rotation2d.k180deg)));
 
     Translation2d targetPos = turretPose.transformBy(targetTransform).getTranslation();
     return targetPos;
+  }
+
+  // What the calculator is commanding (calc error only)
+  @Logged
+  public Translation2d getCommandedAimPoint() {
+    Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
+    double commanded =
+        DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
+            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+            + Math.PI; // back to field frame
+    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+    return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
+  }
+
+  // Where the turret is actually pointing (calc + tracking error)
+  @Logged
+  public Translation2d getActualAimPoint() {
+    Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
+    double actual =
+        getAngle().in(Radians)
+            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+            + Math.PI;
+    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+    return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
+  }
+
+  // What the calculator is commanding (calc error only)
+  @Logged
+  public Translation2d getCommandedAimPointFromLookahead() {
+    Translation2d turretPos =
+        DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
+    double commanded =
+        DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
+            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+            + Math.PI; // back to field frame
+    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+    return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
+  }
+
+  // Where the turret is actually pointing (calc + tracking error)
+  @Logged
+  public Translation2d getActualAimPointFromLookahead() {
+    Translation2d turretPos =
+        DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
+    double actual =
+        getAngle().in(Radians)
+            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+            + Math.PI;
+    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+    return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
   }
 
   //
