@@ -11,7 +11,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
 import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.util.HubTracker;
@@ -97,8 +96,9 @@ public class RobotState {
   }
 
   public Rotation2d getAngleToHub() {
-    return AllianceFlipUtil.apply(
-        Field.getMyHub().minus((robotPose.transformBy(turretToRobot).getTranslation())).getAngle());
+    return Field.getMyHub()
+        .minus((robotPose.transformBy(turretToRobot).getTranslation()))
+        .getAngle();
   }
 
   public double getDistanceToHub() {

@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.CAN;
 import frc.robot.Robot;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -51,8 +52,6 @@ public class Hood extends SubsystemBase {
     }
   }
 
-  private static final int kNumConfigAttempts = 2;
-
   private static final double gearRatio = 1.2;
   private static final Distance kDrumRadius = Meters.of(0.028575);
   private final Angle MIN_ANGLE = Degrees.of(32);
@@ -61,8 +60,8 @@ public class Hood extends SubsystemBase {
   private DCMotorSim motorSimModel;
 
   /* leader and follower motors */
-  private final CANBus kCANBus = new CANBus("Default Name");
-  private final TalonFX motor = new TalonFX(25, kCANBus);
+  private final CANBus kCANBus = new CANBus(CAN.NAME);
+  private final TalonFX motor = new TalonFX(CAN.HOOD, kCANBus);
 
   /* device status signals */
   private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
@@ -168,7 +167,7 @@ public class Hood extends SubsystemBase {
   }
 
   @Logged
-  public double getProvileVelocityRPS() {
+  public double getProfileVelocityRPS() {
     return motorProfileVelocity.getValue();
   }
 

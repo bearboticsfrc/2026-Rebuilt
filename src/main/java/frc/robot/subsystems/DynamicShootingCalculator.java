@@ -101,12 +101,9 @@ public class DynamicShootingCalculator {
     // --- Pose estimation with latency compensation ---
     Pose2d currentPose = RobotState.getInstance().robotPose;
     ChassisSpeeds robotRelVel = RobotState.getInstance().robotVelocity;
-    // ChassisSpeeds fieldVel = RobotState.getInstance().getFieldVelocity();
-
-    ChassisSpeeds fieldVel = filteredVel;
+    ChassisSpeeds rawVel = RobotState.getInstance().getFieldVelocity();
 
     if (RobotState.getInstance().isShooting()) {
-      ChassisSpeeds rawVel = RobotState.getInstance().getFieldVelocity();
       filteredVel =
           new ChassisSpeeds(
               filteredVel.vxMetersPerSecond
@@ -118,8 +115,10 @@ public class DynamicShootingCalculator {
               filteredVel.omegaRadiansPerSecond
                   + VELOCITY_FILTER_ALPHA
                       * (rawVel.omegaRadiansPerSecond - filteredVel.omegaRadiansPerSecond));
-      fieldVel = filteredVel;
+    } else {
+      filteredVel = new ChassisSpeeds(0, 0, rawVel.omegaRadiansPerSecond);
     }
+    ChassisSpeeds fieldVel = filteredVel;
 
     final double PHASE_DELAY_S = 0.03;
     Pose2d estimatedPose =

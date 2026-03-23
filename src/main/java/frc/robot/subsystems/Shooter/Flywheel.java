@@ -25,6 +25,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -56,6 +57,8 @@ public class Flywheel extends SubsystemBase {
 
   private final StatusSignal<Current> motorCurrent = motor.getSupplyCurrent(false);
   private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
+    private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
+
 
   private final SysIdRoutine m_sysIdRoutine =
       new SysIdRoutine(
@@ -103,10 +106,9 @@ public class Flywheel extends SubsystemBase {
   }
 
   private void optimizeCAN() {
-    motor.getPosition().setUpdateFrequency(50);
-    motor.getVelocity().setUpdateFrequency(50);
-    motor.getSupplyCurrent().setUpdateFrequency(50);
-    motor.getDeviceTemp().setUpdateFrequency(10);
+    motorVelocity.setUpdateFrequency(50);
+    motorCurrent.setUpdateFrequency(50);
+    motorTemperature.setUpdateFrequency(10);
 
     motor.optimizeBusUtilization();
   }
@@ -138,7 +140,7 @@ public class Flywheel extends SubsystemBase {
    */
   public Command runAtSpeed(DoubleSupplier rpm) {
     // Command to run the flywheel at a given speed
-    return runOnce(() -> setVelocity(RPM.of(rpm.getAsDouble())));
+    return run(() -> setVelocity(RPM.of(rpm.getAsDouble())));
   }
 
   /**
