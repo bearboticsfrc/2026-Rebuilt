@@ -13,7 +13,6 @@ import bearlib.fms.AllianceColor;
 import bearlib.fms.AllianceReadyListener;
 import bearlib.util.TunableNumber;
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -137,9 +136,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
           .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-    
-  private final SwerveRequest.SwerveDriveBrake breakMode =
-    new SwerveRequest.SwerveDriveBrake();
+
+  private final SwerveRequest.SwerveDriveBrake breakMode = new SwerveRequest.SwerveDriveBrake();
 
   private final DriveTelemetry driveTelemetry = new DriveTelemetry();
 
@@ -206,6 +204,14 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   public CommandSwerveDrivetrain getSwerve() {
     return drivetrain;
+  }
+
+  public Flywheel getFlywheel() {
+    return flywheel;
+  }
+
+  public HubTracker getTracker() {
+    return tracker;
   }
 
   private boolean getTuningMode() {
@@ -408,7 +414,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     copilot.L2().toggleOnTrue(Commands.idle(turret));
 
-    copilot.R2().whileTrue(drivetrain.applyRequest(()-> breakMode));
+    copilot.R2().whileTrue(drivetrain.applyRequest(() -> breakMode));
   }
 
   public void bindDriveSysidTriggers() {

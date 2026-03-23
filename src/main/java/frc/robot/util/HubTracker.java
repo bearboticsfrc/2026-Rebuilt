@@ -8,8 +8,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import java.util.Optional;
 
-import com.fasterxml.jackson.databind.introspect.TypeResolutionContext.Empty;
-
 public class HubTracker {
 
   private static Optional<Alliance> autoWinner = getAutoWinner();
@@ -59,33 +57,32 @@ public class HubTracker {
   }
 
   @Logged(name = "Override Auto Winner")
-  public static boolean overrideAutoWinner(){
+  public boolean overrideAutoWinner() {
     while (true) {
-    if (getAutoWinner() == Optional.of(Alliance.Blue)){
-      autoWinner = Optional.of(Alliance.Red);
-    }
-    if(getAutoWinner() == Optional.of(Alliance.Red)){
-      autoWinner = Optional.of(Alliance.Blue);
-    }
-    else{
-      autoWinner = getAutoWinner();
-    }
+      if (getAutoWinner() == Optional.of(Alliance.Blue)) {
+        autoWinner = Optional.of(Alliance.Red);
+      }
+      if (getAutoWinner() == Optional.of(Alliance.Red)) {
+        autoWinner = Optional.of(Alliance.Blue);
+      } else {
+        autoWinner = getAutoWinner();
+      }
     }
   }
 
-  @Logged (name = "Blue Won Auto")
-  public static boolean blueWonAuto(){
+  @Logged(name = "Blue Won Auto")
+  public boolean blueWonAuto() {
     while (true) {
-      if (getAutoWinner() == null){
+      if (getAutoWinner() == null) {
         autoWinner = Optional.of(Alliance.Blue);
       }
     }
   }
 
-  @Logged (name = "Red Won Auto")
-  public static boolean redWonAuto(){
+  @Logged(name = "Red Won Auto")
+  public boolean redWonAuto() {
     while (true) {
-      if (getAutoWinner() == null){
+      if (getAutoWinner() == null) {
         autoWinner = Optional.of(Alliance.Red);
       }
     }
@@ -219,7 +216,6 @@ public class HubTracker {
         return Optional.empty();
     }
   }
-
 
   /**
    * Counts up from 0 to 160 seconds as match progresses. Returns -1 if not match isn't running or
