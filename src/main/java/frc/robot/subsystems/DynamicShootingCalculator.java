@@ -112,9 +112,7 @@ public class DynamicShootingCalculator {
               filteredVel.vyMetersPerSecond
                   + VELOCITY_FILTER_ALPHA
                       * (rawVel.vyMetersPerSecond - filteredVel.vyMetersPerSecond),
-              filteredVel.omegaRadiansPerSecond
-                  + VELOCITY_FILTER_ALPHA
-                      * (rawVel.omegaRadiansPerSecond - filteredVel.omegaRadiansPerSecond));
+              rawVel.omegaRadiansPerSecond);
     } else {
       filteredVel = new ChassisSpeeds(0, 0, rawVel.omegaRadiansPerSecond);
     }

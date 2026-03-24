@@ -36,9 +36,7 @@ public class DynamicShootingCommand {
                 .alongWith(
                     hood.goToSetpointRotationsDouble(() -> calculator.getParameters().hoodAngle()))
                 .alongWith(
-                    Commands.waitUntil(() -> flywheel.isAtTarget())
-                        .andThen(spindexer.runSpindexer())
-                        .andThen(spindexer.run())));
+                    Commands.waitUntil(() -> flywheel.isAtTarget()).andThen(spindexer.run())));
   }
 
   public Command stop() {
