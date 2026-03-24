@@ -254,32 +254,43 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     NamedCommands.registerCommand(
         "Intake",
         new ScheduleCommand(
-                rollers.run().andThen(intakeArm.extend()).withName("SequentialRollerArm"))
+                rollers
+                    .run()
+                    .alongWith(intakeArm.extend())
+                    .alongWith(spindexer.oscillateSpindexer())
+                    .withName("ParallelRollerArm"))
             .withName("ScheduleIntake"));
 
     NamedCommands.registerCommand(
         "StopIntake",
         new ScheduleCommand(
-                rollers.stop().alongWith(intakeArm.retract()).withName("StopRollersAndRetract"))
+                intakeArm
+                    .retract()
+                    .alongWith(spindexer.stop())
+                    .alongWith(rollers.stop())
+                    .withName("ParallelRetractStop"))
             .withName("ScheduleStopIntake"));
 
     NamedCommands.registerCommand(
         "Shoot",
         new ScheduleCommand(
-                getTurretCommand()
-                    .alongWith(dynamicShootingCommand.shoot().withTimeout(5))
-                    .withName("TurretAndShoot5"))
+                dynamicShootingCommand.shoot().withTimeout(5).withName("TurretAndShoot5"))
             .withName("ScheduleShoot"));
 
     NamedCommands.registerCommand(
         "ShootRoll",
         new ScheduleCommand(
-            getTurretCommand()
-                .alongWith(dynamicShootingCommand.shoot().withTimeout(5))
-                .alongWith(rollers.runSlow())));
+                dynamicShootingCommand
+                    .shoot()
+                    .withTimeout(5)
+                    .alongWith(rollers.runSlow())
+                    .withName("ShootRoll"))
+            .withName("ScheduleShootRoll"));
 
     NamedCommands.registerCommand(
-        "StopShoot", new ScheduleCommand(turret.stop().alongWith(dynamicShootingCommand.stop())));
+        "StopShoot",
+        new ScheduleCommand(dynamicShootingCommand.stop().withName("StopShoot"))
+            .withName("ScheduleStopShoot"));
 
     NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
 
@@ -375,10 +386,16 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     // pilot controlls
     pilot
         .leftTrigger()
-        .onTrue(rollers.run().andThen(intakeArm.extend()))
+        .onTrue(
+            rollers
+                .run()
+                .alongWith(intakeArm.extend())
+                .alongWith(spindexer.oscillateSpindexer())
+                .withName("ParallelIntake"))
         .onFalse(
             intakeArm
                 .retract()
+                .alongWith(spindexer.stop())
                 .alongWith(
                     Commands.waitSeconds(1)
                         .andThen(rollers.stop())

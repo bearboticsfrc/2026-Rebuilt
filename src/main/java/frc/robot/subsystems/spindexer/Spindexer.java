@@ -2,6 +2,7 @@ package frc.robot.subsystems.spindexer;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.CAN.*;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
@@ -12,6 +13,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -20,14 +22,17 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Robot;
+import java.util.Set;
 
 public class Spindexer extends SubsystemBase {
 
@@ -38,6 +43,7 @@ public class Spindexer extends SubsystemBase {
 
   private final DutyCycleOut kickerDutyReq = new DutyCycleOut(0.0);
   private final DutyCycleOut spindexerDutyReq = new DutyCycleOut(0.0);
+  private final MotionMagicVoltage spindexerPositionReq = new MotionMagicVoltage(0.0);
   private final double KICKER_OUTPUT = 1;
   private final double KICKER_REVERSE_OUTPUT = -0.2;
 
@@ -47,6 +53,7 @@ public class Spindexer extends SubsystemBase {
   private final StatusSignal<Current> spindexerSupplyCurrent = spindexer.getSupplyCurrent(false);
   private final StatusSignal<Current> spindexerStatorCurrent = spindexer.getStatorCurrent(false);
   private final StatusSignal<AngularVelocity> spindexerVelocity = spindexer.getVelocity(false);
+  private final StatusSignal<Angle> spindexerPosition = spindexer.getPosition(false);
 
   private final StatusSignal<Current> kickerSupplyCurrent = kicker.getSupplyCurrent(false);
   private final StatusSignal<Current> kickerStatorCurrent = kicker.getStatorCurrent(false);
@@ -71,6 +78,14 @@ public class Spindexer extends SubsystemBase {
     spindexerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
     spindexerConfig.withCurrentLimits(spindexerCurrentLimitsConfigs);
 
+    spindexerConfig.Slot0.kS = 0.1; // Static gain
+    spindexerConfig.Slot0.kV = 0.7; // tune: ~12V / (7530 RPM / 60 / 7.2) = 0.69
+    spindexerConfig.Slot0.kA = 0;
+    spindexerConfig.Slot0.kP = 1; // Proportional gain
+    spindexerConfig.MotionMagic.MotionMagicCruiseVelocity = 0.5; // RPS, mechanism
+    spindexerConfig.MotionMagic.MotionMagicAcceleration = 4; // RPS/s, mechanism - ramps in ~0.125s
+    spindexerConfig.Feedback.SensorToMechanismRatio = spindexerGearRatio;
+
     TalonFXConfiguration kickerConfig = new TalonFXConfiguration();
     kickerConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     kickerConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -80,6 +95,8 @@ public class Spindexer extends SubsystemBase {
     kickerCurrentLimitsConfigs.StatorCurrentLimitEnable = true;
     kickerCurrentLimitsConfigs.SupplyCurrentLimitEnable = true;
     kickerConfig.withCurrentLimits(kickerCurrentLimitsConfigs);
+
+    kickerConfig.Feedback.SensorToMechanismRatio = kickerGearRatio;
 
     tryUntilOk(5, () -> spindexer.getConfigurator().apply(spindexerConfig), getName());
     tryUntilOk(5, () -> kicker.getConfigurator().apply(kickerConfig), getName());
@@ -126,6 +143,33 @@ public class Spindexer extends SubsystemBase {
 
   public Command runKicker() {
     return runOnce(() -> setKickerOutput(KICKER_OUTPUT)).withName("RunKicker");
+  }
+
+  private void setSpindexerPosition(Angle angle) {
+    spindexer.setControl(spindexerPositionReq.withPosition(angle).withEnableFOC(true));
+  }
+
+  private boolean isSpindexerAtPosition(Angle target) {
+    return spindexerPosition.getValue().isNear(target, Rotations.of(.05));
+  }
+
+  // to help seat the fuel into the spindexer, run the spindexer back and forth.
+  public Command oscillateSpindexer() {
+    return Commands.defer(
+            () -> {
+              Angle startPosition = spindexerPosition.getValue();
+              Angle forwardTarget = startPosition.plus(Rotations.of(.25));
+              Angle reverseTarget = startPosition;
+
+              return run(() -> setSpindexerPosition(forwardTarget))
+                  .until(() -> isSpindexerAtPosition(forwardTarget))
+                  .andThen(
+                      run(() -> setSpindexerPosition(reverseTarget))
+                          .until(() -> isSpindexerAtPosition(reverseTarget)))
+                  .repeatedly();
+            },
+            Set.of(this))
+        .withName(getName() + ".oscillateSpindexer");
   }
 
   public Command reverseSpindexer() {
@@ -178,6 +222,7 @@ public class Spindexer extends SubsystemBase {
   public void periodic() {
     BaseStatusSignal.refreshAll(
         spindexerVelocity,
+        spindexerPosition,
         kickerVelocity,
         spindexerSupplyCurrent,
         spindexerStatorCurrent,
@@ -206,7 +251,7 @@ public class Spindexer extends SubsystemBase {
   }
 
   public void kickerSimulationInit() {
-    var kickerTalonFXSim = spindexer.getSimState();
+    var kickerTalonFXSim = kicker.getSimState();
 
     // Match your InvertedValue.Clockwise_Positive config
     kickerTalonFXSim.Orientation = ChassisReference.Clockwise_Positive;
@@ -248,7 +293,7 @@ public class Spindexer extends SubsystemBase {
   }
 
   public void kickerSimulationPeriodic() {
-    var kickerTalonFXSim = spindexer.getSimState();
+    var kickerTalonFXSim = kicker.getSimState();
 
     // set the supply voltage of the TalonFX
     kickerTalonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
@@ -265,8 +310,7 @@ public class Spindexer extends SubsystemBase {
     // note that this is rotor position/velocity (before gear ratio), but
     // DCMotorSim returns mechanism position/velocity (after gear ratio)
     kickerTalonFXSim.setRawRotorPosition(
-        spindexerSimModel.getAngularPosition().times(kickerGearRatio));
-    kickerTalonFXSim.setRotorVelocity(
-        spindexerSimModel.getAngularVelocity().times(kickerGearRatio));
+        kickerSimModel.getAngularPosition().times(kickerGearRatio));
+    kickerTalonFXSim.setRotorVelocity(kickerSimModel.getAngularVelocity().times(kickerGearRatio));
   }
 }

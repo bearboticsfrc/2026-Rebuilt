@@ -57,8 +57,7 @@ public class Flywheel extends SubsystemBase {
 
   private final StatusSignal<Current> motorCurrent = motor.getSupplyCurrent(false);
   private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
-    private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
-
+  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
 
   private final SysIdRoutine m_sysIdRoutine =
       new SysIdRoutine(
