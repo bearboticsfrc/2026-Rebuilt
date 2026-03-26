@@ -58,11 +58,9 @@ public class Slider extends SubsystemBase implements SelfTestable {
     }
   }
 
-  // TODO: measure actual pinion circumference (π × pitch diameter) and update this value.
-  // All setpoints and telemetry scale with this constant.
-  private static final Distance kPinionCircumference = Inches.of(1.0);
+  private static final Distance kPinionCircumference = Inches.of(1.0 * Math.PI);
 
-  private static final double gearRatio = 12; // motor-to-pinion gear reduction
+  private static final double gearRatio = 6.04; // motor-to-pinion gear reduction
 
   private static final Distance kMaxTravel = Inches.of(12);
 
