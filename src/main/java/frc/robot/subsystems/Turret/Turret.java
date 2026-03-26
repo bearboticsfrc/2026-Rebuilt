@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
@@ -72,6 +73,8 @@ public class Turret extends SubsystemBase implements NTSendable {
 
   private DCMotorSim motorSimModel;
 
+  private Voltage kV;
+
   public Turret() {
     super("Turret");
 
@@ -90,6 +93,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.Slot0.kA = 0.05; // .077265;
     config.Slot0.kS = .6; // .2; // start with .4; tune up if mechanism stalls at end of moves
     config.Slot0.kV = 1.25; // 0.54; // ( 0.124 x 4.34 = .54  V/mechanism-RPS )
+    kV = Volts.of(config.Slot0.kV);
 
     config.Slot1.kP = 150;
     config.Slot1.kD = 12;
@@ -285,12 +289,33 @@ public class Turret extends SubsystemBase implements NTSendable {
     // }
   }
 
+  private void controlMotor(Angle angle, AngularVelocity velocity) {
+    Voltage velocityFeedForward = kV.times(velocity.in(RotationsPerSecond) * gearRatio);
+
+    if (Robot.isSimulation()) {
+      motor.setControl(
+          positionVoltage
+              .withPosition(wrapDegreesToSoftLimits(angle))
+              .withFeedForward(velocityFeedForward));
+    } else {
+      motor.setControl(
+          motionMagicVoltage
+              .withPosition(wrapDegreesToSoftLimits(angle))
+              .withFeedForward(velocityFeedForward));
+    }
+  }
+
   public Command setAngle(Angle angle) {
     return run(() -> controlMotor(angle)).withName(this.getName() + ".SetAngle");
   }
 
   public Command setAngle(Supplier<Angle> angle) {
     return run(() -> controlMotor(angle.get())).withName(this.getName() + ".SetAngleSupplier");
+  }
+
+  public Command setAngle(Supplier<Angle> angle, Supplier<AngularVelocity> velocity) {
+    return run(() -> controlMotor(angle.get(), velocity.get()))
+        .withName(this.getName() + ".SetAngleSupplierWithVelocity");
   }
 
   // set angle for turret relative to field element

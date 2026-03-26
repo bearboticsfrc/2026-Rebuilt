@@ -274,7 +274,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   // set turret
   private Command getTurretCommand() {
-    return turret.setAngle(() -> calculator.getParameters().turretAngle().getMeasure());
+    return turret.setAngle(
+        () -> calculator.getParameters().turretAngle().getMeasure(),
+        () -> calculator.getParameters().turretVelocity());
   }
 
   @Override

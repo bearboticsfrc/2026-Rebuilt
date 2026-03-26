@@ -1,7 +1,9 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -9,6 +11,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.RobotState;
 import frc.robot.field.Field;
 import lombok.Getter;
@@ -16,30 +19,24 @@ import lombok.Getter;
 public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
 
-  private Rotation2d lastTurretAngle = new Rotation2d();
+  public static final Transform2d turretToRobot =
+      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d());
+
   private Translation2d lastTarget = Field.getMyHub();
 
   @Logged public Rotation2d turretAngle = new Rotation2d();
 
   @Logged @Getter public Pose2d lookaheadPose = new Pose2d();
 
-  private double hoodAngle = 0;
-  private double flywheelVelocity = 0;
-  private double turretVelocity = 0;
-
-  private static final Transform2d turretToRobot = RobotState.turretToRobot;
-
   public static DynamicShootingCalculator getInstance() {
     if (instance == null) instance = new DynamicShootingCalculator();
     return instance;
   }
 
-  private final LinearFilter turretAngleFilter = LinearFilter.movingAverage((int) (0.1 / 0.02));
-
   public record LaunchingParameters(
       boolean isValid,
       Rotation2d turretAngle,
-      double turretVelocity,
+      AngularVelocity turretVelocity,
       double hoodAngle,
       double flywheelVelocity) {}
 
@@ -86,93 +83,6 @@ public class DynamicShootingCalculator {
     timeOfFlightMap.put(4.0, 1.15);
   }
 
-  public LaunchingParameters getParameters_old() {
-    if (latestParameters != null) {
-      return latestParameters;
-    }
-
-    // estimated robot pose
-    Pose2d currentPose = RobotState.getInstance().robotPose;
-
-    ChassisSpeeds robotRelativeVelocity = RobotState.getInstance().robotVelocity;
-
-    double phaseDelay = 0.03;
-    // apply robot velocities to current pose
-    Pose2d estimatedPose =
-        currentPose.exp(
-            new Twist2d(
-                robotRelativeVelocity.vxMetersPerSecond * phaseDelay,
-                robotRelativeVelocity.vyMetersPerSecond * phaseDelay,
-                robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay));
-
-    // get distance to Hub
-    Translation2d target;
-
-    if (RobotState.getInstance().isInAllianceZone()) target = Field.getMyHub();
-    else if (RobotState.getInstance().isLeftNeutralZone()) target = Field.getMyLeft();
-    else if (RobotState.getInstance().isRightNeutralZone()) target = Field.getMyRight();
-    else target = Field.getMyHub();
-
-    Pose2d turretPose = estimatedPose.transformBy(turretToRobot);
-
-    double turretToTarget = target.getDistance(turretPose.getTranslation());
-
-    // Calculate field relative turret velocity
-    ChassisSpeeds robotVelocity = RobotState.getInstance().getFieldVelocity();
-
-    double robotAngle = estimatedPose.getRotation().getRadians();
-
-    double rx_field =
-        turretToRobot.getX() * Math.cos(robotAngle) - turretToRobot.getY() * Math.sin(robotAngle);
-    double ry_field =
-        turretToRobot.getX() * Math.sin(robotAngle) + turretToRobot.getY() * Math.cos(robotAngle);
-
-    double turretVelocityX =
-        robotVelocity.vxMetersPerSecond - robotVelocity.omegaRadiansPerSecond * (ry_field);
-    double turretVelocityY =
-        robotVelocity.vyMetersPerSecond + robotVelocity.omegaRadiansPerSecond * (rx_field);
-
-    // Account for imparted velocity by robot (turret) to offset
-    double timeOfFlight;
-
-    lookaheadPose = turretPose;
-
-    double lookaheadTurretToTargetDistance = turretToTarget;
-
-    for (int i = 0; i < 5; i++) {
-      timeOfFlight = timeOfFlightMap.get(lookaheadTurretToTargetDistance);
-      double offsetX = turretVelocityX * timeOfFlight;
-      double offsetY = turretVelocityY * timeOfFlight;
-      lookaheadPose =
-          new Pose2d(
-              turretPose.getTranslation().plus(new Translation2d(offsetX, offsetY)),
-              turretPose
-                  .getRotation()
-                  .plus(new Rotation2d(robotVelocity.omegaRadiansPerSecond * timeOfFlight)));
-      lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
-    }
-
-    // Calculate parameters accounted for imparted velocity
-    turretAngle =
-        target.minus(lookaheadPose.getTranslation()).getAngle().minus(lookaheadPose.getRotation());
-
-    hoodAngle = (hoodAngleMap.get(lookaheadTurretToTargetDistance));
-    flywheelVelocity = flywheelSpeedMap.get(lookaheadTurretToTargetDistance);
-    turretVelocity =
-        turretAngleFilter.calculate(turretAngle.minus(lastTurretAngle).getRadians() / 0.02);
-    lastTurretAngle = turretAngle;
-
-    latestParameters =
-        new LaunchingParameters(
-            lookaheadTurretToTargetDistance >= minDistance
-                && lookaheadTurretToTargetDistance <= maxDistance,
-            turretAngle,
-            turretVelocity,
-            hoodAngle,
-            flywheelVelocity);
-    return latestParameters;
-  }
-
   public void clearLaunchingParameters() {
     latestParameters = null;
   }
@@ -200,67 +110,89 @@ public class DynamicShootingCalculator {
 
     // --- Field-frame turret velocity (robot translation + rotation contribution) ---
     double robotAngle = estimatedPose.getRotation().getRadians();
-    double rx_field =
-        turretToRobot.getX() * Math.cos(robotAngle) - turretToRobot.getY() * Math.sin(robotAngle);
-    double ry_field =
-        turretToRobot.getX() * Math.sin(robotAngle) + turretToRobot.getY() * Math.cos(robotAngle);
-
-    double turretVelX = fieldVel.vxMetersPerSecond - fieldVel.omegaRadiansPerSecond * ry_field;
-    double turretVelY = fieldVel.vyMetersPerSecond + fieldVel.omegaRadiansPerSecond * rx_field;
 
     // --- Target selection ---
     Translation2d target = selectTarget();
 
     // --- Iterative lookahead: converge on self-consistent (distance, timeOfFlight) ---
     double lookaheadDistance = target.getDistance(turretPose.getTranslation());
-    lookaheadPose = turretPose;
+    this.lookaheadPose = turretPose;
 
-    final int MAX_ITERATIONS = 5;
+    final int MAX_ITERATIONS = 10;
     final double CONVERGENCE_THRESHOLD_M = 0.001;
 
     for (int i = 0; i < MAX_ITERATIONS; i++) {
       double timeOfFlight = timeOfFlightMap.get(lookaheadDistance);
 
       // Propagate turret position and robot heading over timeOfFlight
-      double propagatedAngle = robotAngle + fieldVel.omegaRadiansPerSecond * timeOfFlight;
+      double propagatedAngle = robotAngle + fieldVel.omegaRadiansPerSecond * timeOfFlight / 2.0;
 
-      // Recompute field-frame turret velocity at propagated angle for better accuracy
-      double rx_prop =
+      double rx_avg =
           turretToRobot.getX() * Math.cos(propagatedAngle)
               - turretToRobot.getY() * Math.sin(propagatedAngle);
-      double ry_prop =
+      double ry_avg =
           turretToRobot.getX() * Math.sin(propagatedAngle)
               + turretToRobot.getY() * Math.cos(propagatedAngle);
-      double velX = fieldVel.vxMetersPerSecond - fieldVel.omegaRadiansPerSecond * ry_prop;
-      double velY = fieldVel.vyMetersPerSecond + fieldVel.omegaRadiansPerSecond * rx_prop;
+      double velX = fieldVel.vxMetersPerSecond - fieldVel.omegaRadiansPerSecond * ry_avg;
+      double velY = fieldVel.vyMetersPerSecond + fieldVel.omegaRadiansPerSecond * rx_avg;
 
-      lookaheadPose =
+      double finalAngle = robotAngle + fieldVel.omegaRadiansPerSecond * timeOfFlight;
+
+      this.lookaheadPose =
           new Pose2d(
               turretPose
                   .getTranslation()
                   .plus(new Translation2d(velX * timeOfFlight, velY * timeOfFlight)),
-              new Rotation2d(propagatedAngle));
+              new Rotation2d(finalAngle));
 
-      double newDistance = target.getDistance(lookaheadPose.getTranslation());
+      double newDistance = target.getDistance(this.lookaheadPose.getTranslation());
 
       if (Math.abs(newDistance - lookaheadDistance) < CONVERGENCE_THRESHOLD_M) {
         lookaheadDistance = newDistance;
+
         break;
       }
       lookaheadDistance = newDistance;
     }
+    // --- Turret angular velocity via finite difference, guarded against zone transitions ---
+    AngularVelocity turretVelocity = RadiansPerSecond.zero();
+
+    boolean targetChanged = !target.equals(lastTarget);
+
+    Translation2d turretToTargetVec = target.minus(this.lookaheadPose.getTranslation());
+    double distanceToTarget = turretToTargetVec.getNorm();
+
+    if (distanceToTarget > 0.1 && !targetChanged) {
+
+      double ux = turretToTargetVec.getX() / distanceToTarget;
+      double uy = turretToTargetVec.getY() / distanceToTarget;
+
+      double finalPropagatedAngle =
+          robotAngle
+              + fieldVel.omegaRadiansPerSecond * timeOfFlightMap.get(lookaheadDistance) / 2.0;
+
+      double rx =
+          turretToRobot.getX() * Math.cos(finalPropagatedAngle)
+              - turretToRobot.getY() * Math.sin(finalPropagatedAngle);
+      double ry =
+          turretToRobot.getX() * Math.sin(finalPropagatedAngle)
+              + turretToRobot.getY() * Math.cos(finalPropagatedAngle);
+      double velX = fieldVel.vxMetersPerSecond - fieldVel.omegaRadiansPerSecond * ry;
+      double velY = fieldVel.vyMetersPerSecond + fieldVel.omegaRadiansPerSecond * rx;
+      double angleVelocity =
+          (ux * velY - uy * velX) / distanceToTarget - fieldVel.omegaRadiansPerSecond;
+
+      turretVelocity = RadiansPerSecond.of(angleVelocity);
+    }
 
     // --- Turret angle in robot frame at predicted pose ---
-    Rotation2d turretAngle =
-        target.minus(lookaheadPose.getTranslation()).getAngle().minus(lookaheadPose.getRotation());
 
-    // --- Turret angular velocity via finite difference, guarded against zone transitions ---
-    double turretAngleDeltaRad = turretAngle.minus(lastTurretAngle).getRadians();
-    boolean targetChanged = !selectTarget().equals(lastTarget);
-    double turretVelocity =
-        targetChanged ? 0.0 : turretAngleFilter.calculate(turretAngleDeltaRad / 0.02);
+    this.turretAngle =
+        target
+            .minus(this.lookaheadPose.getTranslation())
+            .getAngle()
+            .minus(this.lookaheadPose.getRotation());
 
-    lastTurretAngle = turretAngle;
     lastTarget = target;
 
     // --- Lookup shot parameters ---
@@ -269,7 +201,8 @@ public class DynamicShootingCalculator {
     boolean inRange = lookaheadDistance >= minDistance && lookaheadDistance <= maxDistance;
 
     latestParameters =
-        new LaunchingParameters(inRange, turretAngle, turretVelocity, hoodAngle, flywheelVelocity);
+        new LaunchingParameters(
+            inRange, this.turretAngle, turretVelocity, hoodAngle, flywheelVelocity);
     return latestParameters;
   }
 
