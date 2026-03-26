@@ -2,30 +2,31 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
+import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.CAN;
+import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-public class Climber extends SubsystemBase {
+public class Climber extends SubsystemBase implements SelfTestable {
   /** Position setpoints for the climber. */
   public enum Setpoint {
     Bottom(Rotations.of(0)),
@@ -51,28 +52,28 @@ public class Climber extends SubsystemBase {
 
   private static final int SENSOR_PORT = 0;
 
-  @Logged(name = "Climber Sensor", importance = Importance.CRITICAL)
+  @Logged(name = "sensor", importance = Importance.CRITICAL)
   private final DigitalInput sensor = new DigitalInput(SENSOR_PORT);
-
-  private static final int kNumConfigAttempts = 2;
 
   private static final double kGearRatio = 24.6;
   private static final Distance kDrumRadius = Meters.of(0.009525);
 
-  /* leader and follower motors */
-  private final CANBus kCANBus = new CANBus("Default Name");
-  private final TalonFX follower = new TalonFX(19, kCANBus); // follower
-  private final TalonFX leader = new TalonFX(15, kCANBus); // leader
+  private final CANBus kCANBus = new CANBus(CAN.NAME);
+  private final TalonFX motor = new TalonFX(CAN.CLIMBER, kCANBus);
 
   /* device status signals */
-  private final StatusSignal<Angle> leaderPosition = leader.getPosition(false);
-  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity(false);
-  private final StatusSignal<Current> leaderTorqueCurrent = leader.getTorqueCurrent(false);
-  private final StatusSignal<Temperature> leaderTemperature = leader.getDeviceTemp(false);
-  private final StatusSignal<Current> followerTorqueCurrent = follower.getTorqueCurrent(false);
-  private final StatusSignal<Temperature> followerTemperature = follower.getDeviceTemp(false);
+  private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
+  private final StatusSignal<Current> motorTorqueCurrent = motor.getTorqueCurrent(false);
 
-  /* controls used by the leader motors */
+  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
+  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
+  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
+  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
+  private final StatusSignal<Double> motorClosedLoopError = motor.getClosedLoopError(false);
+
+  // supplyCurrent ≈ statorCurrent × (motorVoltage / supplyVoltage)
+
+  /* controls used by the motors */
   private final MotionMagicVoltage setpointRequest = new MotionMagicVoltage(0);
   private final DutyCycleOut manualRequest = new DutyCycleOut(0);
   private final DutyCycleOut calibrationRequest =
@@ -82,8 +83,8 @@ public class Climber extends SubsystemBase {
   public final Trigger isHardStop =
       new Trigger(
               () -> {
-                return leaderVelocity.getValue().abs(RotationsPerSecond) < 1
-                    && leaderTorqueCurrent.getValue().abs(Amps)
+                return motorVelocity.getValue().abs(RotationsPerSecond) < 1
+                    && motorTorqueCurrent.getValue().abs(Amps)
                         > 10; // consider changing to statorcurrent for reliability
               })
           .debounce(0.1);
@@ -91,11 +92,7 @@ public class Climber extends SubsystemBase {
   /** Configs common across all motors. */
   private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
 
-  /** Configs common across just the leader motors. */
-  private static final TalonFXConfiguration leaderInitialConfigs = motorInitialConfigs.clone();
-
-  /** Configs for {@link #follower}. */
-  private final TalonFXConfiguration followerConfigs =
+  private final TalonFXConfiguration motorConfigs =
       motorInitialConfigs
           .clone()
           .withMotorOutput(
@@ -105,22 +102,9 @@ public class Climber extends SubsystemBase {
                   .CurrentLimits
                   .clone()
                   .withStatorCurrentLimit(Amps.of(120))
-                  .withStatorCurrentLimitEnable(true));
-
-  /** Configs for {@link #leader}. */
-  private final TalonFXConfiguration leaderConfigs =
-      leaderInitialConfigs
-          .clone()
-          .withMotorOutput(
-              leaderInitialConfigs.MotorOutput.clone().withNeutralMode(NeutralModeValue.Brake))
-          .withCurrentLimits(
-              leaderInitialConfigs
-                  .CurrentLimits
-                  .clone()
-                  .withStatorCurrentLimit(Amps.of(120))
                   .withStatorCurrentLimitEnable(true))
           .withSlot0(
-              leaderInitialConfigs
+              motorInitialConfigs
                   .Slot0
                   .clone()
                   .withKP(98.4)
@@ -131,8 +115,7 @@ public class Climber extends SubsystemBase {
                   .withKA(0)
                   .withKG(0)
                   .withGravityType(GravityTypeValue.Elevator_Static))
-          .withFeedback(
-              leaderInitialConfigs.Feedback.clone().withSensorToMechanismRatio(kGearRatio))
+          .withFeedback(motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(kGearRatio))
           .withSoftwareLimitSwitch(
               motorInitialConfigs
                   .SoftwareLimitSwitch
@@ -142,7 +125,7 @@ public class Climber extends SubsystemBase {
                   .withReverseSoftLimitThreshold(0.0)
                   .withReverseSoftLimitEnable(true))
           .withMotionMagic(
-              leaderInitialConfigs
+              motorInitialConfigs
                   .MotionMagic
                   .clone()
                   .withMotionMagicCruiseVelocity(RotationsPerSecond.of(3.252032520325203))
@@ -150,49 +133,25 @@ public class Climber extends SubsystemBase {
 
   public Climber() {
     super("Climber");
-    StatusCode status = follower.getConfigurator().apply(followerConfigs);
-
-    for (int i = 0; i < kNumConfigAttempts; ++i) {
-      if (status.isOK()) break;
-      status = follower.getConfigurator().apply(followerConfigs);
-    }
-    if (!status.isOK()) {
-      System.out.println("ERROR Configuring Climber follower motor: " + status);
-    }
-
-    status = leader.getConfigurator().apply(leaderConfigs);
-    for (int i = 0; i < kNumConfigAttempts; ++i) {
-      if (status.isOK()) break;
-      status = leader.getConfigurator().apply(leaderConfigs);
-    }
-    if (!status.isOK()) {
-      System.out.println("ERROR Configuring Climber leader motor: " + status);
-    }
-
-    follower.setControl(new Follower(leader.getDeviceID(), MotorAlignmentValue.Aligned));
+    applyConfig(() -> motor.getConfigurator().apply(motorConfigs), getName());
 
     optimizeCAN();
-    System.out.println("Climber Subsystem Initialized");
+    System.out.println(getName() + " Subsystem Initialized");
   }
 
   private void optimizeCAN() {
-    leader.getPosition().setUpdateFrequency(100);
-    leader.getVelocity().setUpdateFrequency(100);
-    leader.getSupplyCurrent().setUpdateFrequency(50);
-    leader.getDeviceTemp().setUpdateFrequency(4);
+    motor.getPosition().setUpdateFrequency(100);
+    motor.getVelocity().setUpdateFrequency(100);
+    motor.getSupplyCurrent().setUpdateFrequency(50);
+    motor.getDeviceTemp().setUpdateFrequency(4);
 
-    leader.optimizeBusUtilization();
-
-    follower.getSupplyCurrent().setUpdateFrequency(10);
-    follower.getDeviceTemp().setUpdateFrequency(4);
-
-    follower.optimizeBusUtilization();
+    motor.optimizeBusUtilization();
   }
 
   /**
    * @return true if the tower rung is blocking the climber sensor.
    */
-  @Logged(name = "Climber Blocked", importance = Importance.CRITICAL)
+  @Logged(name = "climberBlocked", importance = Importance.CRITICAL)
   public boolean climberBlocked() {
     return !sensor.get();
   }
@@ -204,59 +163,52 @@ public class Climber extends SubsystemBase {
   /**
    * @return The Position of the climber
    */
-  @Logged
+  @Logged(name = "position")
   public Angle getPosition() {
-    return leaderPosition.getValue();
+    return motorPosition.getValue();
   }
 
-  @Logged
+  @Logged(name = "positionDistance")
   public Distance getPositionDistance() {
-    return kDrumRadius.times(leaderPosition.getValue().in(Radians));
+    return kDrumRadius.times(motorPosition.getValue().in(Radians));
   }
 
-  @Logged
+  @Logged(name = "positionInches")
   public double getPositionInches() {
-    return kDrumRadius.times(leaderPosition.getValue().in(Radians)).in(Inches);
+    return kDrumRadius.times(motorPosition.getValue().in(Radians)).in(Inches);
   }
 
   /**
-   * @return The Velocity of the climber
+   * @return The TorqueCurrent of the climber
    */
   @Logged
+  public Current getTorqueCurrent() {
+    return motorTorqueCurrent.getValue();
+  }
+
+  @Logged(name = "closedLoopError")
+  public double getClosedLoopError() {
+    return motorClosedLoopError.getValue();
+  }
+
+  @Logged(name = "velocity")
   public AngularVelocity getVelocity() {
-    return leaderVelocity.getValue();
+    return motorVelocity.getValue();
   }
 
-  /**
-   * @return The TorqueCurrent of the climber
-   */
-  @Logged
-  public Current getTorqueCurrentA() {
-    return leaderTorqueCurrent.getValue();
+  @Logged(name = "supplyCurrent")
+  public Current getSupplyCurrent() {
+    return motorSupplyCurrent.getValue();
   }
 
-  /**
-   * @return The TorqueCurrent of the climber
-   */
-  @Logged
-  public Current getTorqueCurrentB() {
-    return followerTorqueCurrent.getValue();
+  @Logged(name = "statorCurrent")
+  public Current getStatorCurrent() {
+    return motorStatorCurrent.getValue();
   }
 
-  /**
-   * @return The Temperature of the climber
-   */
-  @Logged
-  public double getTemperatureAFahrenheit() {
-    return leaderTemperature.getValue().in(Fahrenheit);
-  }
-
-  /**
-   * @return The Temperature of the climber
-   */
-  @Logged
-  public double getTemperatureBFahrenheit() {
-    return followerTemperature.getValue().in(Fahrenheit);
+  @Logged(name = "temperature")
+  public Temperature getTemperature() {
+    return motorTemperature.getValue();
   }
 
   /**
@@ -265,11 +217,11 @@ public class Climber extends SubsystemBase {
    * @return Command to run
    */
   public Command holdPosition() {
-    return runOnce(() -> setpointRequest.withPosition(leaderPosition.getValue()))
+    return runOnce(() -> setpointRequest.withPosition(motorPosition.getValue()))
         .andThen(
             run(
                 () -> {
-                  leader.setControl(setpointRequest);
+                  motor.setControl(setpointRequest);
                 }));
   }
 
@@ -291,7 +243,7 @@ public class Climber extends SubsystemBase {
     return run(
         () -> {
           setpointRequest.withPosition(setpoint.get().target);
-          leader.setControl(setpointRequest);
+          motor.setControl(setpointRequest);
         });
   }
 
@@ -305,8 +257,48 @@ public class Climber extends SubsystemBase {
     return run(
         () -> {
           manualRequest.withOutput(manualOutput.getAsDouble());
-          leader.setControl(manualRequest);
+          motor.setControl(manualRequest);
         });
+  }
+
+  @Logged private boolean selfTestPassed = false;
+  private static final double SELF_TEST_TOLERANCE_INCHES = 0.5;
+
+  // TODO: safeguard the position of the climber, should start at 0
+  // TODO: retract climber at end of test
+  private Command selfTestAt(Setpoint target, String ntKey) {
+    return goToSetpoint(() -> target)
+        .withName(getName() + ".TestSetpoint" + target.name())
+        .withTimeout(2.0)
+        .andThen(
+            runOnce(
+                () -> {
+                  double errorInches = Math.abs(getPositionInches() - target.targetDist.in(Inches));
+                  selfTestPassed = errorInches < SELF_TEST_TOLERANCE_INCHES;
+                  String result =
+                      (selfTestPassed ? "PASS" : "FAIL")
+                          + ": "
+                          + String.format("%.2f", getPositionInches())
+                          + "\" (target "
+                          + target.targetDist.in(Inches)
+                          + ")";
+
+                  SmartDashboard.putBoolean(ntKey + "/passed", selfTestPassed);
+                  SmartDashboard.putString(ntKey + "/message", result);
+                }))
+        .finallyDo(() -> motor.stopMotor());
+  }
+
+  @Override
+  public Command selfTestSlow() {
+    return selfTestAt(Setpoint.Middle, "Robot/Tests/climber/slow")
+        .withName(getName() + ".SelfTestSlow");
+  }
+
+  @Override
+  public Command selfTestFast() {
+    return selfTestAt(Setpoint.Top, "Robot/Tests/climber/fast")
+        .withName(getName() + ".SelfTestFast");
   }
 
   /**
@@ -317,7 +309,7 @@ public class Climber extends SubsystemBase {
    */
   public Command calibrateZero() {
     return run(() -> {
-          leader.setControl(calibrationRequest);
+          motor.setControl(calibrationRequest);
         })
         .until(isHardStop)
         .andThen(
@@ -325,7 +317,7 @@ public class Climber extends SubsystemBase {
                 .withTimeout(0.25)
                 .finallyDo(
                     () -> {
-                      leader.setPosition(Rotations.of(0));
+                      motor.setPosition(Rotations.of(0));
                     }))
         .withName("CalibrateClimber");
   }
@@ -334,11 +326,12 @@ public class Climber extends SubsystemBase {
   public void periodic() {
     /* refresh all status signals */
     BaseStatusSignal.refreshAll(
-        leaderPosition,
-        leaderVelocity,
-        leaderTorqueCurrent,
-        leaderTemperature,
-        followerTorqueCurrent,
-        followerTemperature);
+        motorPosition,
+        motorVelocity,
+        motorTorqueCurrent,
+        motorTemperature,
+        motorSupplyCurrent,
+        motorStatorCurrent,
+        motorClosedLoopError);
   }
 }

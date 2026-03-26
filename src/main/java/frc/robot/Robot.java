@@ -47,12 +47,14 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DynamicShootingCalculator;
-import frc.robot.subsystems.intake.IntakeArm;
 import frc.robot.subsystems.intake.Rollers;
+import frc.robot.subsystems.intake.Slider;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
+import frc.robot.subsystems.spindexer.Kicker;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.test.SelfTest;
 import frc.robot.util.HubTracker;
 import frc.robot.vision.SpectrumVision;
 import frc.robot.vision.VisionConstants;
@@ -87,9 +89,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final Rollers rollers;
 
-  @Logged private final IntakeArm intakeArm;
+  @Logged private final Slider slider;
 
   @Logged private final Spindexer spindexer;
+  @Logged private final Kicker kicker;
 
   @Logged @Getter private final Turret turret;
 
@@ -142,13 +145,16 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final AutoClimbCommand autoClimbCommand;
 
+  private final SelfTest selfTest;
+
   public Robot() {
     instance = this;
     Telemetry.start(true, false, PrintPriority.NORMAL);
     tracker = new HubTracker();
     rollers = new Rollers();
-    intakeArm = new IntakeArm();
+    slider = new Slider();
     spindexer = new Spindexer();
+    kicker = new Kicker();
     turret = new Turret();
     drivetrain = TunerConstants.createDrivetrain();
 
@@ -165,11 +171,15 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     Telemetry.print("All subsystems Initialized");
 
-    interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer);
+    interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer, kicker);
 
-    dynamicShootingCommand = new DynamicShootingCommand(hood, flywheel, spindexer, turret);
+    dynamicShootingCommand = new DynamicShootingCommand(hood, flywheel, spindexer, kicker, turret);
 
     autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
+
+    selfTest =
+        new SelfTest(
+            rollers, flywheel, hood, spindexer, kicker, turret, slider, climber, drivetrain);
 
     registerPathplannerCommands();
 
@@ -178,6 +188,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     configureLogging();
     configureBindings();
+    selfTest.bindTriggers();
     configureDefaultCommands();
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
@@ -256,17 +267,18 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         new ScheduleCommand(
                 rollers
                     .run()
-                    .alongWith(intakeArm.extend())
-                    .alongWith(spindexer.oscillateSpindexer())
+                    .alongWith(slider.extend())
+                    .alongWith(spindexer.oscillate())
                     .withName("ParallelRollerArm"))
             .withName("ScheduleIntake"));
 
     NamedCommands.registerCommand(
         "StopIntake",
         new ScheduleCommand(
-                intakeArm
+                slider
                     .retract()
                     .alongWith(spindexer.stop())
+                    .alongWith(kicker.stop())
                     .alongWith(rollers.stop())
                     .withName("ParallelRetractStop"))
             .withName("ScheduleStopIntake"));
@@ -308,7 +320,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void autonomousInit() {
-    CommandScheduler.getInstance().schedule(intakeArm.retract());
+    CommandScheduler.getInstance().schedule(slider.retract());
     CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
     m_autonomousCommand = getAutonomousCommand();
@@ -389,13 +401,14 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(
             rollers
                 .run()
-                .alongWith(intakeArm.extend())
-                .alongWith(spindexer.oscillateSpindexer())
+                .alongWith(slider.extend())
+                .alongWith(spindexer.oscillate())
                 .withName("ParallelIntake"))
         .onFalse(
-            intakeArm
+            slider
                 .retract()
                 .alongWith(spindexer.stop())
+                .alongWith(kicker.stop())
                 .alongWith(
                     Commands.waitSeconds(1)
                         .andThen(rollers.stop())
@@ -425,8 +438,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.circle().whileTrue(autoClimbCommand.climb());
     copilot
         .square()
-        .whileTrue(spindexer.reverseSpindexer().andThen(spindexer.reverseKicker()))
-        .onFalse(spindexer.stop());
+        .whileTrue(spindexer.reverse().andThen(kicker.reverse()))
+        .onFalse(spindexer.stop().alongWith(kicker.stop()));
 
     copilot.cross().onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
 
