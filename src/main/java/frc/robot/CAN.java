@@ -12,7 +12,5 @@ public class CAN {
   public static final int KICKER = 23;
   public static final int HOOD = 25;
   public static final int FLYWHEEL = 26;
-
-  // Rio CAN IDs
-  public static final int ROLLERS = 25;
+  public static final int ROLLERS = 27;
 }

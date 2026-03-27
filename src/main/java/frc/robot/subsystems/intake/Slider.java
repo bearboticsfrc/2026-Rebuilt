@@ -12,6 +12,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -35,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class Slider extends SubsystemBase implements SelfTestable {
@@ -43,7 +45,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
   public enum Setpoint {
     Retracted(Inches.of(0)),
     Middle(Inches.of(6)),
-    Extended(Inches.of(12)); // max travel
+    Extended(Inches.of(11.25)); // max travel
 
     /** The position target as a mechanism angle (rotations of the pinion). */
     public final Angle target;
@@ -60,7 +62,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
   private static final Distance kPinionCircumference = Inches.of(1.0 * Math.PI);
 
-  private static final double gearRatio = 6.04; // motor-to-pinion gear reduction
+  private static final double gearRatio = 1.8; // 1.58; // 6.04; // motor-to-pinion gear reduction
 
   private static final Distance kMaxTravel = Inches.of(12);
 
@@ -69,6 +71,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
   private final TalonFX motor = new TalonFX(CAN.SLIDER, canivore);
 
   private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0);
+  private final DutyCycleOut manualRequest = new DutyCycleOut(0);
 
   /* device status signals */
   private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
@@ -92,7 +95,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     config.CurrentLimits.StatorCurrentLimit = Amps.of(120).in(Amps);
     config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.Slot0.kP = 100;
+    config.Slot0.kP = 0.1;
     config.Slot0.kD = 2;
     config.Slot0.kS = 0.3;
     config.Slot0.kG = 0; // TODO: tune kG for tilt angle once mechanism angle is known
@@ -100,9 +103,9 @@ public class Slider extends SubsystemBase implements SelfTestable {
     config.Feedback.SensorToMechanismRatio = gearRatio;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
         kMaxTravel.in(Inches) / kPinionCircumference.in(Inches);
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
     config.MotionMagic.MotionMagicCruiseVelocity =
         RotationsPerSecond.of(0.5).in(RotationsPerSecond);
     config.MotionMagic.MotionMagicAcceleration =
@@ -178,6 +181,20 @@ public class Slider extends SubsystemBase implements SelfTestable {
         .andThen(run(() -> motor.setControl(motionMagicRequest)));
   }
 
+  /**
+   * Manually drives the slider with the provided duty cycle output.
+   *
+   * @param manualOutput Function returning the duty cycle to apply
+   * @return Command to run
+   */
+  public Command manualDrive(DoubleSupplier manualOutput) {
+    return run(
+        () -> {
+          manualRequest.withOutput(manualOutput.getAsDouble());
+          motor.setControl(manualRequest);
+        });
+  }
+
   @Logged private boolean selfTestPassed = false;
   private static final double SELF_TEST_TOLERANCE_INCHES = 0.5;
 
@@ -222,8 +239,8 @@ public class Slider extends SubsystemBase implements SelfTestable {
    * @return Current position in mechanism rotations (pinion rotations).
    */
   @Logged(name = "position")
-  public Angle getPosition() {
-    return motorPosition.getValue();
+  public double getPosition() {
+    return motorPosition.getValue().in(Rotations);
   }
 
   /**
@@ -302,12 +319,12 @@ public class Slider extends SubsystemBase implements SelfTestable {
     var talonFXSim = motor.getSimState();
 
     talonFXSim.Orientation = ChassisReference.CounterClockwise_Positive;
-    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX60);
+    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX44);
 
     motorSimModel =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.025, gearRatio),
-            DCMotor.getKrakenX60Foc(1));
+            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.025, gearRatio),
+            DCMotor.getKrakenX44Foc(1));
 
     var simConfig = new TalonFXConfiguration();
     motor.getConfigurator().refresh(simConfig);

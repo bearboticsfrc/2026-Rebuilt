@@ -27,9 +27,9 @@ import frc.robot.test.SelfTestable;
 
 public class Rollers extends Mechanism implements SelfTestable {
 
-  private final CANBus rio = new CANBus(CAN.RIO);
+  private final CANBus canivore = new CANBus(CAN.NAME);
 
-  private final TalonFX motor = new TalonFX(CAN.ROLLERS, rio);
+  private final TalonFX motor = new TalonFX(CAN.ROLLERS, canivore);
 
   private final VelocityVoltage velocityVoltage = new VelocityVoltage(0.0).withEnableFOC(true);
 

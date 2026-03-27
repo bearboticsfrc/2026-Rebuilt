@@ -72,8 +72,8 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   private final StatusSignal<Double> setpoint = motor.getClosedLoopReference(false);
 
   // set these small to start
-  @Getter public Angle minRotations = Rotations.of(-.4);
-  @Getter public Angle maxRotations = Rotations.of(.35);
+  @Getter public Angle minRotations = Rotations.of(-.62);
+  @Getter public Angle maxRotations = Rotations.of(.62);
 
   @Getter public boolean attached = true;
 
@@ -127,9 +127,9 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     config.TorqueCurrent.PeakReverseTorqueCurrent = -120;
 
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .35;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .62;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.4;
+    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.62;
 
     // motionMagicVoltage.withFeedForward(Volts.of(1));
 
