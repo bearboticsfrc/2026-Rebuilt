@@ -2,11 +2,11 @@ package frc.robot.vision;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Robot;
 
 public class VisionStates {
 
-  private static SpectrumVision vision = Robot.get().getSpectrumVision();
+  // Just a hack so it compiles
+  private static SpectrumVision vision = null; // Robot.get().getSpectrumVision();
 
   public static final Trigger turretSeeingTag = new Trigger(vision::isTurretSeeingTag);
   public static final Trigger seeingTag = new Trigger(vision::tagsInView);

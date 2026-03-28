@@ -24,7 +24,9 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotState;
@@ -157,6 +159,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
   /* The SysId routine to test */
   private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+
+  private static final String[] MODULE_NAMES = {"FrontLeft", "FrontRight", "BackLeft", "BackRight"};
+  private static final double STEER_TOLERANCE_DEG = 5.0;
+  private static final double DRIVE_VELOCITY_TOLERANCE_RPS = 1.0;
+
+  @Logged private boolean selfTestPassed = false;
 
   /**
    * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -298,6 +306,61 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
               });
     }
+  }
+
+  /**
+   * Self-test routine. Zeroes all steer motors, waits for them to settle, then checks: - Each steer
+   * motor reached 0° within tolerance - Each drive motor responds to a brief slow command Results
+   * are logged to SmartDashboard and the selfTestPassed field.
+   */
+  public Command selfTest() {
+    final SwerveRequest.PointWheelsAt zeroWheels =
+        new SwerveRequest.PointWheelsAt().withModuleDirection(Rotation2d.kZero);
+    final SwerveRequest.RobotCentric driveSlowly =
+        new SwerveRequest.RobotCentric().withVelocityX(0.3);
+
+    return Commands.sequence(
+            runOnce(
+                () -> SmartDashboard.putString("Drivetrain/SelfTest/Status", "Testing steer...")),
+            // Phase 1: zero all steer motors and wait for them to settle
+            applyRequest(() -> zeroWheels).withTimeout(2.0),
+            runOnce(this::checkSteerResults),
+            runOnce(
+                () -> SmartDashboard.putString("Drivetrain/SelfTest/Status", "Testing drive...")),
+            // Phase 2: spin drive motors briefly and check velocity response
+            applyRequest(() -> driveSlowly).withTimeout(0.75),
+            runOnce(this::checkDriveResults))
+        .finallyDo(
+            () -> {
+              setControl(new SwerveRequest.SwerveDriveBrake());
+              SmartDashboard.putString(
+                  "Drivetrain/SelfTest/Status", selfTestPassed ? "PASS" : "FAIL");
+            })
+        .withName("DrivetrainSelfTest");
+  }
+
+  private void checkSteerResults() {
+    for (int i = 0; i < 4; i++) {
+      double errorDeg = Math.abs(getState().ModuleStates[i].angle.getDegrees());
+      boolean passed = errorDeg < STEER_TOLERANCE_DEG;
+      SmartDashboard.putBoolean("Drivetrain/SelfTest/" + MODULE_NAMES[i] + "/SteerPassed", passed);
+      SmartDashboard.putNumber(
+          "Drivetrain/SelfTest/" + MODULE_NAMES[i] + "/SteerErrorDeg", errorDeg);
+      if (!passed) selfTestPassed = false;
+    }
+  }
+
+  private void checkDriveResults() {
+    selfTestPassed = true;
+    for (int i = 0; i < 4; i++) {
+      double velocityRPS = Math.abs(getModule(i).getDriveMotor().getVelocity().getValueAsDouble());
+      boolean passed = velocityRPS > DRIVE_VELOCITY_TOLERANCE_RPS;
+      SmartDashboard.putBoolean("Drivetrain/SelfTest/" + MODULE_NAMES[i] + "/DrivePassed", passed);
+      SmartDashboard.putNumber(
+          "Drivetrain/SelfTest/" + MODULE_NAMES[i] + "/DriveVelocityRPS", velocityRPS);
+      if (!passed) selfTestPassed = false;
+    }
+    SmartDashboard.putBoolean("Drivetrain/SelfTest/Passed", selfTestPassed);
   }
 
   public void updatePoses() {

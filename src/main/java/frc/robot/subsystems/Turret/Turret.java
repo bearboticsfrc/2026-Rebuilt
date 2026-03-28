@@ -1,9 +1,11 @@
 package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
+import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
@@ -28,9 +30,11 @@ import edu.wpi.first.networktables.NTSendableBuilder;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
@@ -38,10 +42,11 @@ import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.subsystems.DynamicShootingCalculator;
+import frc.robot.test.SelfTestable;
 import java.util.function.Supplier;
 import lombok.Getter;
 
-public class Turret extends SubsystemBase implements NTSendable {
+public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   private final CANBus canivore = new CANBus(CAN.NAME);
 
   private final TalonFX motor = new TalonFX(CAN.TURRET, canivore);
@@ -62,15 +67,19 @@ public class Turret extends SubsystemBase implements NTSendable {
   private final StatusSignal<Voltage> motorVoltage = motor.getMotorVoltage(false);
   private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
   private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
+  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
+
   private final StatusSignal<Double> setpoint = motor.getClosedLoopReference(false);
 
   // set these small to start
-  @Getter public Angle minRotations = Rotations.of(-.4);
-  @Getter public Angle maxRotations = Rotations.of(.35);
+  @Getter public Angle minRotations = Rotations.of(-.62);
+  @Getter public Angle maxRotations = Rotations.of(.62);
 
   @Getter public boolean attached = true;
 
   private DCMotorSim motorSimModel;
+
+  private Voltage kV;
 
   public Turret() {
     super("Turret");
@@ -90,6 +99,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.Slot0.kA = 0.05; // .077265;
     config.Slot0.kS = .6; // .2; // start with .4; tune up if mechanism stalls at end of moves
     config.Slot0.kV = 1.25; // 0.54; // ( 0.124 x 4.34 = .54  V/mechanism-RPS )
+    kV = Volts.of(5.0);
 
     config.Slot1.kP = 150;
     config.Slot1.kD = 12;
@@ -117,13 +127,13 @@ public class Turret extends SubsystemBase implements NTSendable {
     config.TorqueCurrent.PeakReverseTorqueCurrent = -120;
 
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .35;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .62;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.4;
+    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.62;
 
     // motionMagicVoltage.withFeedForward(Volts.of(1));
 
-    tryUntilOk(5, () -> motor.getConfigurator().apply(config), getName());
+    applyConfig(() -> motor.getConfigurator().apply(config), getName());
 
     motor.setPosition(0);
 
@@ -183,7 +193,8 @@ public class Turret extends SubsystemBase implements NTSendable {
         setpoint,
         motorStatorCurrent,
         motorSupplyCurrent,
-        motorVoltage);
+        motorVoltage,
+        motorTemperature);
   }
 
   @Override
@@ -205,7 +216,7 @@ public class Turret extends SubsystemBase implements NTSendable {
     return "none";
   }
 
-  @Logged
+  @Logged(name = "voltage")
   public Voltage getVoltage() {
     return motorVoltage.getValue();
   }
@@ -215,46 +226,52 @@ public class Turret extends SubsystemBase implements NTSendable {
    *
    * @return motor position in degrees
    */
+  @Logged
   public double getPositionDegrees() {
     return motorPosition.getValue().in(Degrees);
   }
 
-  @Logged
+  @Logged(name = "position")
   public double getPosition() {
     return motorPosition.getValueAsDouble();
   }
 
-  @Logged
+  @Logged(name = "angle")
   public Angle getAngle() {
     return motorPosition.getValue();
   }
 
-  @Logged
+  @Logged(name = "velocity")
   public AngularVelocity getVelocity() {
     return motorVelocity.getValue();
   }
 
-  @Logged
+  @Logged(name = "statorCurrent")
   public Current getStatorCurrent() {
     return motorStatorCurrent.getValue();
   }
 
-  @Logged
+  @Logged(name = "supplyCurrent")
   public Current getSupplyCurrent() {
     return motorSupplyCurrent.getValue();
   }
 
-  @Logged
+  @Logged(name = "temperature")
+  public Temperature getTemperature() {
+    return motorTemperature.getValue();
+  }
+
+  @Logged(name = "setpointDegrees")
   public double getSetpointDegrees() {
     return setpoint.getValueAsDouble() * 360.0;
   }
 
-  @Logged
+  @Logged(name = "setpointRotations")
   public double getSetpointRotations() {
     return setpoint.getValueAsDouble();
   }
 
-  @Logged
+  @Logged(name = "motionMagicSetpointRotations")
   public double getMotionMagicSetpointRotations() {
     if (Robot.isSimulation()) {
       return positionVoltage.Position;
@@ -263,13 +280,55 @@ public class Turret extends SubsystemBase implements NTSendable {
     }
   }
 
-  @Logged
+  @Logged(name = "positionHoldSetpointRotations")
   public double getPositionHoldSetpointRotations() {
     return positionHold.Position;
   }
 
   public Command stop() {
     return runOnce(() -> motor.stopMotor()).withName(this.getName() + ".Stop");
+  }
+
+  @Logged private boolean selfTestPassed = false;
+
+  // percent error tolerance for self test
+  private static final double SELF_TEST_VARIANCE_THRESHOLD = 0.01;
+
+  private boolean isNearTarget(Angle target) {
+    return getAngle().isNear(target, SELF_TEST_VARIANCE_THRESHOLD);
+  }
+
+  // TODO: safeguard the position of the turret, should start at 0
+  private Command selfTestAt(Angle target, String ntKey) {
+    return setAngle(() -> target)
+        .withTimeout(2.0)
+        .andThen(
+            runOnce(
+                () -> {
+                  selfTestPassed = isNearTarget(target);
+                  String result =
+                      (selfTestPassed ? "PASS" : "FAIL")
+                          + ": "
+                          + (int) getAngle().in(Degrees)
+                          + " Degrees (target "
+                          + (int) target.in(Degrees)
+                          + " Degrees)";
+                  SmartDashboard.putBoolean(ntKey + "/passed", selfTestPassed);
+                  SmartDashboard.putString(ntKey + "/message", result);
+                }))
+        .finallyDo(() -> motor.stopMotor());
+  }
+
+  @Override
+  public Command selfTestSlow() {
+    return selfTestAt(Rotations.of(0.1), "Robot/Tests/turret/slow")
+        .withName(getName() + ".SelfTestSlow");
+  }
+
+  @Override
+  public Command selfTestFast() {
+    return selfTestAt(Rotations.of(.25), "Robot/Tests/turret/fast")
+        .withName(getName() + ".SelfTestFast");
   }
 
   private void controlMotor(Angle angle) {
@@ -285,12 +344,33 @@ public class Turret extends SubsystemBase implements NTSendable {
     // }
   }
 
+  private void controlMotor(Angle angle, AngularVelocity velocity) {
+    Voltage velocityFeedForward = kV.times(velocity.in(RotationsPerSecond));
+
+    if (Robot.isSimulation()) {
+      motor.setControl(
+          positionVoltage
+              .withPosition(wrapDegreesToSoftLimits(angle))
+              .withFeedForward(velocityFeedForward));
+    } else {
+      motor.setControl(
+          motionMagicVoltage
+              .withPosition(wrapDegreesToSoftLimits(angle))
+              .withFeedForward(velocityFeedForward));
+    }
+  }
+
   public Command setAngle(Angle angle) {
     return run(() -> controlMotor(angle)).withName(this.getName() + ".SetAngle");
   }
 
   public Command setAngle(Supplier<Angle> angle) {
     return run(() -> controlMotor(angle.get())).withName(this.getName() + ".SetAngleSupplier");
+  }
+
+  public Command setAngle(Supplier<Angle> angle, Supplier<AngularVelocity> velocity) {
+    return run(() -> controlMotor(angle.get(), velocity.get()))
+        .withName(this.getName() + ".SetAngleSupplierWithVelocity");
   }
 
   // set angle for turret relative to field element
@@ -314,10 +394,61 @@ public class Turret extends SubsystemBase implements NTSendable {
         DynamicShootingCalculator.getInstance()
             .getLookaheadPose()
             // .transformBy(RobotState.turretToRobot)
-            .transformBy(new Transform2d(0, 0, new Rotation2d(getAngle())));
+            .transformBy(
+                new Transform2d(0, 0, new Rotation2d(getAngle()).plus(Rotation2d.k180deg)));
 
     Translation2d targetPos = turretPose.transformBy(targetTransform).getTranslation();
     return targetPos;
+  }
+
+  // What the calculator is commanding (calc error only)
+  @Logged
+  public Translation2d getCommandedAimPoint() {
+    Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
+    double commanded =
+        DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
+            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+            + Math.PI; // back to field frame
+    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+    return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
+  }
+
+  // Where the turret is actually pointing (calc + tracking error)
+  @Logged
+  public Translation2d getActualAimPoint() {
+    Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
+    double actual =
+        getAngle().in(Radians)
+            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+            + Math.PI;
+    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+    return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
+  }
+
+  // What the calculator is commanding (calc error only)
+  @Logged
+  public Translation2d getCommandedAimPointFromLookahead() {
+    Translation2d turretPos =
+        DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
+    double commanded =
+        DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
+            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+            + Math.PI; // back to field frame
+    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+    return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
+  }
+
+  // Where the turret is actually pointing (calc + tracking error)
+  @Logged
+  public Translation2d getActualAimPointFromLookahead() {
+    Translation2d turretPos =
+        DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
+    double actual =
+        getAngle().in(Radians)
+            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+            + Math.PI;
+    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+    return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
   }
 
   //

@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.Hood;
+import frc.robot.subsystems.spindexer.Kicker;
 import frc.robot.subsystems.spindexer.Spindexer;
 import lombok.Getter;
 
@@ -16,6 +17,7 @@ public class InterpolatedShootCommand {
   private final Hood hood;
   private final Flywheel flywheel;
   private final Spindexer spindexer;
+  private final Kicker kicker;
 
   @Getter private volatile double flywheelSpeed = 0;
   @Getter private volatile double hoodAngle = 0;
@@ -43,10 +45,12 @@ public class InterpolatedShootCommand {
 
   private final Notifier solutionNotifier = new Notifier(this::calculateShootSolution);
 
-  public InterpolatedShootCommand(Hood hood, Flywheel flywheel, Spindexer spindexer) {
+  public InterpolatedShootCommand(
+      Hood hood, Flywheel flywheel, Spindexer spindexer, Kicker kicker) {
     this.hood = hood;
     this.flywheel = flywheel;
     this.spindexer = spindexer;
+    this.kicker = kicker;
   }
 
   private void calculateShootSolution() {
@@ -71,12 +75,16 @@ public class InterpolatedShootCommand {
                         "Interpolated Shoot", this::getFlywheelSpeed, this::getHoodAngle))
                 .alongWith(
                     Commands.waitUntil(() -> flywheel.isAtTarget())
-                        .andThen(spindexer.runSpindexer())
-                        .andThen(spindexer.run())))
+                        .andThen(spindexer.run())
+                        .andThen(kicker.run())))
         .finallyDo(() -> solutionNotifier.stop());
   }
 
   public Command stop() {
-    return flywheel.stopCommand().alongWith(spindexer.stop()).alongWith(hood.stopCommand());
+    return flywheel
+        .stopCommand()
+        .alongWith(spindexer.stop())
+        .alongWith(kicker.stop())
+        .alongWith(hood.stopCommand());
   }
 }

@@ -2,7 +2,7 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
+import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
@@ -21,18 +21,20 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.CAN;
 import frc.robot.Robot;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-public class Hood extends SubsystemBase {
+public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
   /** Position setpoints for the hood. */
   public enum Setpoint {
     Ground(Rotations.of(0)),
     Middle(Rotations.of(0.7)),
-    Top(Rotations.of(1.3));
+    Top(Rotations.of(1.0));
 
     /** The position target of the setpoint in angular units. */
     public final Angle target;
@@ -51,8 +53,6 @@ public class Hood extends SubsystemBase {
     }
   }
 
-  private static final int kNumConfigAttempts = 2;
-
   private static final double gearRatio = 1.2;
   private static final Distance kDrumRadius = Meters.of(0.028575);
   private final Angle MIN_ANGLE = Degrees.of(32);
@@ -61,12 +61,18 @@ public class Hood extends SubsystemBase {
   private DCMotorSim motorSimModel;
 
   /* leader and follower motors */
-  private final CANBus kCANBus = new CANBus("Default Name");
-  private final TalonFX motor = new TalonFX(25, kCANBus);
+  private final CANBus kCANBus = new CANBus(CAN.NAME);
+  private final TalonFX motor = new TalonFX(CAN.HOOD, kCANBus);
 
   /* device status signals */
+
+  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
+  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
+  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
+  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
+  private final StatusSignal<Double> motorClosedLoopError = motor.getClosedLoopError(false);
+
   private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
-  private final StatusSignal<Current> motorTorqueCurrent = motor.getTorqueCurrent(false);
   private final StatusSignal<Double> motorProfileVelocity =
       motor.getClosedLoopReferenceSlope(false);
 
@@ -103,7 +109,7 @@ public class Hood extends SubsystemBase {
           .withFeedback(motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(gearRatio))
           .withSoftwareLimitSwitch(
               new SoftwareLimitSwitchConfigs()
-                  .withForwardSoftLimitThreshold(1.4)
+                  .withForwardSoftLimitThreshold(Setpoint.Top.target.in(Rotations))
                   .withForwardSoftLimitEnable(true)
                   .withReverseSoftLimitThreshold(0.0)
                   .withReverseSoftLimitEnable(true))
@@ -117,7 +123,7 @@ public class Hood extends SubsystemBase {
   public Hood() {
     super("Hood");
 
-    tryUntilOk(5, () -> motor.getConfigurator().apply(motorConfigs), getName());
+    applyConfig(() -> motor.getConfigurator().apply(motorConfigs), getName());
 
     motor.setPosition(Rotations.of(0.0));
     optimizeCAN();
@@ -140,36 +146,55 @@ public class Hood extends SubsystemBase {
   /**
    * @return The Position of the hood
    */
-  @Logged
-  public Angle getHoodPosition() {
+  @Logged(name = "position")
+  public Angle getPosition() {
     return motorPosition.getValue();
   }
 
-  @Logged
+  @Logged(name = "positionRotations")
   public double getRotations() {
     return motorPosition.getValue().in(Rotations);
   }
 
-  /**
-   * @return The TorqueCurrent of the hood
-   */
-  public Current getTorqueCurrent() {
-    return motorTorqueCurrent.getValue();
-  }
-
-  @Logged
+  @Logged(name = "setpoint")
   public Angle getSetpoint() {
     return setpointRequest.getPositionMeasure();
   }
 
-  @Logged
+  @Logged(name = "atSetpoint")
   public boolean isAtSetpoint() {
-    return getHoodPosition().isNear(getSetpoint(), 0.05);
+    // checks to see if the position is within 0.05 percent of the setpoint
+    return getPosition().isNear(getSetpoint(), 0.05);
   }
 
-  @Logged
-  public double getProvileVelocityRPS() {
+  @Logged(name = "profileVelocityRPS")
+  public double getProfileVelocityRPS() {
     return motorProfileVelocity.getValue();
+  }
+
+  @Logged(name = "closedLoopError")
+  public double getClosedLoopError() {
+    return motorClosedLoopError.getValue();
+  }
+
+  @Logged(name = "velocity")
+  public AngularVelocity getVelocity() {
+    return motorVelocity.getValue();
+  }
+
+  @Logged(name = "supplyCurrent")
+  public Current getSupplyCurrent() {
+    return motorSupplyCurrent.getValue();
+  }
+
+  @Logged(name = "statorCurrent")
+  public Current getStatorCurrent() {
+    return motorStatorCurrent.getValue();
+  }
+
+  @Logged(name = "temperature")
+  public Temperature getTemperature() {
+    return motorTemperature.getValue();
   }
 
   private void controlMotor(Angle angle) {
@@ -204,6 +229,43 @@ public class Hood extends SubsystemBase {
     motor.stopMotor();
   }
 
+  @Logged private boolean selfTestPassed = false;
+
+  // TODO: safeguard the position of the hood, should start at 0
+  private Command selfTestAt(Setpoint target, String ntKey) {
+    return goToSetpoint(() -> target)
+        .withName(getName() + ".TestSetpoint" + target.name())
+        .withTimeout(2.0)
+        .andThen(
+            runOnce(
+                () -> {
+                  selfTestPassed = isAtSetpoint();
+
+                  String result =
+                      (selfTestPassed ? "PASS" : "FAIL")
+                          + ": "
+                          + String.format("%.2f", getRotations())
+                          + " rot (target "
+                          + String.format("%.3f", Setpoint.Middle.target.in(Rotations))
+                          + " rot)";
+
+                  SmartDashboard.putBoolean(ntKey + "/passed", selfTestPassed);
+                  SmartDashboard.putString(ntKey + "/message", result);
+                }))
+        .finallyDo(() -> motor.stopMotor());
+  }
+
+  @Override
+  public Command selfTestSlow() {
+    return selfTestAt(Setpoint.Middle, "Robot/Tests/hood/slow")
+        .withName(getName() + ".SelfTestSlow");
+  }
+
+  @Override
+  public Command selfTestFast() {
+    return selfTestAt(Setpoint.Top, "Robot/Tests/hood/fast").withName(getName() + ".SelfTestFast");
+  }
+
   /**
    * Drives the hood to the provided position setpoint.
    *
@@ -225,7 +287,14 @@ public class Hood extends SubsystemBase {
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(motorPosition, motorTorqueCurrent, motorProfileVelocity);
+    BaseStatusSignal.refreshAll(
+        motorStatorCurrent,
+        motorSupplyCurrent,
+        motorVelocity,
+        motorTemperature,
+        motorClosedLoopError,
+        motorPosition,
+        motorProfileVelocity);
   }
 
   //

@@ -6,7 +6,7 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
+import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
@@ -25,29 +25,29 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.CAN;
 import frc.robot.Robot;
+import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
 
-public class Flywheel extends SubsystemBase {
+public class Flywheel extends SubsystemBase implements SelfTestable {
   /** Creates a new Flywheel. */
   // Create a new CANBus with name canivore
-  private final CANBus canivore = new CANBus("Default Name");
+  private final CANBus canivore = new CANBus(CAN.NAME);
 
-  private final TalonFX motor = new TalonFX(26, canivore);
+  private final TalonFX motor = new TalonFX(CAN.FLYWHEEL, canivore);
 
   // Velocity output control for the flywheel
 
-  // private final VelocityTorqueCurrentFOC velocityTorqueCurrentFOC = new
-  // VelocityTorqueCurrentFOC(0);
-  // private final VelocityDutyCycle velocityDutyCycle = new VelocityDutyCycle(0);
-
   private final MotionMagicVelocityVoltage velocityOut = new MotionMagicVelocityVoltage(0);
-  // private final DutyCycleOut output = new DutyCycleOut(0);
 
   // Tolerance for the flywheel velocity
   private final double tolerance = 750; // RPM
@@ -55,7 +55,12 @@ public class Flywheel extends SubsystemBase {
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
   private final StatusSignal<Current> motorCurrent = motor.getSupplyCurrent(false);
+
+  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
+  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
   private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
+  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
+  private final StatusSignal<Double> motorClosedLoopError = motor.getClosedLoopError(false);
 
   private final SysIdRoutine m_sysIdRoutine =
       new SysIdRoutine(
@@ -78,7 +83,7 @@ public class Flywheel extends SubsystemBase {
     // Put's the motor in Coast mode to make it easier to move by hand
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    // Adjusted the values for VelocityTorqueCurrentFOC which uses amps instead of volts
+
     config.Slot0.kS = 0.31576; // Static gain
     config.Slot0.kV = 0.11941; // Velocity gain
     config.Slot0.kA = 0.015595;
@@ -91,29 +96,33 @@ public class Flywheel extends SubsystemBase {
     config.MotorOutput.PeakReverseDutyCycle = 0;
 
     // Try to apply config multiple time. Break after successfully applying
-    tryUntilOk(5, () -> motor.getConfigurator().apply(config), getName());
+    applyConfig(() -> motor.getConfigurator().apply(config), getName());
 
     if (Robot.isSimulation()) {
       simulationInit();
     }
 
-    System.out.println("Flywheel Subsystem Initialized");
+    System.out.println(getName() + " Subsystem Initialized");
 
     optimizeCAN();
   }
 
   private void optimizeCAN() {
-    motor.getPosition().setUpdateFrequency(50);
-    motor.getVelocity().setUpdateFrequency(50);
-    motor.getSupplyCurrent().setUpdateFrequency(50);
-    motor.getDeviceTemp().setUpdateFrequency(10);
+    motorVelocity.setUpdateFrequency(50);
+    motorCurrent.setUpdateFrequency(50);
+    motorTemperature.setUpdateFrequency(10);
 
     motor.optimizeBusUtilization();
   }
 
   @Override
   public void periodic() {
-    BaseStatusSignal.refreshAll(motorCurrent, motorVelocity);
+    BaseStatusSignal.refreshAll(
+        motorSupplyCurrent,
+        motorStatorCurrent,
+        motorVelocity,
+        motorTemperature,
+        motorClosedLoopError);
   }
 
   public void setVelocity(AngularVelocity velocity) {
@@ -138,7 +147,7 @@ public class Flywheel extends SubsystemBase {
    */
   public Command runAtSpeed(DoubleSupplier rpm) {
     // Command to run the flywheel at a given speed
-    return runOnce(() -> setVelocity(RPM.of(rpm.getAsDouble())));
+    return run(() -> setVelocity(RPM.of(rpm.getAsDouble())));
   }
 
   /**
@@ -162,14 +171,63 @@ public class Flywheel extends SubsystemBase {
             < tolerance; // Check if the current velocity is near the target velocity
   }
 
-  @Logged
-  public double getMotorCurrent() {
-    return motorCurrent.getValueAsDouble();
+  @Logged(name = "closedLoopError")
+  public double getClosedLoopError() {
+    return motorClosedLoopError.getValue();
+  }
+
+  @Logged(name = "supplyCurrent")
+  public Current getSupplyCurrent() {
+    return motorSupplyCurrent.getValue();
+  }
+
+  @Logged(name = "statorCurrent")
+  public Current getStatorCurrent() {
+    return motorStatorCurrent.getValue();
+  }
+
+  @Logged(name = "temperature")
+  public Temperature getTemperature() {
+    return motorTemperature.getValue();
   }
 
   // Stop the flywheel motors
   public void stop() {
     motor.stopMotor();
+  }
+
+  @Logged private boolean selfTestPassed = false;
+
+  private Command selfTestAt(AngularVelocity target, String ntKey) {
+    return runOnce(() -> setVelocity(target))
+        .andThen(Commands.waitUntil(this::isAtTarget).withTimeout(2.0))
+        .andThen(
+            runOnce(
+                () -> {
+                  selfTestPassed = isAtTarget();
+                  String result =
+                      (selfTestPassed ? "PASS" : "FAIL")
+                          + ": "
+                          + (int) getVelocityInRPM()
+                          + " RPM (target "
+                          + (int) target.in(RPM)
+                          + " RPM)";
+                  SmartDashboard.putBoolean(ntKey + "/passed", selfTestPassed);
+                  SmartDashboard.putString(ntKey + "/message", result);
+                }))
+        .finallyDo(() -> motor.stopMotor());
+  }
+
+  @Override
+  public Command selfTestSlow() {
+    return selfTestAt(RPM.of(1000), "Robot/Tests/flywheel/slow")
+        .withName(getName() + ".SelfTestSlow");
+  }
+
+  @Override
+  public Command selfTestFast() {
+    return selfTestAt(RPM.of(3150), "Robot/Tests/flywheel/fast")
+        .withName(getName() + ".SelfTestFast");
   }
 
   /**
@@ -190,12 +248,17 @@ public class Flywheel extends SubsystemBase {
     return m_sysIdRoutine.dynamic(direction);
   }
 
-  @Logged
+  @Logged(name = "velocity")
+  public AngularVelocity getVelocity() {
+    return motorVelocity.getValue();
+  }
+
+  @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
     return motorVelocity.getValue().in(RPM);
   }
 
-  @Logged
+  @Logged(name = "targetVelocityRPM")
   public double getTargetVelocityInRPM() {
     return velocityOut.getVelocityMeasure().in(RPM);
   }

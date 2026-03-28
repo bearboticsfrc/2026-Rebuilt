@@ -1,6 +1,5 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
 import edu.wpi.first.epilogue.Logged;
@@ -11,11 +10,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
 import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.util.HubTracker;
-import java.util.function.Supplier;
 import lombok.*;
 
 public class RobotState {
@@ -24,10 +21,10 @@ public class RobotState {
 
   @Logged public Translation2d turretTranslation;
 
-  @Logged public Pose2d turretPose;
+  @Logged @Getter public Pose2d turretPose;
 
   public static final Transform2d turretToRobot =
-      new Transform2d(Inches.of(-3.25), Inches.of(-3.25), new Rotation2d(Degrees.of(180)));
+      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d());
 
   public static RobotState getInstance() {
     if (instance == null) instance = new RobotState();
@@ -46,7 +43,7 @@ public class RobotState {
 
   @Logged @Getter @Setter public Pose2d robotPose = new Pose2d();
   @Getter @Setter public ChassisSpeeds robotVelocity = new ChassisSpeeds();
-  @Getter @Setter public boolean shooting;
+  @Logged @Getter @Setter public boolean shooting;
 
   public Rotation2d getRotation() {
     return robotPose.getRotation();
@@ -98,8 +95,9 @@ public class RobotState {
   }
 
   public Rotation2d getAngleToHub() {
-    return AllianceFlipUtil.apply(
-        Field.getMyHub().minus((robotPose.transformBy(turretToRobot).getTranslation())).getAngle());
+    return Field.getMyHub()
+        .minus((robotPose.transformBy(turretToRobot).getTranslation()))
+        .getAngle();
   }
 
   public double getDistanceToHub() {
@@ -111,14 +109,8 @@ public class RobotState {
         .getDistance(
             (DynamicShootingCalculator.getInstance()
                 .getLookaheadPose()
-                .transformBy(turretToRobot)
+                // .transformBy(turretToRobot)
                 .getTranslation()));
-  }
-
-  double maxSpeed = 2.0; // 4.58;
-
-  public Supplier<Double> getLinearVelocity() {
-    return (isShooting()) ? () -> (getDistanceToHub() / 100) * maxSpeed : () -> maxSpeed;
   }
 
   public boolean hubActive() {
