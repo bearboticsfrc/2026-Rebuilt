@@ -388,14 +388,13 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     Transform2d targetTransform =
         new Transform2d(
             new Translation2d(RobotState.getInstance().getLookaheadDistanceToHub(), 0.0),
-            Rotation2d.k180deg);
+            Rotation2d.kZero);
 
     Pose2d turretPose =
         DynamicShootingCalculator.getInstance()
             .getLookaheadPose()
             // .transformBy(RobotState.turretToRobot)
-            .transformBy(
-                new Transform2d(0, 0, new Rotation2d(getAngle()).plus(Rotation2d.k180deg)));
+            .transformBy(new Transform2d(0, 0, new Rotation2d(getAngle())));
 
     Translation2d targetPos = turretPose.transformBy(targetTransform).getTranslation();
     return targetPos;

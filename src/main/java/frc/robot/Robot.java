@@ -42,6 +42,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AutoClimbCommand;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
+import frc.robot.commands.StaticShootCommand;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
@@ -126,6 +127,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final DynamicShootingCommand dynamicShootingCommand;
 
+  private final StaticShootCommand staticShootCommand;
+
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
 
@@ -173,6 +176,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer, kicker);
 
     dynamicShootingCommand = new DynamicShootingCommand(hood, flywheel, spindexer, kicker, turret);
+
+    staticShootCommand = new StaticShootCommand(hood, flywheel, spindexer, kicker, rpm, angle);
 
     autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
 

@@ -28,19 +28,26 @@ public class InterpolatedShootCommand {
   private static final InterpolatingDoubleTreeMap hoodAngleMap = new InterpolatingDoubleTreeMap();
 
   static {
-    flywheelSpeedMap.put(1.8, 2300.0);
-    flywheelSpeedMap.put(2.55, 2500.0);
-    flywheelSpeedMap.put(3.0, 2650.0);
-    flywheelSpeedMap.put(3.5, 2700.0);
-    flywheelSpeedMap.put(4.0, 2800.0);
-    flywheelSpeedMap.put(5.2, 3150.0);
 
-    hoodAngleMap.put(1.8, 0.1);
-    hoodAngleMap.put(2.55, 0.2);
-    hoodAngleMap.put(3.0, 0.25);
-    hoodAngleMap.put(3.5, 0.4);
-    hoodAngleMap.put(4.0, 0.5);
-    hoodAngleMap.put(5.2, 0.6);
+    // flywheelSpeedMap.put(distance, speed)
+
+    flywheelSpeedMap.put(1.17, 2400.0);
+    flywheelSpeedMap.put(2.0, 2425.0);
+    flywheelSpeedMap.put(2.67, 2625.0);
+    flywheelSpeedMap.put(3.0, 2700.0);
+    flywheelSpeedMap.put(3.57, 2900.0);
+    flywheelSpeedMap.put(4.0, 3100.0);
+    flywheelSpeedMap.put(4.67, 3250.0);
+    flywheelSpeedMap.put(5.5, 3650.0);
+
+    hoodAngleMap.put(1.17, 0.0);
+    hoodAngleMap.put(2.0, 0.0);
+    hoodAngleMap.put(2.67, 0.0);
+    hoodAngleMap.put(3.0, 0.0);
+    hoodAngleMap.put(3.57, 0.0);
+    hoodAngleMap.put(4.0, 0.0);
+    hoodAngleMap.put(4.67, 0.0);
+    hoodAngleMap.put(5.5, 0.0);
   }
 
   private final Notifier solutionNotifier = new Notifier(this::calculateShootSolution);

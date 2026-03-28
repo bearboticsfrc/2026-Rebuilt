@@ -161,6 +161,11 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
     return setpointRequest.getPositionMeasure();
   }
 
+  @Logged(name = "setpointRotations")
+  public double getSetpointRotation() {
+    return setpointRequest.Position;
+  }
+
   @Logged(name = "atSetpoint")
   public boolean isAtSetpoint() {
     // checks to see if the position is within 0.05 percent of the setpoint
