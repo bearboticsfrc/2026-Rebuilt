@@ -56,7 +56,6 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.test.SelfTest;
 import frc.robot.util.HubTracker;
-import frc.robot.vision.SpectrumVision;
 import frc.robot.vision.VisionConstants;
 import frc.robot.vision.VisionSystem;
 import frc.spectrumLib.Telemetry;
@@ -98,7 +97,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged @Getter public final VisionSystem vision;
 
-  @Logged @Getter public final SpectrumVision spectrumVision;
+  // @Logged @Getter public final SpectrumVision spectrumVision;
 
   @Logged private final CommandSwerveDrivetrain drivetrain;
 
@@ -161,7 +160,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     flywheel = new Flywheel();
     hood = new Hood();
     climber = new Climber();
-    spectrumVision = new SpectrumVision(new SpectrumVision.VisionConfig());
+    // spectrumVision = new SpectrumVision(new SpectrumVision.VisionConfig());
 
     vision =
         new VisionSystem(
