@@ -155,6 +155,11 @@ public class Kicker extends Mechanism implements SelfTestable {
     return velocity.getValue().in(RPM);
   }
 
+  @Logged(name = "setpointRPM")
+  public double getSetpointInRPM() {
+    return velocityReq.Velocity * 60.0;
+  }
+
   @Logged(name = "velocity")
   public AngularVelocity getVelocity() {
     return velocity.getValue();

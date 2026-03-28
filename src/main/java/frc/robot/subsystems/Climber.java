@@ -31,7 +31,7 @@ public class Climber extends SubsystemBase implements SelfTestable {
   public enum Setpoint {
     Bottom(Rotations.of(0)),
     Middle(Inches.of(3.5)),
-    Top(Inches.of(6.75)); // 16.5 rotations
+    Top(Inches.of(6.5));
 
     /** The position target of the setpoint in angular units. */
     public final Angle target;
@@ -55,7 +55,7 @@ public class Climber extends SubsystemBase implements SelfTestable {
   @Logged(name = "sensor", importance = Importance.CRITICAL)
   private final DigitalInput sensor = new DigitalInput(SENSOR_PORT);
 
-  private static final double kGearRatio = 24.6;
+  private static final double kGearRatio = 73.8;
   private static final Distance kDrumRadius = Meters.of(0.009525);
 
   private final CANBus kCANBus = new CANBus(CAN.NAME);
@@ -107,11 +107,11 @@ public class Climber extends SubsystemBase implements SelfTestable {
               motorInitialConfigs
                   .Slot0
                   .clone()
-                  .withKP(98.4)
+                  .withKP(33.0)
                   .withKI(0)
                   .withKD(0)
                   .withKS(0.2)
-                  .withKV(2.952)
+                  .withKV(8.856)
                   .withKA(0)
                   .withKG(0)
                   .withGravityType(GravityTypeValue.Elevator_Static))
@@ -128,8 +128,8 @@ public class Climber extends SubsystemBase implements SelfTestable {
               motorInitialConfigs
                   .MotionMagic
                   .clone()
-                  .withMotionMagicCruiseVelocity(RotationsPerSecond.of(3.252032520325203))
-                  .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(16.260162601626014)));
+                  .withMotionMagicCruiseVelocity(RotationsPerSecond.of(1.2))
+                  .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(5.0)));
 
   public Climber() {
     super("Climber");

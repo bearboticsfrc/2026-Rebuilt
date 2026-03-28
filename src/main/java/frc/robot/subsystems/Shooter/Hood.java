@@ -34,7 +34,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
   public enum Setpoint {
     Ground(Rotations.of(0)),
     Middle(Rotations.of(0.7)),
-    Top(Rotations.of(1.3));
+    Top(Rotations.of(1.0));
 
     /** The position target of the setpoint in angular units. */
     public final Angle target;
@@ -109,7 +109,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
           .withFeedback(motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(gearRatio))
           .withSoftwareLimitSwitch(
               new SoftwareLimitSwitchConfigs()
-                  .withForwardSoftLimitThreshold(1.4)
+                  .withForwardSoftLimitThreshold(Setpoint.Top.target.in(Rotations))
                   .withForwardSoftLimitEnable(true)
                   .withReverseSoftLimitThreshold(0.0)
                   .withReverseSoftLimitEnable(true))

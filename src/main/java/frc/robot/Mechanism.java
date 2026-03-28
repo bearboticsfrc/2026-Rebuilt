@@ -58,7 +58,7 @@ public class Mechanism extends SubsystemBase {
   }
 
   public void logFaults(TalonFX motor) {
-    if (periodicCount % 12 != 0) { // every 240ms at 50Hz loop
+    if (periodicCount++ % 12 != 0) { // every 240ms at 50Hz loop
       return;
     }
     // Read each signal once

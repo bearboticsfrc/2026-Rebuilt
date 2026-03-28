@@ -33,7 +33,7 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   private final VelocityVoltage velocityVoltage = new VelocityVoltage(0.0).withEnableFOC(true);
 
-  public final AngularVelocity ROLLER_SPEED = RPM.of(3500);
+  public final AngularVelocity ROLLER_SPEED = RPM.of(5000);
 
   public final AngularVelocity ROLLER_SPEED_SLOW = RPM.of(1000);
   private final double gearRatio = 1.11;
@@ -160,6 +160,11 @@ public class Rollers extends Mechanism implements SelfTestable {
   public Command selfTestFast() {
     return selfTestAt(ROLLER_SPEED, "Robot/Tests/rollers/fast")
         .withName(getName() + ".SelfTestFast");
+  }
+
+  @Logged(name = "setpoint")
+  public double getSetpoint() {
+    return velocityVoltage.Velocity;
   }
 
   @Logged(name = "velocityRPM")

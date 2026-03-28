@@ -46,7 +46,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   private final MotionMagicVoltage positionReq =
       new MotionMagicVoltage(0.0).withEnableFOC(true).withSlot(1);
 
-  private final AngularVelocity NORMAL_SPEED = RPM.of(700);
+  private final AngularVelocity NORMAL_SPEED = RPM.of(600);
   private final AngularVelocity SLOW_SPEED = RPM.of(60);
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
 
@@ -73,7 +73,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
 
     // Velocity Control Gains
     config.Slot0.kS = 0.1;
-    config.Slot0.kV = 0.7; // ~12V / (7530 RPM / 60 / 7.2) = 0.69
+    config.Slot0.kV = 0.75; // ~12V / (7530 RPM / 60 / 7.2) = 0.69
     config.Slot0.kA = 0;
     config.Slot0.kP = 0.15;
 
@@ -192,6 +192,11 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
     return velocity.getValue().in(RPM);
+  }
+
+  @Logged(name = "setpointRPM")
+  public double getSetpointInRPM() {
+    return velocityReq.Velocity * 60.0;
   }
 
   @Logged(name = "supplyCurrent")

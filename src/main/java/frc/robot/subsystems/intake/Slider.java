@@ -43,9 +43,9 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
   /** Position setpoints for the Slider. */
   public enum Setpoint {
-    Retracted(Inches.of(0)),
+    Retracted(Inches.of(0.02)),
     Middle(Inches.of(6)),
-    Extended(Inches.of(11.25)); // max travel
+    Extended(Inches.of(11.2)); // max travel
 
     /** The position target as a mechanism angle (rotations of the pinion). */
     public final Angle target;
@@ -64,7 +64,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
   private static final double gearRatio = 1.8; // 1.58; // 6.04; // motor-to-pinion gear reduction
 
-  private static final Distance kMaxTravel = Inches.of(12);
+  private static final Distance kMaxTravel = Inches.of(11.25);
 
   private final CANBus canivore = new CANBus(CAN.NAME);
 
@@ -93,24 +93,25 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    config.CurrentLimits.StatorCurrentLimit = Amps.of(120).in(Amps);
+    config.CurrentLimits.StatorCurrentLimit = Amps.of(150).in(Amps);
     config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.Slot0.kP = 0.1;
-    config.Slot0.kD = 2;
-    config.Slot0.kS = 0.3;
-    config.Slot0.kG = 0; // TODO: tune kG for tilt angle once mechanism angle is known
+    config.Slot0.kS = 0.7; //  1.0; // 1.5;
+    config.Slot0.kV = 0.17;
+    config.Slot0.kP = 3.0;
+    config.Slot0.kD = 0.05;
+    // config.Slot0.kI = 1.0;
+    config.Slot0.kG = -0.3; // TODO: tune kG for tilt angle once mechanism angle is known
     config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
     config.Feedback.SensorToMechanismRatio = gearRatio;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold =
-        kMaxTravel.in(Inches) / kPinionCircumference.in(Inches);
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.0;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
-    config.MotionMagic.MotionMagicCruiseVelocity =
-        RotationsPerSecond.of(0.5).in(RotationsPerSecond);
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Setpoint.Extended.target.in(Rotations);
+    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.00;
+    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+
+    config.MotionMagic.MotionMagicCruiseVelocity = RotationsPerSecond.of(20).in(RotationsPerSecond);
     config.MotionMagic.MotionMagicAcceleration =
-        RotationsPerSecondPerSecond.of(2.0).in(RotationsPerSecondPerSecond);
-    config.MotionMagic.MotionMagicJerk = 5.0;
+        RotationsPerSecondPerSecond.of(240).in(RotationsPerSecondPerSecond);
+    config.MotionMagic.MotionMagicJerk = 800;
 
     applyConfig(() -> motor.getConfigurator().apply(config), getName());
 
@@ -140,6 +141,10 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
   public Command retract() {
     return goToSetpoint(() -> Setpoint.Retracted).withName(getName() + ".Retract");
+  }
+
+  public Command stop() {
+    return runOnce(() -> motor.stopMotor());
   }
 
   /**
@@ -195,6 +200,35 @@ public class Slider extends SubsystemBase implements SelfTestable {
         });
   }
 
+  private static final double kCalibrateOutput = -.12;
+  private static final double kCalibrateStallAmps = 25.0;
+
+  /**
+   * Recalibrates the slider zero point. This slowly drives the slider up until we see a drop in
+   * velocity and a spike in stator current, indicating that we've hit a hard stop.
+   *
+   * @return Command to run
+   */
+  public Command calibrateZero() {
+    return run(() -> {
+          manualRequest.withOutput(kCalibrateOutput);
+
+          motor.setControl(manualRequest);
+        })
+        .until(() -> motorStatorCurrent.getValue().in(Amps) > kCalibrateStallAmps)
+        .withTimeout(3.0)
+        .andThen(
+            runOnce(
+                () -> {
+                  motor.stopMotor();
+                  motor.setPosition(Rotations.of(0));
+                  isZeroed = true;
+                }))
+        .withName(getName() + ".CalibrateZero");
+  }
+
+  @Logged private boolean isZeroed = false;
+
   @Logged private boolean selfTestPassed = false;
   private static final double SELF_TEST_TOLERANCE_INCHES = 0.5;
 
@@ -241,6 +275,11 @@ public class Slider extends SubsystemBase implements SelfTestable {
   @Logged(name = "position")
   public double getPosition() {
     return motorPosition.getValue().in(Rotations);
+  }
+
+  @Logged(name = "setpoint")
+  public double getSetpoint() {
+    return motionMagicRequest.Position;
   }
 
   /**
@@ -290,6 +329,11 @@ public class Slider extends SubsystemBase implements SelfTestable {
   @Logged(name = "temperature")
   public Temperature getTemperature() {
     return motorTemperature.getValue();
+  }
+
+  @Logged(name = "closedLoopError")
+  public double getClosedLoopError() {
+    return motorClosedLoopError.getValue();
   }
 
   /**

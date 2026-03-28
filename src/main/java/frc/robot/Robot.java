@@ -165,7 +165,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     vision =
         new VisionSystem(
-            Arrays.asList(VisionConstants.FRONT_CAMERA, VisionConstants.REAR_CAMERA),
+            Arrays.asList(VisionConstants.REAR_CAMERA),
             drivetrain,
             () -> turret.getPositionDegrees());
 
@@ -392,7 +392,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    // turret.setDefaultCommand(getTurretCommand());
+    turret.setDefaultCommand(getTurretCommand());
   }
 
   public void configureBindings() {
@@ -404,7 +404,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
             rollers
                 .run()
                 // .alongWith(slider.extend())
-                .alongWith(spindexer.oscillate())
                 .withName("ParallelIntake"))
         .onFalse(
             // slider
@@ -423,13 +422,19 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
-    pilot.a().onTrue(turret.setAngle(Rotations.of(0)));
-    pilot.b().onTrue(turret.setAngle(Rotations.of(.25)));
-    pilot.x().onTrue(turret.setAngle(Rotations.of(-.25)));
-    pilot.y().onTrue(turret.setAngle(Rotations.of(.6)));
-    pilot.rightBumper().onTrue(turret.setAngle(Rotations.of(-.6)));
+    // pilot.a().onTrue(turret.setAngle(Rotations.of(0)));
+    // pilot.b().onTrue(turret.setAngle(Rotations.of(.25)));
+    // pilot.x().onTrue(turret.setAngle(Rotations.of(-.25)));
+    // pilot.y().onTrue(turret.setAngle(Rotations.of(.6)));
+    // pilot.rightBumper().onTrue(turret.setAngle(Rotations.of(-.6)));
 
-    slider.setDefaultCommand(slider.manualDrive(() -> copilot.getRightY()));
+    pilot.a().onTrue(slider.goToSetpoint(() -> Slider.Setpoint.Retracted));
+    pilot.b().onTrue(slider.goToSetpoint(() -> Slider.Setpoint.Middle));
+    pilot.x().onTrue(slider.goToSetpoint(() -> Slider.Setpoint.Extended));
+    pilot.y().onTrue(slider.stop());
+
+    pilot.rightBumper().onTrue(kicker.run()).onFalse(kicker.stop());
+    // slider.setDefaultCommand(slider.manualDrive(() -> copilot.getRightY()));
 
     // copilot controlls
     copilot.povUp().onTrue(climber.raise());

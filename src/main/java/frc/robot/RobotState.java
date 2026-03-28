@@ -1,6 +1,5 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
 import edu.wpi.first.epilogue.Logged;
@@ -25,7 +24,7 @@ public class RobotState {
   @Logged @Getter public Pose2d turretPose;
 
   public static final Transform2d turretToRobot =
-      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d(Degrees.of(180)));
+      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d());
 
   public static RobotState getInstance() {
     if (instance == null) instance = new RobotState();
