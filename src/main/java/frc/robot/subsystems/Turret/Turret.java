@@ -18,13 +18,19 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import dev.doglog.DogLog;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
 import edu.wpi.first.units.measure.Angle;
@@ -42,8 +48,11 @@ import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.subsystems.DynamicShootingCalculator;
+import frc.robot.subsystems.turret.TurretVisionHelper.TurretAimResult;
 import frc.robot.test.SelfTestable;
+import java.util.Optional;
 import java.util.function.Supplier;
+import limelight.Limelight;
 import lombok.Getter;
 
 public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
@@ -76,6 +85,8 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   @Getter public Angle maxRotations = Rotations.of(.62);
 
   @Getter public boolean attached = true;
+
+  private final TurretVisionHelper limelight;
 
   private DCMotorSim motorSimModel;
 
@@ -143,6 +154,8 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
       simulationInit();
     }
 
+    limelight = new TurretVisionHelper();
+
     System.out.println(getName() + " Subsystem Initialized");
   }
 
@@ -195,6 +208,10 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
         motorSupplyCurrent,
         motorVoltage,
         motorTemperature);
+    Optional<TurretAimResult> aim = limelight.getHubAimSolution();
+    if (aim.isPresent()) {
+      DogLog.log("turretOffset", Units.radiansToDegrees(aim.get().azimuthRads()));
+    }
   }
 
   @Override
@@ -398,6 +415,55 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
 
     Translation2d targetPos = turretPose.transformBy(targetTransform).getTranslation();
     return targetPos;
+  }
+
+  /**
+   * Call this in the turret's periodic() whenever the turret angle changes.
+   *
+   * @param turretAngleRads current turret angle in radians, field-positive CCW from robot forward
+   */
+  private void updateLimelightCameraPose(double turretAngleRads) {
+    Limelight limelight = new Limelight("limelight");
+    // 1. Robot origin → turret pivot (your 6.5" X/Y offsets, whatever height the pivot is at)
+    Transform3d robotToTurretPivot =
+        new Transform3d(
+            new Translation3d(
+                Units.inchesToMeters(6.25), // forward from robot center
+                Units.inchesToMeters(6.25), // left from robot center (adjust if needed)
+                Units.inchesToMeters(24.867407) // height of turret pivot
+                ),
+            new Rotation3d(0, 0, 0) // no rotation yet — turret adds its own below
+            );
+
+    // 2. Turret pivot rotation (yaw only — this is what changes as the turret spins)
+    Transform3d turretRotation =
+        new Transform3d(new Translation3d(), new Rotation3d(0, 0, turretAngleRads));
+
+    // 3. Turret pivot → camera (fixed mechanical offset of the Limelight on the turret)
+    //    Adjust x/z/pitch to match your actual mount geometry
+    // turret_center -> cameraLens = horizontal:  6.877436", vertical:  6.376978
+    Transform3d turretToCamera =
+        new Transform3d(
+            new Translation3d(
+                Units.inchesToMeters(6.877436), // camera forward from turret pivot
+                Units.inchesToMeters(0.0), // camera lateral offset
+                Units.inchesToMeters(0.0) // camera height above pivot
+                ),
+            new Rotation3d(
+                0,
+                Units.degreesToRadians(20), // camera pitch (negative = tilted down)
+                0));
+
+    // 4. Chain: robot → pivot → (rotated by turret angle) → camera
+    //    Pose3d.transformBy() accumulates transforms in order
+    Pose3d cameraPoseRobotSpace =
+        new Pose3d()
+            .transformBy(robotToTurretPivot)
+            .transformBy(turretRotation)
+            .transformBy(turretToCamera);
+
+    // 5. Push to YALL
+    limelight.getSettings().withCameraOffset(cameraPoseRobotSpace);
   }
 
   // What the calculator is commanding (calc error only)

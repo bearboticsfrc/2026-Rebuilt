@@ -10,6 +10,7 @@ package frc.robot.field;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 
 public class AllianceFlipUtil {
@@ -24,6 +25,11 @@ public class AllianceFlipUtil {
 
   public static Translation2d apply(Translation2d translation) {
     return new Translation2d(applyX(translation.getX()), applyY(translation.getY()));
+  }
+
+  public static Translation3d apply(Translation3d translation) {
+    return new Translation3d(
+        applyX(translation.getX()), applyY(translation.getY()), translation.getZ());
   }
 
   public static Rotation2d apply(Rotation2d rotation) {

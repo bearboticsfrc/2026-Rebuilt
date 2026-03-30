@@ -6,6 +6,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 
 public class Field {
   public static final double LENGTH = 16.541;
@@ -25,6 +27,11 @@ public class Field {
 
   public static Translation2d getMyHub() {
     return AllianceFlipUtil.apply(BLUE_HUB);
+  }
+
+  public static Translation3d getMyHub3d() {
+    return AllianceFlipUtil.apply(
+        new Translation3d(BLUE_HUB.getX(), BLUE_HUB.getY(), Units.inchesToMeters(72.0)));
   }
 
   public static Translation2d getMyRight() {
