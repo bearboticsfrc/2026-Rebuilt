@@ -7,16 +7,36 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
-import frc.robot.field.Field;
+import java.util.Map;
 import java.util.Optional;
 import limelight.Limelight;
 import limelight.networktables.LimelightPoseEstimator;
 import limelight.networktables.PoseEstimate;
 
+// set throttle in disable/enable
+// set imu mode in disable
+// set imu mode in enable
+
 public class TurretVisionHelper {
 
   private final Limelight limelight;
   private final LimelightPoseEstimator poseEstimator;
+
+  @SuppressWarnings("null")
+  static final Map<Integer, Transform3d> tagToHubCenterMap =
+      Map.ofEntries(
+          Map.entry(2, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(5, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(8, new Transform3d(new Translation3d(-.5842, -.3556, 0.0), new Rotation3d())),
+          Map.entry(9, new Transform3d(new Translation3d(-.5842, .3556, 0.0), new Rotation3d())),
+          Map.entry(10, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(11, new Transform3d(new Translation3d(-.5842, .3556, 0.0), new Rotation3d())),
+          Map.entry(18, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(21, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(24, new Transform3d(new Translation3d(-.5842, -.3556, 0.0), new Rotation3d())),
+          Map.entry(25, new Transform3d(new Translation3d(-.5842, .3556, 0.0), new Rotation3d())),
+          Map.entry(26, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
+          Map.entry(27, new Transform3d(new Translation3d(-.5842, .3556, 0.0), new Rotation3d())));
 
   // Fixed mechanical transforms - measure these carefully
   private static final Transform3d ROBOT_TO_TURRET_PIVOT =
@@ -75,19 +95,14 @@ public class TurretVisionHelper {
 
   /** Result class so callers get everything they need in one place. */
   public record TurretAimResult(
-      double azimuthRads, // yaw to Hub center in field frame
-      double elevationRads, // pitch to Hub center in field frame
+      double yawOffset, // yaw offset to hub center in camera frame
       double distanceMeters, // straight-line distance to Hub center
       int tagCount, // number of tags used in solve
       boolean isValid // false if result should be rejected
       ) {}
 
-  /**
-   * Call this when you want a shot solution. Returns empty if no valid pose estimate is available.
-   */
-  // TODO: convert to 2d space for distance???
   @SuppressWarnings("null")
-  public Optional<TurretAimResult> getHubAimSolution() {
+  public Optional<TurretAimResult> getHubAimOffset() {
     Optional<PoseEstimate> estimate = poseEstimator.getPoseEstimate();
 
     if (estimate.isEmpty() || !estimate.get().hasData) {
@@ -101,32 +116,28 @@ public class TurretVisionHelper {
       return Optional.empty();
     }
 
-    // Camera pose in field space from MT1 solve
-    // Note: getPoseEstimate() gives bot pose, we need camera pose.
-    // camerapose_targetspace from the raw JSON result gives camera pose directly.
-    // Here we reconstruct it from bot pose + camera offset for simplicity.
-    // For higher accuracy, use getLatestResults() and pull camerapose_targetspace.
-    Pose3d cameraPoseFieldSpace = getCameraPoseFieldSpace();
+    Pose3d cameraPoseTargetSpace = getTargetPoseCameraSpace();
 
-    if (cameraPoseFieldSpace == null) {
+    if (cameraPoseTargetSpace == null) {
       return Optional.empty();
     }
 
-    // Vector from camera to Hub center in field frame
-    Translation3d cameraToHub = Field.getMyHub3d().minus(cameraPoseFieldSpace.getTranslation());
+    NetworkTable table = limelight.getNTTable();
 
-    double distance = cameraToHub.getNorm();
+    long tid = table.getEntry("tid").getInteger(0);
+
+    Pose3d hubCenter = cameraPoseTargetSpace.plus(tagToHubCenterMap.get(tid));
+
+    double distance = hubCenter.getTranslation().getNorm();
+
+    double radiansOffset = Math.atan(hubCenter.getY() / hubCenter.getX());
 
     // Reject if distance is implausible - likely a bad solve
     if (distance < Units.inchesToMeters(24) || distance > Units.inchesToMeters(300)) {
       return Optional.empty();
     }
 
-    double azimuth = Math.atan2(cameraToHub.getY(), cameraToHub.getX());
-    double elevation =
-        Math.atan2(cameraToHub.getZ(), Math.hypot(cameraToHub.getX(), cameraToHub.getY()));
-
-    return Optional.of(new TurretAimResult(azimuth, elevation, distance, pose.tagCount, true));
+    return Optional.of(new TurretAimResult(radiansOffset, distance, pose.tagCount, true));
   }
 
   /**
@@ -139,9 +150,11 @@ public class TurretVisionHelper {
   // results.camerapose_targetspace).orElse(null);
   //   }
 
-  private Pose3d getCameraPoseFieldSpace() {
+  private Pose3d getTargetPoseCameraSpace() {
     NetworkTable table = limelight.getNTTable();
-    double[] rawPose = table.getEntry("camerapose_targetspace").getDoubleArray(new double[0]);
+    double[] rawPose = table.getEntry("targetpose_cameraspace").getDoubleArray(new double[0]);
+
+    // double[] rawPose = table.getEntry("camerapose_targetspace").getDoubleArray(new double[0]);
     long tid = table.getEntry("tid").getInteger(0);
 
     DogLog.log("camerapose_targetspace", rawPose);

@@ -49,8 +49,8 @@ public class VisionSystem {
 
   private final List<PhotonCamera> cameras = new ArrayList<>();
   private final List<PhotonPoseEstimator> photonEstimators = new ArrayList<>();
-  @Getter public final Limelight turretLimelight;
-  public static final String limelight = "limelight";
+  @Getter public final Limelight spectrumTurretLimelight;
+  public static final String LIMELIGHT_NAME = "limelight";
   public static final int limelightPipelineIndex = 0;
 
   @Getter
@@ -63,10 +63,29 @@ public class VisionSystem {
   final Translation2d turretCenterToCamera = new Translation2d(Units.inchesToMeters(6.877436), 0);
 
   @Getter private final DoubleSupplier turretRotationSupplier;
+  @Getter private final DoubleSupplier robotRotationVelocitySupplier;
 
   public record VisionEstimate(
-      Pose3d pose, double timestampSeconds, Matrix<N3, N1> stdDevs, int numTags) {}
+      Pose3d pose,
+      double timestampSeconds,
+      Matrix<N3, N1> stdDevs,
+      int numTags,
+      double ambiguity,
+      double distanceToTag,
+      RejectionReason rejectionReason) {
+    public boolean isAccepted() {
+      return rejectionReason == null;
+    }
+  }
   ;
+
+  public enum RejectionReason {
+    NO_DATA,
+    INSUFFICIENT_TAGS,
+    HIGH_AMBIGUITY, // MT1 only
+    DISTANCE_OUT_OF_RANGE,
+    POSE_JUMP_TOO_LARGE,
+  }
 
   private static final Matrix<N3, N1> MAX_STD_DEVS =
       VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
@@ -86,16 +105,20 @@ public class VisionSystem {
 
   private final CommandSwerveDrivetrain drivetrain;
 
+  TurretLimelight turretLimelight = new TurretLimelight(true);
+
+  private boolean limelightActive = true;
+
   private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
 
   @Logged
   public String getLimelightLogMessage() {
-    return turretLimelight.getLogStatus();
+    return spectrumTurretLimelight.getLogStatus();
   }
 
   @Getter
   final LimelightConfig turretConfig =
-      new LimelightConfig(limelight)
+      new LimelightConfig(LIMELIGHT_NAME)
           .withTranslation(
               Units.inchesToMeters(0.430), Units.inchesToMeters(-5.06), Units.inchesToMeters(27))
           .withRotation(0, 10, 180);
@@ -103,9 +126,11 @@ public class VisionSystem {
   public VisionSystem(
       List<VisionCamera> visionCameras,
       CommandSwerveDrivetrain drivetrain,
-      DoubleSupplier turretRotationSupplier) {
+      DoubleSupplier turretRotationSupplier,
+      DoubleSupplier robotRotationVelocitySupplier) {
     this.drivetrain = drivetrain;
     this.turretRotationSupplier = turretRotationSupplier;
+    this.robotRotationVelocitySupplier = robotRotationVelocitySupplier;
     if (Robot.isSimulation()) {
       setupSimulation();
     }
@@ -124,7 +149,7 @@ public class VisionSystem {
       }
     }
 
-    turretLimelight = new Limelight("limelight", limelightPipelineIndex, turretConfig);
+    spectrumTurretLimelight = new Limelight(LIMELIGHT_NAME, limelightPipelineIndex, turretConfig);
 
     poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
   }
@@ -188,6 +213,15 @@ public class VisionSystem {
       if (visionEstimation.isEmpty()) {
         continue;
       }
+      double ambiguity = visionEstimation.get().targetsUsed.get(0).poseAmbiguity;
+      double distance =
+          visionEstimation
+              .get()
+              .targetsUsed
+              .get(0)
+              .getBestCameraToTarget()
+              .getTranslation()
+              .getNorm();
       if (isTooAmbiguous(visionEstimation.get()) || isTooFar(visionEstimation.get())) {
         continue;
       }
@@ -219,9 +253,24 @@ public class VisionSystem {
               visionEstimation.get().estimatedPose,
               visionEstimation.get().timestampSeconds,
               stdDevs,
-              visionEstimation.get().targetsUsed.size()));
+              visionEstimation.get().targetsUsed.size(),
+              ambiguity,
+              distance,
+              null));
 
       latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
+    }
+
+    if (limelightActive) {
+      turretLimelight.update(
+          drivetrain.getPigeonYaw(),
+          Units.degreesToRadians(turretRotationSupplier.getAsDouble()),
+          Units.rotationsPerMinuteToRadiansPerSecond(robotRotationVelocitySupplier.getAsDouble()));
+
+      VisionEstimate visionEstimate = turretLimelight.read();
+      visionEstimates.add(visionEstimate);
+
+      updatedTargetPosesFromLimelight(turretLimelight.getTagList());
     }
 
     // Optional<VisionEstimate> turretEstimate = getTurretPose();
@@ -233,19 +282,20 @@ public class VisionSystem {
     return visionEstimates;
   }
 
+  @SuppressWarnings("null")
   public Optional<VisionEstimate> getTurretPose() {
 
-    if (!turretLimelight.targetInView()) {
-      turretLimelight.setTagStatus("No Targets in View");
-      turretLimelight.sendInvalidStatus("No Targets in View Rejection");
+    if (!spectrumTurretLimelight.targetInView()) {
+      spectrumTurretLimelight.setTagStatus("No Targets in View");
+      spectrumTurretLimelight.sendInvalidStatus("No Targets in View Rejection");
       return Optional.empty();
     }
 
-    boolean multiTags = turretLimelight.multipleTagsInView();
-    double targetSize = turretLimelight.getTargetSize();
-    Pose3d megaTag1Pose3d = turretLimelight.getMegaTag1_Pose3d();
+    boolean multiTags = spectrumTurretLimelight.multipleTagsInView();
+    double targetSize = spectrumTurretLimelight.getTargetSize();
+    Pose3d megaTag1Pose3d = spectrumTurretLimelight.getMegaTag1_Pose3d();
     Pose2d megaTag1Pose2d = megaTag1Pose3d.toPose2d();
-    RawFiducial[] tags = turretLimelight.getRawFiducial();
+    RawFiducial[] tags = spectrumTurretLimelight.getRawFiducial();
 
     double highestAmbiguity = 0.0;
     ChassisSpeeds robotSpeed = Robot.get().getSwerve().getCurrentRobotChassisSpeeds();
@@ -260,25 +310,25 @@ public class VisionSystem {
             .getDistance(megaTag1Pose2d.getTranslation());
 
     /* ---------------- Rejections ---------------- */
-    turretLimelight.setTagStatus("");
+    spectrumTurretLimelight.setTagStatus("");
     for (RawFiducial tag : tags) {
       highestAmbiguity = Math.max(highestAmbiguity, tag.ambiguity);
 
       if (tag.ambiguity > 0.9) {
-        turretLimelight.sendInvalidStatus("High Ambiguity Rejection");
+        spectrumTurretLimelight.sendInvalidStatus("High Ambiguity Rejection");
         return Optional.empty();
       }
     }
 
     if (shouldReject(megaTag1Pose2d, targetSize)) {
-      turretLimelight.sendInvalidStatus("Generic Rejection");
+      spectrumTurretLimelight.sendInvalidStatus("Generic Rejection");
       return Optional.empty();
     }
 
     // Roll / pitch rejection
     if (Math.abs(Math.toDegrees(megaTag1Pose3d.getRotation().getX())) > 5
         || Math.abs(Math.toDegrees(megaTag1Pose3d.getRotation().getY())) > 5) {
-      turretLimelight.sendInvalidStatus("Roll/Pitch Rejection");
+      spectrumTurretLimelight.sendInvalidStatus("Roll/Pitch Rejection");
       return Optional.empty();
     }
 
@@ -287,31 +337,31 @@ public class VisionSystem {
     double degStds;
 
     if (robotLinearSpeed <= 0.2 && targetSize > 4) {
-      turretLimelight.sendValidStatus("Stationary close integration");
+      spectrumTurretLimelight.sendValidStatus("Stationary close integration");
       xyStds = 0.1;
       degStds = 0.1;
     } else if (multiTags && targetSize > 2) {
-      turretLimelight.sendValidStatus("Strong multi integration");
+      spectrumTurretLimelight.sendValidStatus("Strong multi integration");
       xyStds = 0.1;
       degStds = 0.1;
     } else if (multiTags && targetSize > 0.2) {
-      turretLimelight.sendValidStatus("Multi integration");
+      spectrumTurretLimelight.sendValidStatus("Multi integration");
       xyStds = 0.25;
       degStds = 8.0;
     } else if (targetSize > 2 && mt1PoseDifference < 0.5) {
-      turretLimelight.sendValidStatus("Close integration");
+      spectrumTurretLimelight.sendValidStatus("Close integration");
       xyStds = 0.5;
       degStds = LARGE_VARIANCE;
     } else if (targetSize > 1 && mt1PoseDifference < 0.25) {
-      turretLimelight.sendValidStatus("Proximity integration");
+      spectrumTurretLimelight.sendValidStatus("Proximity integration");
       xyStds = 1.0;
       degStds = LARGE_VARIANCE;
     } else if (highestAmbiguity < 0.25 && targetSize >= 0.03) {
-      turretLimelight.sendValidStatus("Stable integration");
+      spectrumTurretLimelight.sendValidStatus("Stable integration");
       xyStds = 1.5;
       degStds = LARGE_VARIANCE;
     } else {
-      turretLimelight.sendInvalidStatus("Confidence too low");
+      spectrumTurretLimelight.sendInvalidStatus("Confidence too low");
       return Optional.empty();
     }
 
@@ -354,11 +404,12 @@ public class VisionSystem {
 
     Pose2d integratedPose = new Pose2d(robotTranslation, robotRotation);
 
-    double timestamp = Utils.fpgaToCurrentTime(turretLimelight.getMegaTag1PoseTimestamp());
+    double timestamp = Utils.fpgaToCurrentTime(spectrumTurretLimelight.getMegaTag1PoseTimestamp());
     Matrix<N3, N1> stdDevs = VecBuilder.fill(xyStds, xyStds, degStds);
     int numTags = tags.length;
 
-    return Optional.of(new VisionEstimate(new Pose3d(integratedPose), timestamp, stdDevs, numTags));
+    return Optional.of(
+        new VisionEstimate(new Pose3d(integratedPose), timestamp, stdDevs, numTags, 0, 0, null));
   }
 
   /**
@@ -417,8 +468,8 @@ public class VisionSystem {
     }
   }
 
-  private void updatedTargetPosesFromLimelight(RawFiducial[] tags) {
-    for (RawFiducial tag : tags) {
+  private void updatedTargetPosesFromLimelight(limelight.results.RawFiducial[] tags) {
+    for (limelight.results.RawFiducial tag : tags) {
       int fiducialId = tag.id;
       Pose3d tagPose = VisionConstants.APRIL_TAG_FIELD_LAYOUT.getTagPose(fiducialId).get();
 
@@ -467,6 +518,7 @@ public class VisionSystem {
     VisionEstimate currentGroup = list.get(0);
     for (int i = 1; i < list.size(); i++) {
       VisionEstimate next = list.get(i);
+      if (!next.isAccepted()) continue;
       double timeDelta = Math.abs(next.timestampSeconds() - currentGroup.timestampSeconds());
 
       if (timeDelta < MAX_TIME_DELTA_SECONDS) {
@@ -478,6 +530,8 @@ public class VisionSystem {
         currentGroup = next;
       }
     }
+
+    if (!currentGroup.isAccepted()) return;
     // integrate the final fused group
     integrateSingleEstimate(currentGroup);
   }
@@ -540,7 +594,7 @@ public class VisionSystem {
     int numTags = a.numTags() + b.numTags();
     double time = b.timestampSeconds();
 
-    return new VisionEstimate(new Pose3d(fusedPose), time, fusedStdDev, numTags);
+    return new VisionEstimate(new Pose3d(fusedPose), time, fusedStdDev, numTags, 0, 0, null);
   }
 
   /** Helper to integrate a single estimate */
@@ -549,6 +603,10 @@ public class VisionSystem {
       drivetrain.addVisionMeasurement(
           estimate.pose().toPose2d(), estimate.timestampSeconds(), estimate.stdDevs());
     }
+  }
+
+  public void resetPose() {
+    turretLimelight.resetLastAcceptedPose();
   }
 
   // ----- Simulation

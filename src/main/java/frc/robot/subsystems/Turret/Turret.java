@@ -165,8 +165,8 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
       motor.getVelocity().setUpdateFrequency(1000);
       motor.getClosedLoopReference().setUpdateFrequency(1000);
     } else {
-      motor.getPosition().setUpdateFrequency(50);
-      motor.getVelocity().setUpdateFrequency(50);
+      motor.getPosition().setUpdateFrequency(250);
+      motor.getVelocity().setUpdateFrequency(250);
       motor.getClosedLoopReference().setUpdateFrequency(50);
     }
 
@@ -208,9 +208,9 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
         motorSupplyCurrent,
         motorVoltage,
         motorTemperature);
-    Optional<TurretAimResult> aim = limelight.getHubAimSolution();
+    Optional<TurretAimResult> aim = limelight.getHubAimOffset();
     if (aim.isPresent()) {
-      DogLog.log("turretOffset", Units.radiansToDegrees(aim.get().azimuthRads()));
+      DogLog.log("turretOffset", Units.radiansToDegrees(aim.get().yawOffset()));
     }
   }
 

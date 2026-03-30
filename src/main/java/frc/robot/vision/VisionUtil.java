@@ -189,6 +189,6 @@ public class VisionUtil {
     int numTags = a.numTags() + b.numTags();
     double time = b.timestampSeconds();
 
-    return new VisionEstimate(new Pose3d(fusedPose), time, fusedStdDev, numTags);
+    return new VisionEstimate(new Pose3d(fusedPose), time, fusedStdDev, numTags, 0, 0, null);
   }
 }

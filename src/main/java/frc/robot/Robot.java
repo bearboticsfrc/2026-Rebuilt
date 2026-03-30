@@ -167,7 +167,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         new VisionSystem(
             Arrays.asList(VisionConstants.REAR_CAMERA),
             drivetrain,
-            () -> turret.getPositionDegrees());
+            () -> turret.getPositionDegrees(),
+            () -> drivetrain.getState().Speeds.omegaRadiansPerSecond);
 
     Telemetry.print("All subsystems Initialized");
 
@@ -364,6 +365,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
           AllianceFlipUtil.apply(((PathPlannerAuto) selectedAutoCommand).getStartingPose());
       introspectedAutoCommand = selectedAutoCommand;
       drivetrain.resetPose(autoStartPose);
+      vision.resetPose();
       System.out.println("Setting autostartpose!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
   }
@@ -479,6 +481,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
       Command firstAuto = autoChooser.getSelected();
       System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FirstAuto: " + firstAuto.getName());
       drivetrain.resetPose(AllianceFlipUtil.apply(((PathPlannerAuto) firstAuto).getStartingPose()));
+      vision.resetPose();
       initialPoseSet = true;
     }
   }
