@@ -56,36 +56,33 @@ public class HubTracker {
     return getAutoWinner().isPresent() ? getAutoWinner().get().toString() : "Not Set";
   }
 
-  @Logged(name = "Override Auto Winner")
-  public boolean overrideAutoWinner() {
-    while (true) {
-      if (getAutoWinner() == Optional.of(Alliance.Blue)) {
-        autoWinner = Optional.of(Alliance.Red);
-      }
-      if (getAutoWinner() == Optional.of(Alliance.Red)) {
-        autoWinner = Optional.of(Alliance.Blue);
-      } else {
-        autoWinner = getAutoWinner();
-      }
-    }
-  }
+  // @Logged(name = "Override Auto Winner")
+  // public boolean overrideAutoWinner() {
+  //     if (getAutoWinner() == Optional.of(Alliance.Blue)) {
+  //       autoWinner = Optional.of(Alliance.Red);
+  //     }
+  //     if (getAutoWinner() == Optional.of(Alliance.Red)) {
+  //       autoWinner = Optional.of(Alliance.Blue);
+  //     } else {
+  //       autoWinner = getAutoWinner();
+  //     }
+  // }
 
   @Logged(name = "Blue Won Auto")
   public boolean blueWonAuto() {
-    while (true) {
-      if (getAutoWinner() == null) {
-        autoWinner = Optional.of(Alliance.Blue);
-      }
+    if (getAutoWinner() == null) {
+      autoWinner = Optional.of(Alliance.Blue);
     }
+
+    return autoWinner.orElse(Alliance.Blue) == Alliance.Blue;
   }
 
   @Logged(name = "Red Won Auto")
   public boolean redWonAuto() {
-    while (true) {
-      if (getAutoWinner() == null) {
-        autoWinner = Optional.of(Alliance.Red);
-      }
+    if (getAutoWinner() == null) {
+      autoWinner = Optional.of(Alliance.Red);
     }
+    return autoWinner.orElse(Alliance.Red) == Alliance.Red;
   }
 
   /**
