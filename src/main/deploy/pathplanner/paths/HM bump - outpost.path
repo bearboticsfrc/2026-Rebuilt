@@ -53,7 +53,7 @@
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 2.5,
-    "rotation": 90.47945358984157
+    "rotation": -90.53301350486176
   },
   "useDefaultConstraints": true
 }

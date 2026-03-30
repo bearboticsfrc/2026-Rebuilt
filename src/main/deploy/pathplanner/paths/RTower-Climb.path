@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.814399999999999,
-        "y": 2.4466555555555556
+        "x": 0.8078636363636362,
+        "y": 2.664193181818182
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.5606341060616895,
-        "y": 2.4711629141722273
+        "x": 1.0655340909090907,
+        "y": 2.8187954545454543
       },
       "isLocked": false,
-      "linkedName": "overbump O"
+      "linkedName": "RTower"
     },
     {
       "anchor": {
-        "x": 3.008,
-        "y": 2.4466555555555556
+        "x": 1.075840909090909,
+        "y": 2.829102272727273
       },
       "prevControl": {
-        "x": 3.838572293466716,
-        "y": 2.424481490597531
+        "x": 0.8860267584995838,
+        "y": 2.666404429363282
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "HM bump"
+      "linkedName": "RTowerClimb"
     }
   ],
   "rotationTargets": [],
@@ -33,22 +33,22 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 2.0,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.0,
-    "rotation": -90.53301350486176
+    "velocity": 0,
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
-    "velocity": 1.75,
-    "rotation": 90.32626310189055
+    "velocity": 0,
+    "rotation": -90.0
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

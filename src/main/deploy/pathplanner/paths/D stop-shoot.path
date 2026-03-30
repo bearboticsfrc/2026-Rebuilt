@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.4757333333333333,
-        "y": 5.542353780313838
+        "x": 3.5597840909090905,
+        "y": 5.601636363636365
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.1129036590824586,
-        "y": 5.5336562089718955
+        "x": 3.196954416658216,
+        "y": 5.592938792294422
       },
       "isLocked": false,
       "linkedName": "D stop"
@@ -41,7 +41,7 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 0.0,
     "rotation": -88.56790381583538
   },
   "reversed": false,
