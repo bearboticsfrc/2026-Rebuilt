@@ -86,7 +86,7 @@ public class HubTracker {
   }
 
   @Logged(name = "In Endgame")
-  public boolean inEndGame(){
+  public boolean inEndGame() {
     return getCurrentShift() == Optional.of(Shift.ENDGAME);
   }
 
