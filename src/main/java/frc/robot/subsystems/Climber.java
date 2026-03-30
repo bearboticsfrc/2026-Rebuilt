@@ -25,6 +25,7 @@ import frc.robot.CAN;
 import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import lombok.Getter;
 
 public class Climber extends SubsystemBase implements SelfTestable {
   /** Position setpoints for the climber. */
@@ -49,6 +50,9 @@ public class Climber extends SubsystemBase implements SelfTestable {
       this.targetDist = target;
     }
   }
+
+  @Logged @Getter public boolean zeroed = false;
+  private boolean wasBlocked = false;
 
   private static final int SENSOR_PORT = 0;
 
@@ -158,6 +162,17 @@ public class Climber extends SubsystemBase implements SelfTestable {
 
   public boolean isAtTop() {
     return Math.abs(getPositionInches() - Setpoint.Top.targetDist.in(Inches)) < .5;
+  }
+
+  public boolean isAtBottom() {
+    return Math.abs(getPositionInches() - Setpoint.Bottom.targetDist.in(Inches)) < .5;
+  }
+
+  // may need to fix
+  public boolean canClimb() {
+    boolean event = wasBlocked && !climberBlocked();
+    wasBlocked = climberBlocked();
+    return event;
   }
 
   /**
@@ -318,6 +333,7 @@ public class Climber extends SubsystemBase implements SelfTestable {
                 .finallyDo(
                     () -> {
                       motor.setPosition(Rotations.of(0));
+                      zeroed = true;
                     }))
         .withName("CalibrateClimber");
   }
