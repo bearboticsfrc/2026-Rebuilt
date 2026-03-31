@@ -499,7 +499,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     stateMachine
         .onExit(IntakeStates.EXTENDED)
-        .onTrue(slider.retract().andThen(Commands.waitSeconds(2.0)).andThen(rollers.stop()));
+        .onTrue(slider.retract().andThen(Commands.waitSeconds(0.5)).andThen(rollers.stop()));
 
     // turret
     stateMachine

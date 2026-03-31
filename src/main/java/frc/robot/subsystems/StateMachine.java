@@ -107,11 +107,10 @@ public class StateMachine extends SubsystemBase {
         transition(
             States.DRIVE,
             States.SHOOTING,
-            robotState.isInAllianceZone()
-                && pilot.getRightTriggerAxis() > 0.1
-                && tracker.hubStatus());
+            robotState.isInAllianceZone() && pilot.getRightTriggerAxis() > 0.1);
+        // && tracker.hubStatus());
         transition(
-            States.DRIVE, States.CLIMB, copilot.povUp().getAsBoolean() && tracker.inEndGame());
+            States.DRIVE, States.CLIMB, copilot.povUp().getAsBoolean()); // && tracker.inEndGame());
         break;
       case SHOOTING:
         transition(
