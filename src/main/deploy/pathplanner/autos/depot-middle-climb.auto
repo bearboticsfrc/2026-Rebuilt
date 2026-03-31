@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "start-overbump"
+            "pathName": "DepotBump-DepotNeutralBump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "overbump-neutral"
+            "pathName": "DepotNeutralBump-Collect"
           }
         },
         {
@@ -25,13 +25,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "D neutral-collect"
+            "pathName": "DepotNeutralCollect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "collect-overbump"
+            "pathName": "Collect-DepotNeutralBump"
           }
         },
         {
@@ -43,7 +43,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "overbump- stop"
+            "pathName": "DepotNeutralBump-DepotBump"
           }
         },
         {
@@ -55,7 +55,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepotBump-LTower"
+            "pathName": "DepotBump-DepotTower"
           }
         },
         {
@@ -79,7 +79,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LTower-Climb"
+            "pathName": "DepotTower-Climb"
           }
         },
         {
@@ -92,6 +92,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "DepotAutos",
   "choreoAuto": false
 }

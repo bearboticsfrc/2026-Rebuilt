@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.4826961483594863,
+        "x": 5.814399999999999,
         "y": 2.4466555555555556
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.890780095059113,
-        "y": 2.443006362841815
+        "x": 5.092129349920344,
+        "y": 2.447285295183342
       },
       "isLocked": false,
-      "linkedName": "O Start 1"
+      "linkedName": "overbump O"
     },
     {
       "anchor": {
-        "x": 5.814399999999999,
+        "x": 3.4826961483594863,
         "y": 2.4466555555555556
       },
       "prevControl": {
-        "x": 5.564401669219805,
-        "y": 2.4475691238983144
+        "x": 4.305901713697279,
+        "y": 2.4433580915101243
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "overbump O"
+      "linkedName": "O Start 1"
     }
   ],
   "rotationTargets": [],
@@ -33,22 +33,22 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.75,
-    "maxAcceleration": 2.5,
+    "maxVelocity": 2.0,
+    "maxAcceleration": 2.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0.0,
-    "rotation": 90.32626310189055
+    "velocity": 0,
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 91.57975488141655
+    "rotation": 90.32626310189055
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

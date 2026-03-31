@@ -31,13 +31,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Depot-Climb"
+            "pathName": "Depot-DepotTower"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "DepotAutos",
   "choreoAuto": false
 }

@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.4956348074179737,
-        "y": 2.2947503566333807
+        "x": 5.7757499999999995,
+        "y": 5.360615384615385
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.5381740370898713,
-        "y": 1.6607560627674756
+        "x": 5.866320613409414,
+        "y": 6.136934928124657
       },
       "isLocked": false,
-      "linkedName": "over bump from neutral"
+      "linkedName": "DepotNeutralBump"
     },
     {
       "anchor": {
-        "x": 1.0346136363636362,
-        "y": 0.6646704545454554
+        "x": 7.956038461538462,
+        "y": 7.011820512820512
       },
       "prevControl": {
-        "x": 2.121460997276617,
-        "y": 0.8716889994812604
+        "x": 6.790281868393142,
+        "y": 7.604394509674823
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": "D Neutral"
     }
   ],
   "rotationTargets": [],
@@ -33,22 +33,22 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 1.75,
+    "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -178.53119928561398
+    "velocity": 1.75,
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 1.75,
+    "rotation": -90.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }

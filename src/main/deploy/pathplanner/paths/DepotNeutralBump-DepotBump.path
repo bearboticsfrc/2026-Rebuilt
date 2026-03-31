@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.653653846153848,
+        "x": 5.7757499999999995,
         "y": 5.360615384615385
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.640229082843788,
+        "x": 4.76232523668994,
         "y": 5.3597042074780665
       },
       "isLocked": false,
-      "linkedName": "D over bumb 2"
+      "linkedName": "DepotNeutralBump"
     },
     {
       "anchor": {
         "x": 3.5605769230769244,
-        "y": 5.360615384615385
+        "y": 5.361
       },
       "prevControl": {
-        "x": 3.310596436533172,
-        "y": 5.3637388998384665
+        "x": 3.8105769230769244,
+        "y": 5.361
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "DepotBump"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 1.75,
-    "rotation": 180.0
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
     "velocity": 1.75,
-    "rotation": 180.0
+    "rotation": -90.0
   },
   "useDefaultConstraints": false
 }

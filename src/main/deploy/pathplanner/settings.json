@@ -4,10 +4,12 @@
   "holonomicMode": true,
   "pathFolders": [
     "D Bump",
-    "O - Outpost",
     "O Bump"
   ],
-  "autoFolders": [],
+  "autoFolders": [
+    "DepotAutos",
+    "OutpostAutos"
+  ],
   "defaultMaxVel": 2.0,
   "defaultMaxAccel": 2.0,
   "defaultMaxAngVel": 540.0,

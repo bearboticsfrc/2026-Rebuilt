@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O start - overbump"
+            "pathName": "OutpostBump-OutpostNeutralBump"
           }
         },
         {
@@ -19,19 +19,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O overbump - neutral"
+            "pathName": "OutpostNeutralBump-Collect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "O neutral - collect"
+            "pathName": "OutpostCollect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "O collect - overbump"
+            "pathName": "Collect-OutpostNeutralBump"
           }
         },
         {
@@ -49,7 +49,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O overbump - start"
+            "pathName": "OutpostNeutralBump-OutpostBump"
           }
         },
         {
@@ -79,7 +79,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O start - overbump"
+            "pathName": "OutpostBump-OutpostNeutralBump"
           }
         },
         {
@@ -91,19 +91,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O overbump - neutral"
+            "pathName": "OutpostNeutralBump-Collect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "O neutral - collect"
+            "pathName": "OutpostCollect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "O collect - overbump"
+            "pathName": "Collect-OutpostNeutralBump"
           }
         },
         {
@@ -121,7 +121,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O overbump - start"
+            "pathName": "OutpostNeutralBump-OutpostBump"
           }
         },
         {
@@ -140,6 +140,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "OutpostAutos",
   "choreoAuto": false
 }

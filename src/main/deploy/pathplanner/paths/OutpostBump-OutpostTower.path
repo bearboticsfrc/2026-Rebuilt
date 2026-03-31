@@ -3,40 +3,40 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.534450784593438,
-        "y": 1.3631669044222543
+        "x": 3.4826961483594863,
+        "y": 2.4466555555555556
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2799514744828335,
-        "y": 1.3180184424440502
+        "x": 2.6581506938140316,
+        "y": 2.4466555555555556
       },
       "isLocked": false,
-      "linkedName": "O Start"
+      "linkedName": "O Start 1"
     },
     {
       "anchor": {
-        "x": 1.0346136363636362,
-        "y": 0.6646704545454554
+        "x": 0.8078636363636362,
+        "y": 2.664193181818182
       },
       "prevControl": {
-        "x": 2.5232298998009903,
-        "y": 0.9742575110447076
+        "x": 1.2201363636363636,
+        "y": 2.478670454545455
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Outpost"
+      "linkedName": "RTower"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.8466501240694807,
+      "minWaypointRelativePos": 0.823843416370107,
       "maxWaypointRelativePos": 1.0,
       "constraints": {
-        "maxVelocity": 1.0,
-        "maxAcceleration": 2.5,
+        "maxVelocity": 0.9,
+        "maxAcceleration": 0.1,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -55,14 +55,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": -178.53119928561398
+    "velocity": 0.5,
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": "O - Outpost",
+  "folder": "O Bump",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 180.0
+    "velocity": 2.0,
+    "rotation": 90.0
   },
   "useDefaultConstraints": true
 }

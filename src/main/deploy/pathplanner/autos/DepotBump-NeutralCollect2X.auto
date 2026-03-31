@@ -7,25 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "start - bump"
+            "pathName": "DepotBump-DepotNeutralBump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "overbump-neutral"
+            "pathName": "DepotNeutralBump-Collect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "D neutral-collect"
+            "pathName": "DepotNeutralCollect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "D collect-overbump 1"
+            "pathName": "Collect-DepotNeutralBump"
           }
         },
         {
@@ -43,7 +43,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "D overbump 1 "
+            "pathName": "DepotNeutralBump-DepotBump"
           }
         },
         {
@@ -65,15 +65,15 @@
           }
         },
         {
-          "type": "named",
+          "type": "path",
           "data": {
-            "name": "StopShoot"
+            "pathName": "DepotBump-DepotNeutralBump"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "start - bump"
+            "name": "StopShoot"
           }
         },
         {
@@ -85,19 +85,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "overbump-neutral"
+            "pathName": "DepotNeutralBump-Collect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "D neutral-collect"
+            "pathName": "DepotNeutralCollect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "collect-overbump"
+            "pathName": "Collect-DepotNeutralBump"
           }
         },
         {
@@ -115,7 +115,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "overbump- stop"
+            "pathName": "DepotNeutralBump-DepotBump"
           }
         },
         {
@@ -146,6 +146,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "DepotAutos",
   "choreoAuto": false
 }
