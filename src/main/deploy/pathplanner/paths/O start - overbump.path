@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.534,
-        "y": 2.447
+        "x": 3.4826961483594863,
+        "y": 2.4466555555555556
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.659663338088443,
-        "y": 2.4762360278966558
+        "x": 4.608359486447929,
+        "y": 2.4758915834522113
       },
       "isLocked": false,
       "linkedName": "O Start 1"
@@ -41,14 +41,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 2.0,
-    "rotation": 90.0
+    "velocity": 0.0,
+    "rotation": 88.60102831492563
   },
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 91.57975488141655
   },
   "useDefaultConstraints": false
 }

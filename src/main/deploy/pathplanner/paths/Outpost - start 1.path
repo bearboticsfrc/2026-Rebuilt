@@ -16,11 +16,11 @@
     },
     {
       "anchor": {
-        "x": 3.534450784593438,
+        "x": 3.4826961483594863,
         "y": 2.4466555555555556
       },
       "prevControl": {
-        "x": 2.4604733161101793,
+        "x": 2.4087186798762277,
         "y": 2.2895740941800518
       },
       "nextControl": null,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 1.5,
-    "rotation": 90.0
+    "rotation": 91.57975488141655
   },
   "reversed": false,
   "folder": "O - Outpost",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -178.53119928561398
   },
   "useDefaultConstraints": true
 }

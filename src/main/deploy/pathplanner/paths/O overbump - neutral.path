@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 8.011226818830243,
+        "x": 7.610128388017117,
         "y": 1.3502282453637668
       },
       "prevControl": {
-        "x": 7.4678031383737515,
-        "y": 0.4186447931526389
+        "x": 6.876184434934219,
+        "y": 0.37829709938183775
       },
       "nextControl": null,
       "isLocked": false,
@@ -29,25 +29,11 @@
     }
   ],
   "rotationTargets": [],
-  "constraintZones": [
-    {
-      "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.6049966239027706,
-      "maxWaypointRelativePos": 1.0,
-      "constraints": {
-        "maxVelocity": 1.5,
-        "maxAcceleration": 2.5,
-        "maxAngularVelocity": 540.0,
-        "maxAngularAcceleration": 720.0,
-        "nominalVoltage": 12.0,
-        "unlimited": false
-      }
-    }
-  ],
+  "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
+    "maxVelocity": 2.5,
     "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -62,7 +48,7 @@
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 1.75,
-    "rotation": 90.44594638682048
+    "rotation": 90.32626310189055
   },
   "useDefaultConstraints": false
 }

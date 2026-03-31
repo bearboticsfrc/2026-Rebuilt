@@ -16,30 +16,12 @@
     },
     {
       "anchor": {
-<<<<<<< Updated upstream
         "x": 3.3433409090909088,
         "y": 2.4580568181818183
       },
       "prevControl": {
         "x": 4.173913202557625,
         "y": 2.435882753223794
-=======
-<<<<<<< HEAD
-        "x": 3.5732667617689007,
-        "y": 2.4466555555555556
-      },
-      "prevControl": {
-        "x": 4.403839055235616,
-        "y": 2.424481490597531
-=======
-        "x": 3.3433409090909088,
-        "y": 2.4580568181818183
-      },
-      "prevControl": {
-        "x": 4.173913202557625,
-        "y": 2.435882753223794
->>>>>>> c553f6d884b5274ed66c448a8b8819aaf4ac1cb3
->>>>>>> Stashed changes
       },
       "nextControl": null,
       "isLocked": false,
@@ -60,21 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0.0,
-<<<<<<< Updated upstream
     "rotation": -90.53301350486176
-=======
-<<<<<<< HEAD
-    "rotation": 90.0
-=======
-    "rotation": -90.53301350486176
->>>>>>> c553f6d884b5274ed66c448a8b8819aaf4ac1cb3
->>>>>>> Stashed changes
   },
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 1.75,
-    "rotation": 90.44594638682048
+    "rotation": 90.32626310189055
   },
   "useDefaultConstraints": false
 }

@@ -3,38 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
         "x": 5.549000000000001,
-=======
-        "x": 5.769935897435898,
->>>>>>> Stashed changes
-=======
-        "x": 5.549000000000001,
->>>>>>> Stashed changes
         "y": 5.546666666666668
       },
       "prevControl": null,
       "nextControl": {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
         "x": 5.639570613409416,
         "y": 6.32298621017594
       },
       "isLocked": false,
       "linkedName": null
-<<<<<<< Updated upstream
-=======
-        "x": 5.860500751753328,
-        "y": 6.322986882048353
-      },
-      "isLocked": false,
-      "linkedName": "d end 1"
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     },
     {
       "anchor": {
