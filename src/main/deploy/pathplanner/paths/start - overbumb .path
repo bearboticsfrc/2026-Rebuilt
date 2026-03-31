@@ -3,51 +3,47 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.990923076923078,
-        "y": 4.616410256410257
-      },
-      "prevControl": null,
-      "nextControl": {
-        "x": 7.223461538461539,
-        "y": 4.302448717948718
-      },
-      "isLocked": false,
-      "linkedName": "D collect"
-    },
-    {
-      "anchor": {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
         "x": 5.549000000000001,
         "y": 5.546666666666668
       },
+      "prevControl": null,
+      "nextControl": {
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/D overbump 1 .path
+        "x": 4.535575236689942,
+        "y": 5.545755489529349
+========
+        "x": 4.452250851794567,
+        "y": 5.542353780313838
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/start - overbumb .path
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/D overbump 1 .path
+        "x": 3.5605769230769244,
+        "y": 5.546666666666668
+      },
       "prevControl": {
-        "x": 6.304833333333335,
-<<<<<<< Updated upstream
-=======
+        "x": 3.310596436533172,
+        "y": 5.549790181889749
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+========
         "x": 5.769935897435898,
         "y": 5.546666666666668
       },
       "prevControl": {
-        "x": 6.525769230769232,
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-        "y": 4.988512820512821
+        "x": 5.519935897435898,
+        "y": 5.546666666666668
       },
       "nextControl": null,
       "isLocked": false,
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-      "linkedName": null
-=======
       "linkedName": "d end 1"
->>>>>>> Stashed changes
-=======
-      "linkedName": null
->>>>>>> Stashed changes
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/start - overbumb .path
     }
   ],
   "rotationTargets": [],
@@ -56,7 +52,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.75,
-    "maxAcceleration": 2.5,
+    "maxAcceleration": 1.75,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -70,7 +66,7 @@
   "folder": "D Bump",
   "idealStartingState": {
     "velocity": 1.75,
-    "rotation": -123.36636600105965
+    "rotation": -90.0
   },
   "useDefaultConstraints": false
 }

@@ -16,11 +16,11 @@
     },
     {
       "anchor": {
-        "x": 3.4826961483594863,
+        "x": 3.534450784593438,
         "y": 2.4466555555555556
       },
       "prevControl": {
-        "x": 4.305901713697279,
+        "x": 4.35765634993123,
         "y": 2.4433580915101243
       },
       "nextControl": null,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 91.57975488141655
+    "rotation": 90.0
   },
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.32626310189055
+    "rotation": 90.44594638682048
   },
   "useDefaultConstraints": true
 }

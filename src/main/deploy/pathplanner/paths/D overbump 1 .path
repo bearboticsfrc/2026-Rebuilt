@@ -3,29 +3,105 @@
   "waypoints": [
     {
       "anchor": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
         "x": 5.549000000000001,
+=======
+        "x": 5.769935897435898,
+>>>>>>> Stashed changes
+=======
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Depot-Climb.path
+        "x": 1.1479886363636362,
+        "y": 5.62225
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.1479886363636362,
+        "y": 5.37225
+      },
+      "isLocked": false,
+      "linkedName": "DepotEndPickup"
+    },
+    {
+      "anchor": {
+        "x": 1.075840909090909,
+        "y": 4.663715909090908
+      },
+      "prevControl": {
+        "x": 1.075840909090909,
+        "y": 4.913715909090908
+========
+        "x": 5.549000000000001,
+>>>>>>> Stashed changes
         "y": 5.546666666666668
       },
       "prevControl": null,
       "nextControl": {
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/D overbump 1 .path
         "x": 4.535575236689942,
         "y": 5.545755489529349
+========
+        "x": 4.452250851794567,
+        "y": 5.542353780313838
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/start - overbumb .path
+=======
+        "x": 4.535575236689942,
+        "y": 5.545755489529349
+>>>>>>> Stashed changes
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
+<<<<<<< Updated upstream
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/D overbump 1 .path
+=======
+        "x": 4.756511134125839,
+        "y": 5.545755489529349
+      },
+      "isLocked": false,
+      "linkedName": "d end 1"
+    },
+    {
+      "anchor": {
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
         "x": 3.5605769230769244,
         "y": 5.546666666666668
       },
       "prevControl": {
         "x": 3.310596436533172,
         "y": 5.549790181889749
+<<<<<<< Updated upstream
+=======
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/D overbump 1 .path
+>>>>>>> Stashed changes
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+========
+        "x": 5.769935897435898,
+        "y": 5.546666666666668
+      },
+      "prevControl": {
+        "x": 5.519935897435898,
+        "y": 5.546666666666668
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "d end 1"
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/start - overbumb .path
+=======
+>>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     }
   ],
   "rotationTargets": [],
@@ -33,22 +109,49 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
+<<<<<<< Updated upstream
     "maxVelocity": 1.75,
     "maxAcceleration": 1.75,
+=======
+    "maxVelocity": 2.0,
+    "maxAcceleration": 2.0,
+>>>>>>> Stashed changes
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
+<<<<<<< Updated upstream
     "velocity": 1.75,
     "rotation": -90.0
+=======
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Depot-Climb.path
+    "velocity": 0,
+    "rotation": 90.0
+========
+    "velocity": 1.75,
+    "rotation": -90.0
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/D overbump 1 .path
+>>>>>>> Stashed changes
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
+<<<<<<< Updated upstream
     "velocity": 1.75,
     "rotation": -90.0
   },
   "useDefaultConstraints": false
+=======
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Depot-Climb.path
+    "velocity": 2.0,
+    "rotation": 180.0
+========
+    "velocity": 1.75,
+    "rotation": -90.0
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/D overbump 1 .path
+  },
+  "useDefaultConstraints": true
+>>>>>>> Stashed changes
 }

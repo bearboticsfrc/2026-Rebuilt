@@ -3,6 +3,7 @@
   "waypoints": [
     {
       "anchor": {
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Depot-Climb.path
         "x": 1.1479886363636362,
         "y": 5.62225
       },
@@ -22,6 +23,27 @@
       "prevControl": {
         "x": 1.075840909090909,
         "y": 4.913715909090908
+========
+        "x": 5.549000000000001,
+        "y": 5.546666666666668
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.535575236689942,
+        "y": 5.545755489529349
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.5605769230769244,
+        "y": 5.546666666666668
+      },
+      "prevControl": {
+        "x": 3.310596436533172,
+        "y": 5.549790181889749
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/D overbump 1 .path
       },
       "nextControl": null,
       "isLocked": false,
@@ -41,14 +63,24 @@
     "unlimited": false
   },
   "goalEndState": {
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Depot-Climb.path
     "velocity": 0,
     "rotation": 90.0
+========
+    "velocity": 1.75,
+    "rotation": -90.0
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/D overbump 1 .path
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Depot-Climb.path
     "velocity": 2.0,
     "rotation": 180.0
+========
+    "velocity": 1.75,
+    "rotation": -90.0
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/D overbump 1 .path
   },
   "useDefaultConstraints": true
 }
