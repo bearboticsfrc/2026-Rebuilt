@@ -9,8 +9,8 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import frc.rebuilt.FieldHelpers;
 import frc.robot.Robot;
+import frc.robot.field.Field;
 import frc.robot.vision.VisionSystem.VisionEstimate;
 import frc.spectrumLib.Telemetry;
 import java.util.Comparator;
@@ -64,7 +64,7 @@ public class VisionUtil {
 
   private boolean rejectionCheck(Pose2d pose, double targetSize) {
     /* rejections */
-    if (FieldHelpers.poseOutOfField(pose)) {
+    if (Field.poseOutOfField(pose)) {
       return true;
     }
 
@@ -92,7 +92,7 @@ public class VisionUtil {
       Pose2d pose;
 
       // Check if the vision pose is bad and don't trust it
-      if (FieldHelpers.poseOutOfField(botpose3D)) { // pose out of field
+      if (Field.poseOutOfField(botpose3D)) { // pose out of field
         Telemetry.log("Pose out of field", reject);
         reject = true;
       } else if (Math.abs(botpose3D.getZ()) > 0.25) { // when in air

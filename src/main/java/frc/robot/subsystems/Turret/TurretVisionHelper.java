@@ -22,7 +22,6 @@ public class TurretVisionHelper {
   private final Limelight limelight;
   private final LimelightPoseEstimator poseEstimator;
 
-  @SuppressWarnings("null")
   static final Map<Integer, Transform3d> tagToHubCenterMap =
       Map.ofEntries(
           Map.entry(2, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),

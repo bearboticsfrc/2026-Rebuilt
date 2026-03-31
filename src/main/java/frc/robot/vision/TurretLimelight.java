@@ -1,9 +1,6 @@
 package frc.robot.vision;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static frc.robot.vision.VisionConstants.CULLING_DISTANCE;
-import static frc.robot.vision.VisionConstants.MULTI_TAG_STD_DEVS;
-import static frc.robot.vision.VisionConstants.SINGLE_TAG_STD_DEVS;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -12,9 +9,13 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.Robot;
+import frc.robot.field.Field;
 import frc.robot.vision.VisionSystem.RejectionReason;
 import frc.robot.vision.VisionSystem.VisionEstimate;
 import java.util.Optional;
@@ -22,6 +23,8 @@ import limelight.Limelight;
 import limelight.networktables.AngularVelocity3d;
 import limelight.networktables.LimelightPoseEstimator;
 import limelight.networktables.LimelightPoseEstimator.EstimationMode;
+import limelight.networktables.LimelightSettings;
+import limelight.networktables.LimelightTargetData;
 import limelight.networktables.Orientation3d;
 import limelight.networktables.PoseEstimate;
 import limelight.results.RawFiducial;
@@ -34,8 +37,9 @@ public class TurretLimelight {
   private static final int MIN_TAG_COUNT = 2;
   private static final double MAX_AMBIGUITY = 0.9; // MT1 only, lower = more confident
   private static final double MAX_DISTANCE_M = Units.inchesToMeters(240);
-  private static final double MIN_DISTANCE_M = Units.inchesToMeters(24);
+  private static final double MIN_DISTANCE_M = Units.inchesToMeters(12);
   private static final double MAX_POSE_JUMP_M = 2.0; // 0.5; // reject if pose jumps more than this
+  private static final double LARGE_VARIANCE = 999999.0;
 
   private final Limelight limelight;
   private final LimelightPoseEstimator poseEstimator;
@@ -53,6 +57,26 @@ public class TurretLimelight {
     mode = useMegaTag2 ? EstimationMode.MEGATAG2 : EstimationMode.MEGATAG1;
 
     poseEstimator = limelight.createPoseEstimator(mode);
+  }
+
+  // call on disableInit and enableInit
+public void updateLimelightSettings() {
+    if (DriverStation.isDisabled()) {
+      LimelightSettings settings = limelight.getSettings();
+      settings.withThrottle(100);
+      // set imu_mode
+    } else {
+      LimelightSettings settings = limelight.getSettings();
+      settings.withThrottle(0);
+            // set imu_mode
+
+    }
+  }
+
+  public void captureVideo() {
+          LimelightSettings settings = limelight.getSettings();
+      settings.rewindCapture(10);
+
   }
 
   /**
@@ -99,6 +123,7 @@ public class TurretLimelight {
     NO_DATA,
     INSUFFICIENT_TAGS,
     HIGH_AMBIGUITY, // MT1 only
+    POSE_OUT_OF_FIELD,
     DISTANCE_OUT_OF_RANGE,
     POSE_JUMP_TOO_LARGE,
   }
@@ -107,7 +132,7 @@ public class TurretLimelight {
    * Returns a result every call regardless of acceptance, so callers can log rejection reasons for
    * tuning.
    */
-  public VisionEstimate read() {
+  public VisionEstimate getTurretVisionEstimate() {
     Optional<PoseEstimate> estimate = poseEstimator.getPoseEstimate();
 
     // No data at all
@@ -115,32 +140,46 @@ public class TurretLimelight {
       return rejected(RejectionReason.NO_DATA);
     }
 
-    PoseEstimate pose = estimate.get();
+    PoseEstimate poseEstimate = estimate.get();
 
     // Not enough tags
-    if (pose.tagCount < MIN_TAG_COUNT) {
-      return rejectedWithData(pose, RejectionReason.INSUFFICIENT_TAGS);
+    if (poseEstimate.tagCount < MIN_TAG_COUNT) {
+      return rejectedWithData(poseEstimate, RejectionReason.INSUFFICIENT_TAGS);
     }
+
+    // RawFiducial[] tags = limelight.getRawFiducial();
+    double highestAmbiguity = 0.0;
 
     // MT1 only: reject high ambiguity (MT2 doesn't have meaningful ambiguity)
-    if (mode == EstimationMode.MEGATAG1 && pose.rawFiducials.length > 0) {
-      double ambiguity = pose.rawFiducials[0].ambiguity;
-      if (ambiguity > MAX_AMBIGUITY) {
-        return rejectedWithData(pose, RejectionReason.HIGH_AMBIGUITY);
+    if (mode == EstimationMode.MEGATAG1) {
+      if (poseEstimate.getMaxTagAmbiguity() > MAX_AMBIGUITY) {
+        return rejectedWithData(poseEstimate, RejectionReason.HIGH_AMBIGUITY);
       }
     }
+    // check if the pose is out of the field
+    if (Field.poseOutOfField(poseEstimate.pose)) {
+      return rejectedWithData(poseEstimate, RejectionReason.POSE_OUT_OF_FIELD);
+    }
+
+    // check if we are rotating really fast
 
     // Distance check - use average tag distance from PoseEstimate
-    if (pose.avgTagDist < MIN_DISTANCE_M || pose.avgTagDist > MAX_DISTANCE_M) {
-      return rejectedWithData(pose, RejectionReason.DISTANCE_OUT_OF_RANGE);
+    if (poseEstimate.avgTagDist < MIN_DISTANCE_M || poseEstimate.avgTagDist > MAX_DISTANCE_M) {
+      return rejectedWithData(poseEstimate, RejectionReason.DISTANCE_OUT_OF_RANGE);
+    }
+
+    // Roll / pitch rejection
+    if (Math.abs(Math.toDegrees(poseEstimate.pose.getRotation().getX())) > 5
+        || Math.abs(Math.toDegrees(poseEstimate.pose.getRotation().getY())) > 5) {
+      return rejectedWithData(poseEstimate, RejectionReason.ROLL_PITCH_REJECTION);
     }
 
     // Pose jump check - reject if pose moved implausibly far since last accepted
-    Pose3d currentPose = pose.pose;
+    Pose3d currentPose = poseEstimate.pose;
     if (lastAcceptedPose != null) {
       double jump = currentPose.getTranslation().getDistance(lastAcceptedPose.getTranslation());
       if (jump > MAX_POSE_JUMP_M) {
-        return rejectedWithData(pose, RejectionReason.POSE_JUMP_TOO_LARGE);
+        return rejectedWithData(poseEstimate, RejectionReason.POSE_JUMP_TOO_LARGE);
       }
     }
 
@@ -148,19 +187,19 @@ public class TurretLimelight {
     lastAcceptedPose = currentPose;
 
     double ambiguity =
-        (mode == EstimationMode.MEGATAG1 && pose.rawFiducials.length > 0)
-            ? pose.rawFiducials[0].ambiguity
+        (mode == EstimationMode.MEGATAG1 && poseEstimate.rawFiducials.length > 0)
+            ? poseEstimate.rawFiducials[0].ambiguity
             : 0.0;
 
-    latestTags = pose.rawFiducials;
+    latestTags = poseEstimate.rawFiducials;
 
     return new VisionEstimate(
         currentPose,
-        pose.timestampSeconds,
-        calculateStdDevs(pose.tagCount, ambiguity, pose.avgTagDist),
-        pose.tagCount,
+        poseEstimate.timestampSeconds,
+        calculateStdDevs(poseEstimate),
+        poseEstimate.tagCount,
         ambiguity,
-        pose.avgTagDist,
+        poseEstimate.avgTagDist,
         null // accepted - no rejection reason
         );
   }
@@ -171,24 +210,60 @@ public class TurretLimelight {
     return latestTags;
   }
 
-  private Matrix<N3, N1> calculateStdDevs(int tagCount, double ambiguity, double tagDistance) {
+  private Matrix<N3, N1> calculateStdDevs(PoseEstimate poseEstimate) {
+    double xyStdDevs;
+    double rotationStdDevs;
 
-    var estStdDevs = MULTI_TAG_STD_DEVS;
+    ChassisSpeeds robotSpeed = Robot.get().getSwerve().getCurrentRobotChassisSpeeds();
+    double robotLinearSpeed =
+        Math.hypot(robotSpeed.vxMetersPerSecond, robotSpeed.vyMetersPerSecond);
+    LimelightTargetData targetData = limelight.getData().targetData;
+    double targetSize = targetData.getTargetArea();
+    boolean multipleTags = poseEstimate.tagCount > 1;
+    double maxAmbiguity = poseEstimate.getMaxTagAmbiguity();
+    Pose3d pose = poseEstimate.pose;
 
-    if (tagCount == 0) {
-      // No tags visible.  Return Max Standard Deviations because we don't want to use this
-      // measurement
-      return MAX_STD_DEVS;
+    double mt1PoseDifference =
+        Robot.get()
+            .getSwerve()
+            .getRobotPose()
+            .getTranslation()
+            .getDistance(pose.toPose2d().getTranslation());
+
+    if (robotLinearSpeed <= 0.2 && targetSize > 4) {
+      xyStdDevs = 0.1;
+      rotationStdDevs = 0.1;
+    } else if (multipleTags && targetSize > 2) {
+      xyStdDevs = 0.1;
+      rotationStdDevs = 0.1;
+    } else if (multipleTags && targetSize > 0.2) {
+      xyStdDevs = 0.25;
+      rotationStdDevs = 8.0;
+    } else if (targetSize > 2 && mt1PoseDifference < 0.5) {
+      xyStdDevs = 0.5;
+      rotationStdDevs = LARGE_VARIANCE;
+    } else if (targetSize > 1 && mt1PoseDifference < 0.25) {
+      xyStdDevs = 1.0;
+      rotationStdDevs = LARGE_VARIANCE;
+    } else if (maxAmbiguity < 0.25 && targetSize >= 0.03) {
+      xyStdDevs = 1.5;
+      rotationStdDevs = LARGE_VARIANCE;
     } else {
-      if (tagCount == 1 && tagDistance > CULLING_DISTANCE) return MAX_STD_DEVS;
-
-      // One or more tags visible, run the full heuristic.
-      // Increase std devs if only one target is visible
-      if (tagCount == 1) estStdDevs = SINGLE_TAG_STD_DEVS;
-
-      // Increase std devs based on (average) distance
-      return estStdDevs.times(1 + (tagDistance * tagDistance / 30));
+      xyStdDevs = LARGE_VARIANCE;
+      rotationStdDevs = LARGE_VARIANCE;
     }
+
+    if ((mode == EstimationMode.MEGATAG1) && (poseEstimate.getMaxTagAmbiguity() > 0.5)) {
+      rotationStdDevs = Math.max(rotationStdDevs, 50.0);
+    }
+
+    if (Math.abs(robotSpeed.omegaRadiansPerSecond) >= 0.5) {
+      rotationStdDevs = Math.max(rotationStdDevs, 75.0);
+    }
+
+    Matrix<N3, N1> stdDevs = VecBuilder.fill(xyStdDevs, xyStdDevs, rotationStdDevs);
+
+    return stdDevs;
   }
 
   public void resetLastAcceptedPose() {

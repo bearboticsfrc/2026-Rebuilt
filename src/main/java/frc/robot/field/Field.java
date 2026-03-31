@@ -12,6 +12,7 @@ import edu.wpi.first.math.util.Units;
 public class Field {
   public static final double LENGTH = 16.541;
   public static final double WIDTH = 8.069;
+  public static final double ROBOT_WIDTH = 0.85725;
   public static final Translation2d BLUE_HUB = new Translation2d(4.625, 4.034536);
   public static final Translation2d RED_HUB = new Translation2d(11.915394, 4.034536);
   public static final Pose2d BLUE_OUTPOST_POSE =
@@ -49,7 +50,8 @@ public class Field {
   public static boolean poseOutOfField(Pose2d pose2D) {
     double x = pose2D.getX();
     double y = pose2D.getY();
-    return (x <= 0 || x >= Field.LENGTH) || (y <= 0 || y >= Field.WIDTH);
+    return (x <= ROBOT_WIDTH || x >= Field.LENGTH - ROBOT_WIDTH)
+        || (y <= ROBOT_WIDTH || y >= Field.WIDTH - ROBOT_WIDTH);
   }
 
   public static boolean poseOutOfField(Pose3d pose3D) {
