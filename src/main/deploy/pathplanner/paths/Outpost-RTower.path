@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.4748797788081673,
-        "y": 0.39584677707090077
+        "x": 0.9006249999999998,
+        "y": 1.3449204545454552
       },
       "isLocked": false,
       "linkedName": "Outpost"
     },
     {
       "anchor": {
-        "x": 3.4826961483594863,
-        "y": 2.4466555555555556
+        "x": 0.8078636363636362,
+        "y": 2.664193181818182
       },
       "prevControl": {
-        "x": 2.4087186798762277,
-        "y": 2.2895740941800518
+        "x": 0.8490909090909087,
+        "y": 1.8911818181818183
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "O Start 1"
+      "linkedName": "RTower"
     }
   ],
   "rotationTargets": [],
@@ -41,11 +41,11 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 1.5,
-    "rotation": 91.57975488141655
+    "velocity": 0,
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": "O - Outpost",
+  "folder": "O Bump",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -178.53119928561398

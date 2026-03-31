@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 3.008,
-        "y": 2.4466555555555556
+        "x": 3.3433409090909088,
+        "y": 2.4580568181818183
       },
       "prevControl": {
-        "x": 3.838572293466716,
-        "y": 2.424481490597531
+        "x": 4.173913202557625,
+        "y": 2.435882753223794
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "HM bump"
     }
   ],
   "rotationTargets": [],
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0.0,
-    "rotation": 90.47945358984157
+    "rotation": -90.53301350486176
   },
   "reversed": false,
   "folder": "O Bump",

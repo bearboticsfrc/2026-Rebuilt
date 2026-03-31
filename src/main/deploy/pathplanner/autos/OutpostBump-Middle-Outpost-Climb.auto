@@ -7,31 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "start-overbump"
+            "pathName": "O start - overbump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "overbump-neutral"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Intake"
+            "pathName": "O overbump - neutral"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "D neutral-collect"
+            "pathName": "O neutral - collect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "collect-overbump"
+            "pathName": "O collect - overbump"
           }
         },
         {
@@ -43,31 +37,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "overbump- stop"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "DepotBump-LTower"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopShoot"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "RaiseClimb"
+            "pathName": "HM O overbump - stop"
           }
         },
         {
@@ -79,13 +49,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LTower-Climb"
+            "pathName": "HM bump - outpost"
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "LowerClimb"
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Outpost-RTower"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RTower-Climb"
           }
         }
       ]
