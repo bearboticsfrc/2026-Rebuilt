@@ -85,6 +85,11 @@ public class HubTracker {
     return autoWinner.orElse(Alliance.Red) == Alliance.Red;
   }
 
+  @Logged(name = "In Endgame")
+  public boolean inEndGame() {
+    return getCurrentShift() == Optional.of(Shift.ENDGAME);
+  }
+
   /**
    * Returns an {@link Optional} containing the current {@link Shift}. Will return {@link
    * Optional#empty()} if disabled or in between auto and teleop.

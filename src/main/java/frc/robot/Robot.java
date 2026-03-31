@@ -12,7 +12,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import bearlib.fms.AllianceColor;
 import bearlib.fms.AllianceReadyListener;
 import bearlib.util.TunableNumber;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -38,10 +37,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.AutoClimbCommand;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
+import frc.robot.commands.StaticShootCommand;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
@@ -126,6 +125,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final DynamicShootingCommand dynamicShootingCommand;
 
+  private final StaticShootCommand staticShootCommand;
+
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
 
@@ -175,6 +176,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer, kicker);
 
     dynamicShootingCommand = new DynamicShootingCommand(hood, flywheel, spindexer, kicker, turret);
+
+    staticShootCommand = new StaticShootCommand(hood, flywheel, spindexer, kicker, rpm, angle);
 
     autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
 
@@ -239,12 +242,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   // TODO: Make max speed relative to distance to hub, so that we can be more precise when close to
   // the hub and faster when far away
   public Supplier<Double> getMaxLinearVelocity() {
-    return () -> (RobotState.getInstance().isShooting()) ? 1.0 : MaxSpeed;
+    double distanceToHub = robotState.getDistanceToHub();
+    return () -> (robotState.isShooting()) ? 1.25 - ((distanceToHub / 5.5) * 0.5) : MaxSpeed;
   }
 
   public Supplier<Double> getMaxAngularVelocity() {
     return () ->
-        (RobotState.getInstance().isShooting())
+        (robotState.isShooting())
             ? RotationsPerSecond.of(0.25).in(RadiansPerSecond)
             : MaxAngularRate;
   }
@@ -409,46 +413,28 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     // pilot controlls
     pilot
         .leftTrigger()
-        .onTrue(
-            rollers
-                .run()
-                // .alongWith(slider.extend())
-                .withName("ParallelIntake"))
+        .onTrue(rollers.run().alongWith(slider.extend()).withName("ParallelIntake"))
         .onFalse(
-            // slider
-            //    .retract()
-            //   .alongWith(spindexer.stop())
-            spindexer
-                .stop()
-                .alongWith(kicker.stop())
+            slider
+                .retract()
                 .alongWith(
                     Commands.waitSeconds(1)
                         .andThen(rollers.stop())
-                        .andThen(Commands.waitSeconds(2))));
-
+                        .andThen(Commands.waitSeconds(2)))
+                .withName("ParallelRetractIntake"));
     pilot
         .rightTrigger()
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
-    // pilot.a().onTrue(turret.setAngle(Rotations.of(0)));
-    // pilot.b().onTrue(turret.setAngle(Rotations.of(.25)));
-    // pilot.x().onTrue(turret.setAngle(Rotations.of(-.25)));
-    // pilot.y().onTrue(turret.setAngle(Rotations.of(.6)));
-    // pilot.rightBumper().onTrue(turret.setAngle(Rotations.of(-.6)));
-
-    pilot.a().onTrue(slider.goToSetpoint(() -> Slider.Setpoint.Retracted));
-    pilot.b().onTrue(slider.goToSetpoint(() -> Slider.Setpoint.Middle));
-    pilot.x().onTrue(slider.goToSetpoint(() -> Slider.Setpoint.Extended));
-    pilot.y().onTrue(slider.stop());
-
-    pilot.rightBumper().onTrue(kicker.run()).onFalse(kicker.stop());
-    // slider.setDefaultCommand(slider.manualDrive(() -> copilot.getRightY()));
-
     // copilot controlls
     copilot.povUp().onTrue(climber.raise());
 
     copilot.povDown().onTrue(climber.lower());
+
+    copilot.povRight().onTrue(climber.calibrateZero());
+
+    // copilot.circle().whileTrue(autoClimbCommand.climb());
 
     copilot
         .povLeft()
@@ -458,14 +444,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                   if (climber.getCurrentCommand() != null) climber.getCurrentCommand().cancel();
                 }));
 
-    copilot.povRight().onTrue(climber.calibrateZero());
-
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
-    copilot.circle().whileTrue(autoClimbCommand.climb());
-    copilot
-        .square()
-        .whileTrue(spindexer.reverse().andThen(kicker.reverse()))
-        .onFalse(spindexer.stop().alongWith(kicker.stop()));
 
     copilot.cross().onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
 
@@ -476,24 +455,29 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.L2().toggleOnTrue(Commands.idle(turret));
 
     copilot.R2().whileTrue(drivetrain.applyRequest(() -> breakMode));
+
+    copilot
+        .square()
+        .whileTrue(spindexer.reverse().andThen(kicker.reverse()))
+        .onFalse(spindexer.stop().alongWith(kicker.stop()));
   }
 
-  public void bindDriveSysidTriggers() {
-    pilot.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
-    pilot.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
+  // public void bindDriveSysidTriggers() {
+  //   pilot.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
+  //   pilot.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
 
-    /*
-     * Joystick Y = quasistatic forward
-     * Joystick A = quasistatic reverse
-     * Joystick B = dynamic forward
-     * Joystick X = dyanmic reverse
-     */
+  //   /*
+  //    * Joystick Y = quasistatic forward
+  //    * Joystick A = quasistatic reverse
+  //    * Joystick B = dynamic forward
+  //    * Joystick X = dyanmic reverse
+  //    */
 
-    pilot.y().whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-    pilot.a().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-    pilot.b().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-    pilot.x().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-  }
+  //   pilot.y().whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+  //   pilot.a().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+  //   pilot.b().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+  //   pilot.x().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+  // }
 
   public void setupSmartDashboardData() {
     SmartDashboard.putData("Field2d", field2d);
