@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotState;
 import frc.robot.subsystems.intake.Slider;
 import frc.robot.subsystems.shooter.Flywheel;
+import frc.robot.util.HubTracker;
 import lombok.Getter;
 
 public class StateMachine extends SubsystemBase {
@@ -35,19 +36,22 @@ public class StateMachine extends SubsystemBase {
   private final Flywheel flywheel;
   private final Slider slider;
   private final Climber climber;
+  private final HubTracker tracker;
 
   public StateMachine(
       CommandXboxController pilot,
       CommandPS5Controller copilot,
       Flywheel flywheel,
       Slider slider,
-      Climber climber) {
+      Climber climber,
+      HubTracker tracker) {
 
     this.pilot = pilot;
     this.copilot = copilot;
     this.flywheel = flywheel;
     this.slider = slider;
     this.climber = climber;
+    this.tracker = tracker;
 
     this.state = States.DRIVE;
     this.previousState = States.DRIVE;
@@ -103,9 +107,11 @@ public class StateMachine extends SubsystemBase {
         transition(
             States.DRIVE,
             States.SHOOTING,
-            robotState.isInAllianceZone() && pilot.getRightTriggerAxis() > 0.1);
-        // need to fix
-        transition(States.DRIVE, States.CLIMB, copilot.povUp().getAsBoolean());
+            robotState.isInAllianceZone()
+                && pilot.getRightTriggerAxis() > 0.1
+                && tracker.hubStatus());
+        transition(
+            States.DRIVE, States.CLIMB, copilot.povUp().getAsBoolean() && tracker.inEndGame());
         break;
       case SHOOTING:
         transition(
