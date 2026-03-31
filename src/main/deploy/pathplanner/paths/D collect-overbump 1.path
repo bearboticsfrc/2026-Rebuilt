@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.653653846153848,
-        "y": 5.360615384615385
+        "x": 7.990923076923078,
+        "y": 4.616410256410257
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.640229082843788,
-        "y": 5.3597042074780665
+        "x": 7.223461538461539,
+        "y": 4.302448717948718
       },
       "isLocked": false,
-      "linkedName": "D over bumb 2"
+      "linkedName": "D collect"
     },
     {
       "anchor": {
-        "x": 3.5605769230769244,
-        "y": 5.360615384615385
+        "x": 5.549000000000001,
+        "y": 5.546666666666668
       },
       "prevControl": {
-        "x": 3.310596436533172,
-        "y": 5.3637388998384665
+        "x": 6.304833333333335,
+        "y": 4.988512820512821
       },
       "nextControl": null,
       "isLocked": false,
@@ -34,7 +34,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 1.75,
-    "maxAcceleration": 1.75,
+    "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 1.75,
-    "rotation": 180.0
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
     "velocity": 1.75,
-    "rotation": 180.0
+    "rotation": -123.36636600105965
   },
   "useDefaultConstraints": false
 }

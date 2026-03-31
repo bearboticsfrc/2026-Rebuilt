@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 2.2479333333333336,
-        "y": 5.542353780313838
+        "x": 3.5605769230769244,
+        "y": 5.546666666666668
       },
       "prevControl": {
-        "x": 2.7178299464480804,
-        "y": 5.556284422244268
+        "x": 4.030473536191671,
+        "y": 5.560597308597098
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "D stop shoot"
     }
   ],
   "rotationTargets": [],
@@ -41,14 +41,19 @@
     "unlimited": false
   },
   "goalEndState": {
+<<<<<<< Updated upstream
     "velocity": 0.0,
     "rotation": -88.56790381583538
+=======
+    "velocity": 0,
+    "rotation": -90.0
+>>>>>>> Stashed changes
   },
   "reversed": false,
   "folder": "D Bump",
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": -90.98776039963985
+    "velocity": 2.0,
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

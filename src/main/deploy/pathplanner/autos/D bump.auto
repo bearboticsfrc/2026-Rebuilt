@@ -7,7 +7,73 @@
         {
           "type": "path",
           "data": {
-            "pathName": "start-overbump"
+            "pathName": "start - bump"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "overbump-neutral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D neutral-collect"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D collect-overbump 1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D overbump 1 "
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootRoll"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 4.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "start - bump"
           }
         },
         {
@@ -53,12 +119,6 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "D stop-shoot"
-          }
-        },
-        {
           "type": "wait",
           "data": {
             "waitTime": 0.25
@@ -68,6 +128,18 @@
           "type": "named",
           "data": {
             "name": "ShootRoll"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 4.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShoot"
           }
         }
       ]
