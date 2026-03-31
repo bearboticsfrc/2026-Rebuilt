@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.610128388017117,
-        "y": 3.3039657631954356
+        "x": 8.011,
+        "y": 3.395
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.833010114824733,
-        "y": 2.9573833356295762
+        "x": 7.1699871611982875,
+        "y": 3.653773181169757
       },
       "isLocked": false,
       "linkedName": "O collect"
     },
     {
       "anchor": {
-        "x": 5.814399999999999,
-        "y": 2.4466555555555556
+        "x": 5.814,
+        "y": 2.447
       },
       "prevControl": {
-        "x": 6.9345612579619464,
-        "y": 2.9567469720533257
+        "x": 6.497003708987162,
+        "y": 3.433696798224758
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,7 +33,7 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 1.5,
+    "maxVelocity": 1.75,
     "maxAcceleration": 2.5,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 1.75,
-    "rotation": 90.36550047716706
+    "rotation": 88.78870116643265
   },
   "reversed": false,
   "folder": "O Bump",
   "idealStartingState": {
     "velocity": 1.75,
-    "rotation": 91.36392753160305
+    "rotation": 116.55819150523826
   },
   "useDefaultConstraints": false
 }

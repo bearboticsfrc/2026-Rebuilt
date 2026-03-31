@@ -8,9 +8,13 @@
           "type": "path",
           "data": {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "pathName": "start - bump"
 =======
             "pathName": "start - overbumb "
+>>>>>>> Stashed changes
+=======
+            "pathName": "start - bump"
 >>>>>>> Stashed changes
           }
         },
@@ -40,12 +44,18 @@
         },
         {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
           "type": "wait",
           "data": {
             "waitTime": 0.25
           }
         },
         {
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
           "type": "path",
@@ -55,12 +65,18 @@
         },
         {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
           "type": "wait",
           "data": {
             "waitTime": 0.25
           }
         },
         {
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
           "type": "named",
@@ -84,9 +100,13 @@
           "type": "path",
           "data": {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             "pathName": "start - bump"
 =======
             "pathName": "start - overbumb "
+>>>>>>> Stashed changes
+=======
+            "pathName": "start - bump"
 >>>>>>> Stashed changes
           }
         },
@@ -128,6 +148,7 @@
         },
         {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
           "type": "named",
           "data": {
@@ -136,6 +157,20 @@
         },
         {
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
+          "type": "wait",
+          "data": {
+            "waitTime": 4.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShoot"
+          }
+        },
+        {
           "type": "wait",
           "data": {
             "waitTime": 4.0

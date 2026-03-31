@@ -41,33 +41,21 @@
           }
         },
         {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.25
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "O overbump - stop"
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "O stop - shoot"
+            "name": "Shoot"
           }
         },
         {
           "type": "wait",
           "data": {
             "waitTime": 0.25
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
           }
         }
       ]

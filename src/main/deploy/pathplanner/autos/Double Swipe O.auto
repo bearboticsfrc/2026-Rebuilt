@@ -103,7 +103,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O collect - overbump"
+            "pathName": "O collect - rotate - overbump"
           }
         },
         {
@@ -121,7 +121,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "O overbump - start"
+            "pathName": "O overbump - stop - rotated"
           }
         },
         {

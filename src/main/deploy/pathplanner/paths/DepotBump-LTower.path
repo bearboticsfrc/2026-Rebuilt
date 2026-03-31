@@ -62,7 +62,11 @@
   "folder": "D Bump",
   "idealStartingState": {
     "velocity": 2.0,
+<<<<<<< Updated upstream
     "rotation": -90.0
+=======
+    "rotation": -89.01645480037354
+>>>>>>> Stashed changes
   },
   "useDefaultConstraints": true
 }
