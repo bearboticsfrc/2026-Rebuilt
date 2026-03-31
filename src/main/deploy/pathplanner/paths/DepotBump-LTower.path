@@ -62,7 +62,7 @@
   "folder": "D Bump",
   "idealStartingState": {
     "velocity": 2.0,
-    "rotation": -89.01645480037354
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

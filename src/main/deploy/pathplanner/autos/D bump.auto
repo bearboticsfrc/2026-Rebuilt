@@ -7,7 +7,11 @@
         {
           "type": "path",
           "data": {
+<<<<<<< Updated upstream
             "pathName": "start - bump"
+=======
+            "pathName": "start - overbumb "
+>>>>>>> Stashed changes
           }
         },
         {
@@ -35,24 +39,30 @@
           }
         },
         {
+<<<<<<< Updated upstream
           "type": "wait",
           "data": {
             "waitTime": 0.25
           }
         },
         {
+=======
+>>>>>>> Stashed changes
           "type": "path",
           "data": {
             "pathName": "D overbump 1 "
           }
         },
         {
+<<<<<<< Updated upstream
           "type": "wait",
           "data": {
             "waitTime": 0.25
           }
         },
         {
+=======
+>>>>>>> Stashed changes
           "type": "named",
           "data": {
             "name": "ShootRoll"
@@ -73,7 +83,11 @@
         {
           "type": "path",
           "data": {
+<<<<<<< Updated upstream
             "pathName": "start - bump"
+=======
+            "pathName": "start - overbumb "
+>>>>>>> Stashed changes
           }
         },
         {
@@ -107,27 +121,30 @@
           }
         },
         {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.25
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "overbump- stop"
           }
         },
         {
+<<<<<<< Updated upstream
+=======
+          "type": "named",
+          "data": {
+            "name": "ShootRoll"
+          }
+        },
+        {
+>>>>>>> Stashed changes
           "type": "wait",
           "data": {
-            "waitTime": 0.25
+            "waitTime": 4.0
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "ShootRoll"
+            "name": "StopShoot"
           }
         },
         {

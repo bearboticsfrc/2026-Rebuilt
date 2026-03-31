@@ -3,19 +3,40 @@
   "waypoints": [
     {
       "anchor": {
+<<<<<<< Updated upstream
         "x": 5.549000000000001,
+=======
+        "x": 5.769935897435898,
+>>>>>>> Stashed changes
         "y": 5.546666666666668
       },
       "prevControl": null,
       "nextControl": {
+<<<<<<< Updated upstream
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/D overbump 1 .path
         "x": 4.535575236689942,
         "y": 5.545755489529349
+========
+        "x": 4.452250851794567,
+        "y": 5.542353780313838
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/start - overbumb .path
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
+<<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/D overbump 1 .path
+=======
+        "x": 4.756511134125839,
+        "y": 5.545755489529349
+      },
+      "isLocked": false,
+      "linkedName": "d end 1"
+    },
+    {
+      "anchor": {
+>>>>>>> Stashed changes
         "x": 3.5605769230769244,
         "y": 5.546666666666668
       },
@@ -26,6 +47,21 @@
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
+<<<<<<< Updated upstream
+========
+        "x": 5.769935897435898,
+        "y": 5.546666666666668
+      },
+      "prevControl": {
+        "x": 5.519935897435898,
+        "y": 5.546666666666668
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "d end 1"
+>>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/start - overbumb .path
+=======
+>>>>>>> Stashed changes
     }
   ],
   "rotationTargets": [],
