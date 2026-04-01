@@ -14,6 +14,38 @@ import lombok.Getter;
 
 public class StateMachine extends SubsystemBase {
 
+  public enum States {
+    DRIVE,
+    INTAKE,
+    SHOOTING,
+    CLIMB,
+  }
+
+  public enum ShootStates {
+    IDLE,
+    RAMP,
+    SHOOT,
+  }
+
+  public enum IntakeStates {
+    RETRACT,
+    EXTENDING,
+    EXTENDED,
+    OSCILLATE,
+  }
+
+  public enum TurretStates {
+    TRACK,
+  }
+
+  public enum ClimbStates {
+    IDLE,
+    EXTENDING,
+    EXTENDED,
+    RETRACTING,
+    RETRACTED,
+  }
+
   @Logged @Getter private States state;
   private States previousState;
 
@@ -67,38 +99,6 @@ public class StateMachine extends SubsystemBase {
 
     this.climbState = ClimbStates.IDLE;
     this.previousClimbState = ClimbStates.IDLE;
-  }
-
-  public enum States {
-    DRIVE,
-    INTAKE,
-    SHOOTING,
-    CLIMB,
-  }
-
-  public enum ShootStates {
-    IDLE,
-    RAMP,
-    SHOOT,
-  }
-
-  public enum IntakeStates {
-    RETRACT,
-    EXTENDING,
-    EXTENDED,
-    OSCILLATE,
-  }
-
-  public enum TurretStates {
-    TRACK,
-  }
-
-  public enum ClimbStates {
-    IDLE,
-    EXTENDING,
-    EXTENDED,
-    RETRACTING,
-    RETRACTED,
   }
 
   public void update() {
