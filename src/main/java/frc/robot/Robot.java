@@ -196,11 +196,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     registerPathplannerCommands();
 
-    autoChooser = AutoBuilder.buildAutoChooser("Bread-N-Buttah");
+    autoChooser = AutoBuilder.buildAutoChooser("O bump");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();
-    configureBindings();
+    // configureBindings();
     selfTest.bindTriggers();
     configureDefaultCommands();
     configureStateMachine();
@@ -415,7 +415,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    turret.setDefaultCommand(getTurretCommand());
+    // turret.setDefaultCommand(getTurretCommand());
   }
 
   public void configureBindings() {
@@ -493,13 +493,14 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     stateMachine.onExit(ShootStates.SHOOT).onTrue(kicker.stop().alongWith(spindexer.stop()));
 
     // intake
+    stateMachine.onEnter(IntakeStates.RETRACT).onTrue(slider.retract().alongWith(rollers.stop()));
+
     stateMachine.onEnter(IntakeStates.EXTENDING).onTrue(slider.extend());
 
     stateMachine.onEnter(IntakeStates.EXTENDED).onTrue(rollers.run());
 
     stateMachine
-        .onExit(IntakeStates.EXTENDED)
-        .onTrue(slider.retract().andThen(Commands.waitSeconds(0.5)).andThen(rollers.stop()));
+        .onEnter(IntakeStates.OSCILLATE);
 
     // turret
     stateMachine

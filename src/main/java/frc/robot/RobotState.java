@@ -59,6 +59,13 @@ public class RobotState {
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
   }
 
+  // needs work
+  public boolean isStopped() {
+    return getFieldVelocity().vxMetersPerSecond < 0.1
+        && getFieldVelocity().vyMetersPerSecond < 0.1
+        && getFieldVelocity().omegaRadiansPerSecond < 0.1;
+  }
+
   @Logged
   public boolean isInAllianceZone() {
     if (isBlueAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;

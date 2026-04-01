@@ -86,6 +86,7 @@ public class StateMachine extends SubsystemBase {
     RETRACT,
     EXTENDING,
     EXTENDED,
+    OSCILLATE,
   }
 
   public enum TurretStates {
@@ -145,11 +146,29 @@ public class StateMachine extends SubsystemBase {
   public void updateIntakeState() {
     switch (intakeState) {
       case RETRACT:
+        transition(
+            IntakeStates.RETRACT,
+            IntakeStates.OSCILLATE,
+            robotState.isStopped() && pilot.getRightTriggerAxis() > 0.1);
         break;
       case EXTENDING:
         transition(IntakeStates.EXTENDING, IntakeStates.EXTENDED, slider.isExtended());
         break;
       case EXTENDED:
+        transition(
+            IntakeStates.EXTENDED,
+            IntakeStates.OSCILLATE,
+            robotState.isStopped() && pilot.getRightTriggerAxis() > 0.1);
+        break;
+      case OSCILLATE:
+        transition(
+            IntakeStates.OSCILLATE,
+            IntakeStates.RETRACT,
+            !robotState.isStopped() && pilot.getRightTriggerAxis() < 0.1);
+        transition(
+            IntakeStates.OSCILLATE,
+            IntakeStates.EXTENDING,
+            !robotState.isStopped() && pilot.getRightTriggerAxis() > 0.1);
         break;
     }
   }
