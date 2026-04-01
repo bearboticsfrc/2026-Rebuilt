@@ -3,9 +3,12 @@ package frc.robot.util;
 import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import java.util.Optional;
 
 public class HubTracker {
@@ -56,33 +59,46 @@ public class HubTracker {
     return getAutoWinner().isPresent() ? getAutoWinner().get().toString() : "Not Set";
   }
 
-  // @Logged(name = "Override Auto Winner")
-  // public boolean overrideAutoWinner() {
-  //     if (getAutoWinner() == Optional.of(Alliance.Blue)) {
-  //       autoWinner = Optional.of(Alliance.Red);
-  //     }
-  //     if (getAutoWinner() == Optional.of(Alliance.Red)) {
-  //       autoWinner = Optional.of(Alliance.Blue);
-  //     } else {
-  //       autoWinner = getAutoWinner();
-  //     }
-  // }
+  private final GenericEntry blueWonAuto =
+      Shuffleboard.getTab("Testing")
+          .add("Blue Won Auto", false)
+          .withWidget(BuiltInWidgets.kToggleButton)
+          .getEntry();
 
-  @Logged(name = "Blue Won Auto")
-  public boolean blueWonAuto() {
-    if (getAutoWinner() == null) {
+  private final GenericEntry redWonAuto =
+      Shuffleboard.getTab("Testing")
+          .add("Red Won Auto", false)
+          .withWidget(BuiltInWidgets.kToggleButton)
+          .getEntry();
+
+  private final GenericEntry overrideAutoWinner =
+      Shuffleboard.getTab("Testing")
+          .add("Override Auto Winnner", false)
+          .withWidget(BuiltInWidgets.kToggleButton)
+          .getEntry();
+
+  public void blueWonAuto() {
+    if (blueWonAuto.getBoolean(true) && autoWinner == null) {
       autoWinner = Optional.of(Alliance.Blue);
     }
-
-    return autoWinner.orElse(Alliance.Blue) == Alliance.Blue;
+    autoWinner = getAutoWinner();
   }
 
-  @Logged(name = "Red Won Auto")
-  public boolean redWonAuto() {
-    if (getAutoWinner() == null) {
-      autoWinner = Optional.of(Alliance.Red);
+  public void redWonAuto() {
+    if (redWonAuto.getBoolean(true) && autoWinner == null) {
+      autoWinner = Optional.of(Alliance.Blue);
     }
-    return autoWinner.orElse(Alliance.Red) == Alliance.Red;
+    autoWinner = getAutoWinner();
+  }
+
+  public void overrideAutoWinner() {
+    if (overrideAutoWinner.getBoolean(true) && autoWinner == Optional.of(Alliance.Blue)) {
+      autoWinner = Optional.of(Alliance.Red);
+    } else if (overrideAutoWinner.getBoolean(true) && autoWinner == Optional.of(Alliance.Red)) {
+      autoWinner = Optional.of(Alliance.Blue);
+    } else {
+      autoWinner = getAutoWinner();
+    }
   }
 
   @Logged(name = "In Endgame")
