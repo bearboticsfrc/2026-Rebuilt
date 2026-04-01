@@ -55,7 +55,7 @@
         {
           "type": "named",
           "data": {
-            "name": "ShootRoll"
+            "name": "Shoot"
           }
         },
         {
@@ -127,7 +127,7 @@
         {
           "type": "named",
           "data": {
-            "name": "ShootRoll"
+            "name": "Shoot"
           }
         },
         {

@@ -47,6 +47,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "OutpostBump-Outpost"
@@ -65,9 +71,33 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "StopShoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "RaiseClimb"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "OutpostTower-Climb"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "LowerClimb"
           }
         }
       ]
