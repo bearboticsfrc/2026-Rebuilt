@@ -60,17 +60,20 @@ public class DynamicShootingCalculator {
   private static final InterpolatingDoubleTreeMap timeOfFlightMap =
       new InterpolatingDoubleTreeMap();
 
-  static {
-    maxDistance = 9;
-    minDistance = 1.25;
+  private static final InterpolatingDoubleTreeMap passFlywheelSpeedMap =
+      new InterpolatingDoubleTreeMap();
 
-    // angles for shooting
-    // flywheelSpeedMap.put(2.55, 2500.0);
-    // flywheelSpeedMap.put(1.8, 2300.0);
-    // flywheelSpeedMap.put(3.5, 2700.0);
-    // flywheelSpeedMap.put(5.2, 3150.0);
-    // flywheelSpeedMap.put(4.0, 2800.0);
-    // flywheelSpeedMap.put(3.0, 2650.0);
+  private static final InterpolatingDoubleTreeMap passHoodAngleMap =
+      new InterpolatingDoubleTreeMap();
+
+  private static final InterpolatingDoubleTreeMap passTimeOfFlightMap =
+      new InterpolatingDoubleTreeMap();
+
+  static {
+    maxDistance = 10;
+    minDistance = 1.17;
+
+    /* Values for shooting */
 
     flywheelSpeedMap.put(1.17, 2400.0);
     flywheelSpeedMap.put(2.0, 2425.0);
@@ -81,13 +84,6 @@ public class DynamicShootingCalculator {
     flywheelSpeedMap.put(4.67, 3250.0);
     flywheelSpeedMap.put(5.5, 3650.0);
 
-    // hoodAngleMap.put(2.55, 0.2);
-    // hoodAngleMap.put(1.8, 0.1);
-    // hoodAngleMap.put(3.5, 0.4);
-    // hoodAngleMap.put(5.2, 0.6);
-    // hoodAngleMap.put(4.0, 0.5);
-    // hoodAngleMap.put(3.0, 0.25);
-
     hoodAngleMap.put(1.17, 0.0);
     hoodAngleMap.put(2.0, 0.0);
     hoodAngleMap.put(2.67, 0.0);
@@ -97,7 +93,6 @@ public class DynamicShootingCalculator {
     hoodAngleMap.put(4.67, 0.0);
     hoodAngleMap.put(5.5, 0.0);
 
-    // get better time of flights
     timeOfFlightMap.put(1.17, 0.94);
     timeOfFlightMap.put(2.0, 1.03);
     timeOfFlightMap.put(2.67, 1.1);
@@ -106,6 +101,9 @@ public class DynamicShootingCalculator {
     timeOfFlightMap.put(4.0, 1.4);
     timeOfFlightMap.put(4.67, 1.46);
     timeOfFlightMap.put(5.5, 1.59);
+
+    /* Values for passing */
+
   }
 
   public void clearLaunchingParameters() {
@@ -162,7 +160,7 @@ public class DynamicShootingCalculator {
     final double CONVERGENCE_THRESHOLD_M = 0.001;
 
     for (int i = 0; i < MAX_ITERATIONS; i++) {
-      double timeOfFlight = timeOfFlightMap.get(lookaheadDistance);
+      double timeOfFlight = getTOFMap().get(lookaheadDistance);
 
       // Propagate turret position and robot heading over timeOfFlight
       double propagatedAngle = robotAngle + fieldVel.omegaRadiansPerSecond * timeOfFlight / 2.0;
@@ -206,8 +204,7 @@ public class DynamicShootingCalculator {
       double uy = turretToTargetVec.getY() / distanceToTarget;
 
       double finalPropagatedAngle =
-          robotAngle
-              + fieldVel.omegaRadiansPerSecond * timeOfFlightMap.get(lookaheadDistance) / 2.0;
+          robotAngle + fieldVel.omegaRadiansPerSecond * getTOFMap().get(lookaheadDistance) / 2.0;
 
       double rx =
           turretToRobot.getX() * Math.cos(finalPropagatedAngle)
@@ -237,8 +234,8 @@ public class DynamicShootingCalculator {
     lastTarget = target;
 
     // --- Lookup shot parameters ---
-    double hoodAngle = hoodAngleMap.get(lookaheadDistance);
-    double flywheelVelocity = flywheelSpeedMap.get(lookaheadDistance);
+    double hoodAngle = getHoodMap().get(lookaheadDistance);
+    double flywheelVelocity = getFlywheelMap().get(lookaheadDistance);
     boolean inRange = lookaheadDistance >= minDistance && lookaheadDistance <= maxDistance;
 
     latestParameters =
@@ -252,5 +249,20 @@ public class DynamicShootingCalculator {
     if (state.isLeftNeutralZone()) return Field.getMyLeft();
     if (state.isRightNeutralZone()) return Field.getMyRight();
     return Field.getMyHub();
+  }
+
+  private InterpolatingDoubleTreeMap getFlywheelMap() {
+    RobotState state = RobotState.getInstance();
+    return (!state.isInAllianceZone()) ? passFlywheelSpeedMap : flywheelSpeedMap;
+  }
+
+  private InterpolatingDoubleTreeMap getHoodMap() {
+    RobotState state = RobotState.getInstance();
+    return (!state.isInAllianceZone()) ? passHoodAngleMap : hoodAngleMap;
+  }
+
+  private InterpolatingDoubleTreeMap getTOFMap() {
+    RobotState state = RobotState.getInstance();
+    return (!state.isInAllianceZone()) ? passTimeOfFlightMap : timeOfFlightMap;
   }
 }

@@ -244,6 +244,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     return true;
   }
 
+  public StateMachine getStateMachine(){
+    return stateMachine;
+  }
+
   @Logged
   public double getDistanceToHub() {
     return RobotState.getInstance().getDistanceToHub();
