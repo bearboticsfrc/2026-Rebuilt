@@ -11,15 +11,15 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "DepotNeutralBump-Collect"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "Intake"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "DepotNeutralBump-Collect"
           }
         },
         {
