@@ -12,8 +12,10 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
+import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.field.Field;
+import frc.robot.subsystems.StateMachine.States;
 import lombok.Getter;
 
 public class DynamicShootingCalculator {
@@ -27,6 +29,8 @@ public class DynamicShootingCalculator {
   @Logged public Rotation2d turretAngle = new Rotation2d();
 
   @Logged @Getter public Pose2d lookaheadPose = new Pose2d();
+
+  private StateMachine stateMachine = Robot.get().getStateMachine();
 
   private AngularVelocity turretVelocity = RadiansPerSecond.of(0);
 
@@ -120,7 +124,7 @@ public class DynamicShootingCalculator {
     ChassisSpeeds robotRelVel = RobotState.getInstance().robotVelocity;
     ChassisSpeeds rawVel = RobotState.getInstance().getFieldVelocity();
 
-    if (RobotState.getInstance().isShooting()) {
+    if (RobotState.getInstance().isShooting() || stateMachine.getState() == States.SHOOTING) {
       filteredVel =
           new ChassisSpeeds(
               filteredVel.vxMetersPerSecond

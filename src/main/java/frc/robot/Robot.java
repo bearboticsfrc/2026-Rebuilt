@@ -50,6 +50,7 @@ import frc.robot.subsystems.StateMachine;
 import frc.robot.subsystems.StateMachine.ClimbStates;
 import frc.robot.subsystems.StateMachine.IntakeStates;
 import frc.robot.subsystems.StateMachine.ShootStates;
+import frc.robot.subsystems.StateMachine.States;
 import frc.robot.subsystems.StateMachine.TurretStates;
 import frc.robot.subsystems.intake.Rollers;
 import frc.robot.subsystems.intake.Slider;
@@ -244,7 +245,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     return true;
   }
 
-  public StateMachine getStateMachine(){
+  public StateMachine getStateMachine() {
     return stateMachine;
   }
 
@@ -257,12 +258,15 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   // the hub and faster when far away
   public Supplier<Double> getMaxLinearVelocity() {
     double distanceToHub = robotState.getDistanceToHub();
-    return () -> (robotState.isShooting()) ? 1.25 - ((distanceToHub / 5.5) * 0.5) : MaxSpeed;
+    return () ->
+        (robotState.isShooting()) || stateMachine.getState() == States.SHOOTING
+            ? 1.25 - ((distanceToHub / 5.5) * 0.5)
+            : MaxSpeed;
   }
 
   public Supplier<Double> getMaxAngularVelocity() {
     return () ->
-        (robotState.isShooting())
+        (robotState.isShooting() || stateMachine.getState() == States.SHOOTING)
             ? RotationsPerSecond.of(0.25).in(RadiansPerSecond)
             : MaxAngularRate;
   }
