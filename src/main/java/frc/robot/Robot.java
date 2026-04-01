@@ -499,8 +499,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     stateMachine.onEnter(IntakeStates.EXTENDED).onTrue(rollers.run());
 
-    stateMachine
-        .onEnter(IntakeStates.OSCILLATE);
+    stateMachine.onEnter(IntakeStates.OSCILLATE).onTrue(slider.oscillate());
 
     // turret
     stateMachine
