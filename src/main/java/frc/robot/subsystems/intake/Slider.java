@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Robot;
@@ -145,6 +146,14 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
   public Command stop() {
     return runOnce(() -> motor.stopMotor());
+  }
+
+  public Command oscillate() {
+    return Commands.either(
+            goToSetpoint(() -> Setpoint.Middle).andThen(Commands.waitSeconds(1)),
+            goToSetpoint(() -> Setpoint.Retracted).andThen(Commands.waitSeconds(1)),
+            this::isRetracted)
+        .repeatedly();
   }
 
   /**
@@ -343,6 +352,12 @@ public class Slider extends SubsystemBase implements SelfTestable {
   public boolean isExtended() {
     return getPositionInches()
         >= Setpoint.Extended.targetDist.in(Inches) - SELF_TEST_TOLERANCE_INCHES;
+  }
+
+  @Logged
+  public boolean isRetracted() {
+    return getPositionInches()
+        >= Setpoint.Retracted.targetDist.in(Inches) - SELF_TEST_TOLERANCE_INCHES;
   }
 
   @Override
