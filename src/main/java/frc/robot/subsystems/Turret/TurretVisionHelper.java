@@ -20,6 +20,7 @@ import limelight.networktables.PoseEstimate;
 public class TurretVisionHelper {
 
   private final Limelight limelight;
+  private final String LIMELIGHT_NAME = "limelight";
   private final LimelightPoseEstimator poseEstimator;
 
   static final Map<Integer, Transform3d> tagToHubCenterMap =
@@ -68,10 +69,10 @@ public class TurretVisionHelper {
           Units.inchesToMeters(0), Units.inchesToMeters(0), Units.inchesToMeters(72.0));
 
   public TurretVisionHelper() {
-    limelight = new Limelight("limelight-turret");
+    limelight = new Limelight(LIMELIGHT_NAME);
 
     // Verify it's connected at startup - fires WPILib alert if not
-    Limelight.isAvailable("limelight-turret");
+    Limelight.isAvailable(LIMELIGHT_NAME);
 
     // MegaTag1 - no gyro dependency, purely geometric solve
     poseEstimator = limelight.createPoseEstimator(LimelightPoseEstimator.EstimationMode.MEGATAG1);

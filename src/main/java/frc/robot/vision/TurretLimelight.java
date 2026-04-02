@@ -2,6 +2,7 @@ package frc.robot.vision;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -14,7 +15,11 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
+import frc.robot.RobotState;
 import frc.robot.field.Field;
 import frc.robot.vision.VisionSystem.RejectionReason;
 import frc.robot.vision.VisionSystem.VisionEstimate;
@@ -24,6 +29,7 @@ import limelight.networktables.AngularVelocity3d;
 import limelight.networktables.LimelightPoseEstimator;
 import limelight.networktables.LimelightPoseEstimator.EstimationMode;
 import limelight.networktables.LimelightSettings;
+import limelight.networktables.LimelightSettings.ImuMode;
 import limelight.networktables.LimelightTargetData;
 import limelight.networktables.Orientation3d;
 import limelight.networktables.PoseEstimate;
@@ -50,33 +56,46 @@ public class TurretLimelight {
 
   private Pose3d lastAcceptedPose = null;
 
+  private Trigger rewindTrigger;
+
+  private Timer rewindTimer = new Timer();
+
   public TurretLimelight(boolean useMegaTag2) {
     limelight = new Limelight(LIMELIGHT_NAME);
     Limelight.isAvailable(LIMELIGHT_NAME);
 
+    LimelightSettings settings = limelight.getSettings();
+    settings.withThrottle(100).withImuMode(ImuMode.SyncInternalImu).save();
+
     mode = useMegaTag2 ? EstimationMode.MEGATAG2 : EstimationMode.MEGATAG1;
 
     poseEstimator = limelight.createPoseEstimator(mode);
+
+    rewindTrigger = new Trigger(() -> RobotState.getInstance().isShooting());
+    rewindTrigger
+        .onTrue(Commands.runOnce(() -> rewindTimer.restart()))
+        .onFalse(
+            Commands.runOnce(
+                () -> {
+                  rewindTimer.stop();
+                  captureVideo(rewindTimer.get());
+                }));
   }
 
   // call on disableInit and enableInit
-public void updateLimelightSettings() {
+  public void updateLimelightSettings() {
     if (DriverStation.isDisabled()) {
       LimelightSettings settings = limelight.getSettings();
-      settings.withThrottle(100);
-      // set imu_mode
+      settings.withThrottle(100).withImuMode(ImuMode.SyncInternalImu).save();
     } else {
       LimelightSettings settings = limelight.getSettings();
-      settings.withThrottle(0);
-            // set imu_mode
-
+      settings.withThrottle(0).withImuMode(ImuMode.InternalImuExternalAssist).save();
     }
   }
 
-  public void captureVideo() {
-          LimelightSettings settings = limelight.getSettings();
-      settings.rewindCapture(10);
-
+  public void captureVideo(double durationSeconds) {
+    LimelightSettings settings = limelight.getSettings();
+    settings.rewindCapture(durationSeconds);
   }
 
   /**
@@ -193,6 +212,8 @@ public void updateLimelightSettings() {
 
     latestTags = poseEstimate.rawFiducials;
 
+    DogLog.log("limelightPose", currentPose);
+
     return new VisionEstimate(
         currentPose,
         poseEstimate.timestampSeconds,
@@ -261,6 +282,10 @@ public void updateLimelightSettings() {
       rotationStdDevs = Math.max(rotationStdDevs, 75.0);
     }
 
+    if (mode == EstimationMode.MEGATAG2) {
+      rotationStdDevs = LARGE_VARIANCE;
+    }
+
     Matrix<N3, N1> stdDevs = VecBuilder.fill(xyStdDevs, xyStdDevs, rotationStdDevs);
 
     return stdDevs;
@@ -279,6 +304,8 @@ public void updateLimelightSettings() {
             .transformBy(
                 new Transform3d(new Translation3d(), new Rotation3d(0, 0, turretAngleRads)))
             .transformBy(TURRET_TO_CAMERA);
+    DogLog.log("cameraPose", cameraPose);
+    DogLog.log("cameraYaw", cameraPose.getRotation().toRotation2d().getDegrees());
 
     limelight.getSettings().withCameraOffset(cameraPose);
   }
@@ -306,14 +333,17 @@ public void updateLimelightSettings() {
   private static final Transform3d ROBOT_TO_TURRET_PIVOT =
       new Transform3d(
           new Translation3d(
-              Units.inchesToMeters(6.25),
-              Units.inchesToMeters(6.25),
-              Units.inchesToMeters(24.867407)),
+              Units.inchesToMeters(-6.25), // 6.25 inches back from middle
+              Units.inchesToMeters(
+                  6.25), // 6.25 inches to the right of middle  Limelight UI uses "LL right" here
+              Units.inchesToMeters(24.867407)), // 24+ inches up from the ground
           new Rotation3d());
 
   private static final Transform3d TURRET_TO_CAMERA =
       new Transform3d(
           new Translation3d(
-              Units.inchesToMeters(6.877436), Units.inchesToMeters(0.0), Units.inchesToMeters(0.0)),
-          new Rotation3d(0, Units.degreesToRadians(20), 0));
+              Units.inchesToMeters(6.877436), // out from the center of turret rotation
+              Units.inchesToMeters(0.0),
+              Units.inchesToMeters(0.0)),
+          new Rotation3d(0, Units.degreesToRadians(20), 0)); // 20 degrees pointed up
 }

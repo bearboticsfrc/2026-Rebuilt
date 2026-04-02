@@ -18,7 +18,6 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
-import dev.doglog.DogLog;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -48,9 +47,7 @@ import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.subsystems.DynamicShootingCalculator;
-import frc.robot.subsystems.turret.TurretVisionHelper.TurretAimResult;
 import frc.robot.test.SelfTestable;
-import java.util.Optional;
 import java.util.function.Supplier;
 import limelight.Limelight;
 import lombok.Getter;
@@ -86,7 +83,7 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
 
   @Getter public boolean attached = true;
 
-  private final TurretVisionHelper limelight;
+  //  private final TurretVisionHelper limelight;
 
   private DCMotorSim motorSimModel;
 
@@ -109,8 +106,9 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
 
     config.Slot0.kA = 0.05; // .077265;
     config.Slot0.kS = .6; // .2; // start with .4; tune up if mechanism stalls at end of moves
-    config.Slot0.kV = 1.25; // 0.54; // ( 0.124 x 4.34 = .54  V/mechanism-RPS )
-    kV = Volts.of(5.0);
+    config.Slot0.kV =
+        1.25; //  ( 0.124 x 4.34 = .54  V/mechanism-RPS ) // not used in positionvoltage
+    kV = Volts.of(10.0); // consider zeroing this or zeroing the Slot0.kV and using only this
 
     config.Slot1.kP = 150;
     config.Slot1.kD = 12;
@@ -119,12 +117,11 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     config.Slot1.kV = 0;
 
     // var motionMagicConfigs = config.MotionMagic;
-    config.MotionMagic.MotionMagicCruiseVelocity =
-        200; // 6.0; // 1.8; // Target cruise velocity of 80 rps
+    config.MotionMagic.MotionMagicCruiseVelocity = 3.0; // 1.8; // Target cruise velocity of 80 rps
     config.MotionMagic.MotionMagicAcceleration =
-        400; // 12.0; // 3.6; // Target acceleration of 160 rps/s (0.5 seconds)
+        20; // 12.0; // 3.6; // Target acceleration of 160 rps/s (0.5 seconds)
     config.MotionMagic.MotionMagicJerk =
-        800; // 40; // 25; // Target jerk of 1600 rps/s/s (0.1 seconds)
+        0; // 40; // 25; // Target jerk of 1600 rps/s/s (0.1 seconds)
 
     config.Feedback.RotorToSensorRatio = 1.0;
     config.Feedback.SensorToMechanismRatio = gearRatio;
@@ -154,7 +151,7 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
       simulationInit();
     }
 
-    limelight = new TurretVisionHelper();
+    // limelight = new TurretVisionHelper();
 
     System.out.println(getName() + " Subsystem Initialized");
   }
@@ -208,10 +205,10 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
         motorSupplyCurrent,
         motorVoltage,
         motorTemperature);
-    Optional<TurretAimResult> aim = limelight.getHubAimOffset();
-    if (aim.isPresent()) {
-      DogLog.log("turretOffset", Units.radiansToDegrees(aim.get().yawOffset()));
-    }
+    // Optional<TurretAimResult> aim = limelight.getHubAimOffset();
+    // if (aim.isPresent()) {
+    //   DogLog.log("turretOffset", Units.radiansToDegrees(aim.get().yawOffset()));
+    // }
   }
 
   @Override
@@ -290,11 +287,12 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
 
   @Logged(name = "motionMagicSetpointRotations")
   public double getMotionMagicSetpointRotations() {
-    if (Robot.isSimulation()) {
-      return positionVoltage.Position;
-    } else {
-      return motionMagicVoltage.Position;
-    }
+    return motionMagicVoltage.Position;
+  }
+
+  @Logged(name = "positionVoltageSetpointRotations")
+  public double getPositionVoltageSetpointRotations() {
+    return positionVoltage.Position;
   }
 
   @Logged(name = "positionHoldSetpointRotations")
@@ -349,31 +347,36 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   }
 
   private void controlMotor(Angle angle) {
-    // double errorDeg = Math.abs(motor.getPosition().getValue().minus(angle).in(Degrees));
-    // if (errorDeg > 2.0) {
-    if (Robot.isSimulation()) {
-      motor.setControl(positionVoltage.withPosition(wrapDegreesToSoftLimits(angle)));
-    } else {
-      motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle)));
-    }
-    // } else {
-    //  motor.setControl(positionHold.withPosition(wrapDegreesToSoftLimits(angle)));
-    // }
+    motor.setControl(motionMagicVoltage.withPosition(wrapDegreesToSoftLimits(angle)));
   }
 
-  private void controlMotor(Angle angle, AngularVelocity velocity) {
-    Voltage velocityFeedForward = kV.times(velocity.in(RotationsPerSecond));
+  private static final double LARGE_JUMP_THRESHOLD = 0.2; // rotations (~72 degrees)
 
-    if (Robot.isSimulation()) {
-      motor.setControl(
-          positionVoltage
-              .withPosition(wrapDegreesToSoftLimits(angle))
-              .withFeedForward(velocityFeedForward));
+  private void controlMotor(Angle angle, AngularVelocity velocity) {
+    Angle target = wrapDegreesToSoftLimits(angle);
+    double errorRotations = Math.abs(motorPosition.getValue().minus(target).in(Rotations));
+
+    if (errorRotations > LARGE_JUMP_THRESHOLD) {
+      // wrap around or large repositioning - use motion magic for deceleration
+      motor.setControl(motionMagicVoltage.withPosition(target));
     } else {
-      motor.setControl(
-          motionMagicVoltage
-              .withPosition(wrapDegreesToSoftLimits(angle))
-              .withFeedForward(velocityFeedForward));
+      Voltage velocityFeedForward = kV.times(velocity.in(RotationsPerSecond));
+
+      motor.setControl(positionVoltage.withPosition(target).withFeedForward(velocityFeedForward));
+    }
+  }
+
+  private void controlMotor_new(Angle angle, AngularVelocity velocity) {
+    Angle target = wrapDegreesToSoftLimits(angle);
+    double errorRotations = Math.abs(motorPosition.getValue().minus(target).in(Rotations));
+
+    if (errorRotations > LARGE_JUMP_THRESHOLD) {
+      // wrap around or large repositioning - use motion magic for deceleration
+      motor.setControl(motionMagicVoltage.withPosition(target));
+    } else {
+      Voltage velocityFeedForward = kV.times(velocity.in(RotationsPerSecond));
+
+      motor.setControl(positionVoltage.withPosition(target).withFeedForward(velocityFeedForward));
     }
   }
 
@@ -463,7 +466,7 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
             .transformBy(turretToCamera);
 
     // 5. Push to YALL
-    limelight.getSettings().withCameraOffset(cameraPoseRobotSpace);
+    //  limelight.getSettings().withCameraOffset(cameraPoseRobotSpace);
   }
 
   // What the calculator is commanding (calc error only)

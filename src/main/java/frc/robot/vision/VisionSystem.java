@@ -15,13 +15,13 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
 import frc.robot.field.Field;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +49,7 @@ public class VisionSystem {
 
   @Getter
   final Translation2d robotToTurretCenter =
-      new Translation2d(Units.inchesToMeters(-6.25), Units.inchesToMeters(6.25));
+      new Translation2d(Units.inchesToMeters(-6.25), Units.inchesToMeters(-6.25));
 
   // 24.867 z
 
@@ -94,21 +94,27 @@ public class VisionSystem {
   private static final double simLoopPeriod = 0.005; // 5ms
 
   @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
-  public Map<String, Pose2d> latestCameraPose = new HashMap<String, Pose2d>();
+  public Map<String, Pose2d> latestCameraPose =
+      Collections.synchronizedMap(new HashMap<String, Pose2d>());
+
+  public final List<Pose2d> targetPoses = Collections.synchronizedList(new ArrayList<>());
 
   @Logged(name = "Target Poses", importance = Importance.CRITICAL)
-  public final List<Pose2d> targetPoses = new ArrayList<>();
+  public List<Pose2d> getTargetPoses() {
+    synchronized (targetPoses) {
+      return targetPoses;
+    }
+  }
 
   private final CommandSwerveDrivetrain drivetrain;
 
-  TurretLimelight turretLimelight = new TurretLimelight(true);
-
-  private boolean limelightActive = true;
+  private TurretLimelight turretLimelight;
 
   private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
 
   public VisionSystem(
       List<VisionCamera> visionCameras,
+      boolean enableLimelight,
       CommandSwerveDrivetrain drivetrain,
       DoubleSupplier turretRotationSupplier,
       DoubleSupplier robotRotationVelocitySupplier) {
@@ -133,13 +139,20 @@ public class VisionSystem {
       }
     }
 
+    if (enableLimelight) {
+      turretLimelight = new TurretLimelight(false);
+    }
+
     poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
   }
 
+  public void updateCameraSettings() {
+    if (turretLimelight != null) {
+      turretLimelight.updateLimelightSettings();
+    }
+  }
+
   private void poseEstimationPeriodic() {
-    turretLimelight.updateLimelightSettings();
-
-
     List<VisionEstimate> visionEstimates = getEstimatedGlobalPoses();
 
     integrateMultipleEstimates(visionEstimates);
@@ -246,16 +259,19 @@ public class VisionSystem {
       latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
     }
 
-    if (limelightActive) {
+    if (turretLimelight != null) {
+      double robotYawRads = Robot.get().getSwerve().getRobotPose().getRotation().getRadians();
       turretLimelight.update(
-          drivetrain.getPigeonYaw(),
+          robotYawRads,
           Units.degreesToRadians(turretRotationSupplier.getAsDouble()),
-          Units.rotationsPerMinuteToRadiansPerSecond(robotRotationVelocitySupplier.getAsDouble()));
+          robotRotationVelocitySupplier.getAsDouble());
 
       VisionEstimate visionEstimate = turretLimelight.getTurretVisionEstimate();
-      visionEstimates.add(visionEstimate);
+      if (visionEstimate.isAccepted()) {
+        visionEstimates.add(visionEstimate);
 
-      updatedTargetPosesFromLimelight(turretLimelight.getTagList());
+        updatedTargetPosesFromLimelight(turretLimelight.getTagList());
+      }
     }
 
     // Optional<VisionEstimate> turretEstimate = getTurretPose();
@@ -317,9 +333,11 @@ public class VisionSystem {
   private void updatedTargetPoses(List<PhotonTrackedTarget> targetList) {
     for (PhotonTrackedTarget trackedTarget : targetList) {
       int fiducialId = trackedTarget.getFiducialId();
-      Pose3d tagPose = VisionConstants.APRIL_TAG_FIELD_LAYOUT.getTagPose(fiducialId).get();
-
-      targetPoses.add(tagPose.toPose2d());
+      Optional<Pose3d> optionalTagPose =
+          VisionConstants.APRIL_TAG_FIELD_LAYOUT.getTagPose(fiducialId);
+      if (optionalTagPose.isPresent()) {
+        targetPoses.add(optionalTagPose.get().toPose2d());
+      }
     }
   }
 
@@ -454,14 +472,16 @@ public class VisionSystem {
 
   /** Helper to integrate a single estimate */
   private void integrateSingleEstimate(VisionEstimate estimate) {
-    if (estimate != null) {
+    if (estimate != null && estimate.isAccepted()) {
       drivetrain.addVisionMeasurement(
           estimate.pose().toPose2d(), estimate.timestampSeconds(), estimate.stdDevs());
     }
   }
 
   public void resetPose() {
-    turretLimelight.resetLastAcceptedPose();
+    if (turretLimelight != null) {
+      turretLimelight.resetLastAcceptedPose();
+    }
   }
 
   // ----- Simulation

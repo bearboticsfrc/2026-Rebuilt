@@ -96,8 +96,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged @Getter public final VisionSystem vision;
 
-  // @Logged @Getter public final SpectrumVision spectrumVision;
-
   @Logged private final CommandSwerveDrivetrain drivetrain;
 
   @Logged private final Flywheel flywheel;
@@ -161,11 +159,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     flywheel = new Flywheel();
     hood = new Hood();
     climber = new Climber();
-    // spectrumVision = new SpectrumVision(new SpectrumVision.VisionConfig());
 
     vision =
         new VisionSystem(
-            Arrays.asList(VisionConstants.REAR_CAMERA),
+            Arrays.asList(VisionConstants.REAR_CAMERA /* ,
+                VisionConstants.LEFT_CAMERA,
+                VisionConstants.RIGHT_CAMERA */),
+            false,
             drivetrain,
             () -> turret.getPositionDegrees(),
             () -> drivetrain.getState().Speeds.omegaRadiansPerSecond);
@@ -326,6 +326,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void autonomousInit() {
+    vision.updateCameraSettings();
+
     CommandScheduler.getInstance().schedule(slider.retract());
     CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
@@ -348,6 +350,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+
+    vision.updateCameraSettings();
   }
 
   @Override
@@ -356,6 +360,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   }
 
   /** Disabled periodic which updates the autonomous starting pose. */
+  @Override
   public void disabledPeriodic() {
     Command selectedAutoCommand = autoChooser.getSelected();
 
@@ -368,6 +373,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
       vision.resetPose();
       System.out.println("Setting autostartpose!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     }
+  }
+
+  @Override
+  public void disabledInit() {
+    vision.updateCameraSettings();
   }
 
   @Logged
@@ -437,6 +447,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                 }));
 
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
+    copilot
+        .circle()
+        .onTrue(Commands.runOnce(() -> drivetrain.getPigeon2().reset()).ignoringDisable(true));
 
     copilot.cross().onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
 
