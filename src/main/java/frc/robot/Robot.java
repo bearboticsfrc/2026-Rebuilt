@@ -201,7 +201,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();
-    // configureBindings();
+    configureBindings();
     selfTest.bindTriggers();
     configureDefaultCommands();
     configureStateMachine();
