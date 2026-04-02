@@ -149,10 +149,10 @@ public class Slider extends SubsystemBase implements SelfTestable {
   }
 
   public Command oscillate() {
-    return Commands.either(
-            goToSetpoint(() -> Setpoint.Middle).andThen(Commands.waitSeconds(1)),
-            goToSetpoint(() -> Setpoint.Retracted).andThen(Commands.waitSeconds(1)),
-            this::isRetracted)
+    return goToSetpoint(() -> Setpoint.Middle)
+        .andThen(Commands.waitSeconds(1))
+        .andThen(goToSetpoint(() -> Setpoint.Retracted))
+        .andThen(Commands.waitSeconds(1))
         .repeatedly();
   }
 
