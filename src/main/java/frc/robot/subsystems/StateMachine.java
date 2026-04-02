@@ -111,7 +111,9 @@ public class StateMachine extends SubsystemBase {
             robotState.isInAllianceZone() && pilot.getRightTriggerAxis() > 0.1);
         // && tracker.hubStatus());
         transition(
-            States.DRIVE, States.CLIMB, copilot.povUp().getAsBoolean()); // && tracker.inEndGame());
+            States.DRIVE,
+            States.CLIMB,
+            climber.isAtBottom() && copilot.povUp().getAsBoolean()); // && tracker.inEndGame());
         break;
       case SHOOTING:
         transition(
@@ -123,7 +125,12 @@ public class StateMachine extends SubsystemBase {
         transition(States.INTAKE, States.DRIVE, pilot.getLeftTriggerAxis() < 0.1);
         break;
       case CLIMB:
-        transition(States.CLIMB, States.DRIVE, climber.isZeroed());
+        transition(
+            States.CLIMB,
+            States.DRIVE,
+            !copilot.povUp().getAsBoolean()
+                && !copilot.povDown().getAsBoolean()
+                && climber.isAtBottom());
         break;
       default:
         transition(States.DRIVE, States.DRIVE, true);
@@ -188,7 +195,10 @@ public class StateMachine extends SubsystemBase {
         transition(ClimbStates.EXTENDING, ClimbStates.EXTENDED, climber.isAtTop());
         break;
       case EXTENDED:
-        transition(ClimbStates.EXTENDED, ClimbStates.RETRACTING, climber.canClimb());
+        transition(
+            ClimbStates.EXTENDED,
+            ClimbStates.RETRACTING,
+            climber.canClimb() && copilot.povDown().getAsBoolean());
         break;
       case RETRACTING:
         transition(ClimbStates.RETRACTING, ClimbStates.RETRACTED, climber.isAtBottom());
