@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -46,19 +45,19 @@ public class StateMachine extends SubsystemBase {
     RETRACTED,
   }
 
-  @Logged @Getter private States state;
+  @Getter private States state;
   private States previousState;
 
-  @Logged @Getter private ShootStates shootState;
+  @Getter private ShootStates shootState;
   private ShootStates previousShootState;
 
-  @Logged @Getter private IntakeStates intakeState;
+  @Getter private IntakeStates intakeState;
   private IntakeStates previousIntakeState;
 
-  @Logged @Getter private TurretStates turretState;
+  @Getter private TurretStates turretState;
   private TurretStates previousTurretState;
 
-  @Logged @Getter private ClimbStates climbState;
+  @Getter private ClimbStates climbState;
   private ClimbStates previousClimbState;
 
   private final RobotState robotState = RobotState.getInstance();

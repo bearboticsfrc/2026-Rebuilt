@@ -46,12 +46,6 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DynamicShootingCalculator;
-import frc.robot.subsystems.StateMachine;
-import frc.robot.subsystems.StateMachine.ClimbStates;
-import frc.robot.subsystems.StateMachine.IntakeStates;
-import frc.robot.subsystems.StateMachine.ShootStates;
-import frc.robot.subsystems.StateMachine.States;
-import frc.robot.subsystems.StateMachine.TurretStates;
 import frc.robot.subsystems.intake.Rollers;
 import frc.robot.subsystems.intake.Slider;
 import frc.robot.subsystems.shooter.Flywheel;
@@ -110,11 +104,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final Climber climber;
 
-  @Logged private DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
+  @Logged private DynamicShootingCalculator calculator;
 
   @Logged private RobotState robotState = RobotState.getInstance();
 
-  @Logged private final StateMachine stateMachine;
+  // @Logged private StateMachine stateMachine;
 
   @Getter public Field2d field2d = new Field2d();
 
@@ -170,7 +164,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     hood = new Hood();
     climber = new Climber();
 
-    stateMachine = new StateMachine(pilot, copilot, flywheel, slider, climber, tracker);
+    calculator = DynamicShootingCalculator.getInstance();
+
+    // stateMachine = new StateMachine(pilot, copilot, flywheel, slider, climber, tracker);
     // spectrumVision = new SpectrumVision(new SpectrumVision.VisionConfig());
 
     vision =
@@ -204,7 +200,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     configureBindings();
     selfTest.bindTriggers();
     configureDefaultCommands();
-    configureStateMachine();
+    // configureStateMachine();
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);
@@ -245,9 +241,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     return true;
   }
 
-  public StateMachine getStateMachine() {
-    return stateMachine;
-  }
+  // public StateMachine getStateMachine() {
+  //   return stateMachine;
+  // }
 
   @Logged
   public double getDistanceToHub() {
@@ -258,15 +254,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   // the hub and faster when far away
   public Supplier<Double> getMaxLinearVelocity() {
     double distanceToHub = robotState.getDistanceToHub();
-    return () ->
-        (robotState.isShooting()) || stateMachine.getState() == States.SHOOTING
-            ? 1.25 - ((distanceToHub / 5.5) * 0.5)
-            : MaxSpeed;
+    return () -> (robotState.isShooting()) ? 1.25 - ((distanceToHub / 5.5) * 0.5) : MaxSpeed;
   }
 
   public Supplier<Double> getMaxAngularVelocity() {
     return () ->
-        (robotState.isShooting() || stateMachine.getState() == States.SHOOTING)
+        (robotState.isShooting())
             ? RotationsPerSecond.of(0.25).in(RadiansPerSecond)
             : MaxAngularRate;
   }
@@ -434,7 +427,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    // turret.setDefaultCommand(getTurretCommand());
+    turret.setDefaultCommand(getTurretCommand());
   }
 
   public void configureBindings() {
@@ -494,50 +487,51 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onFalse(spindexer.stop().alongWith(kicker.stop()));
   }
 
-  public void configureStateMachine() {
-    // shooter
-    stateMachine
-        .onEnter(ShootStates.RAMP)
-        .onTrue(
-            flywheel
-                .runAtSpeed(calculator.getParameters().flywheelVelocity())
-                .alongWith(
-                    hood.goToSetpointRotationsDouble(
-                        () -> calculator.getParameters().hoodAngle())));
+  // public void configureStateMachine() {
+  //   // shooter
+  //   stateMachine
+  //       .onEnter(ShootStates.RAMP)
+  //       .onTrue(
+  //           flywheel
+  //               .runAtSpeed(calculator.getParameters().flywheelVelocity())
+  //               .alongWith(
+  //                   hood.goToSetpointRotationsDouble(
+  //                       () -> calculator.getParameters().hoodAngle())));
 
-    stateMachine
-        .onExit(ShootStates.SHOOT)
-        .onTrue(flywheel.stopCommand().alongWith(hood.stopCommand()));
+  //   stateMachine
+  //       .onExit(ShootStates.SHOOT)
+  //       .onTrue(flywheel.stopCommand().alongWith(hood.stopCommand()));
 
-    // spindexer
-    stateMachine.onEnter(ShootStates.SHOOT).onTrue(kicker.run().andThen(spindexer.run()));
+  //   // spindexer
+  //   stateMachine.onEnter(ShootStates.SHOOT).onTrue(kicker.run().andThen(spindexer.run()));
 
-    stateMachine.onExit(ShootStates.SHOOT).onTrue(kicker.stop().alongWith(spindexer.stop()));
+  //   stateMachine.onExit(ShootStates.SHOOT).onTrue(kicker.stop().alongWith(spindexer.stop()));
 
-    // intake
-    stateMachine.onEnter(IntakeStates.RETRACT).onTrue(slider.retract().alongWith(rollers.stop()));
+  //   // intake
+  //
+  // stateMachine.onEnter(IntakeStates.RETRACT).onTrue(slider.retract().alongWith(rollers.stop()));
 
-    stateMachine.onEnter(IntakeStates.EXTENDING).onTrue(slider.extend());
+  //   stateMachine.onEnter(IntakeStates.EXTENDING).onTrue(slider.extend());
 
-    stateMachine.onEnter(IntakeStates.EXTENDED).onTrue(rollers.run());
+  //   stateMachine.onEnter(IntakeStates.EXTENDED).onTrue(rollers.run());
 
-    stateMachine.onEnter(IntakeStates.OSCILLATE).onTrue(slider.oscillate());
+  //   stateMachine.onEnter(IntakeStates.OSCILLATE).onTrue(slider.oscillate());
 
-    // turret
-    stateMachine
-        .onEnter(TurretStates.TRACK)
-        .onTrue(
-            turret.setAngle(
-                () -> calculator.getParameters().turretAngle().getMeasure(),
-                () -> calculator.getParameters().turretVelocity()));
+  //   // turret
+  //   stateMachine
+  //       .onEnter(TurretStates.TRACK)
+  //       .onTrue(
+  //           turret.setAngle(
+  //               () -> calculator.getParameters().turretAngle().getMeasure(),
+  //               () -> calculator.getParameters().turretVelocity()));
 
-    // climber
-    stateMachine.onEnter(ClimbStates.EXTENDING).onTrue(climber.raise());
+  //   // climber
+  //   stateMachine.onEnter(ClimbStates.EXTENDING).onTrue(climber.raise());
 
-    stateMachine.onEnter(ClimbStates.RETRACTING).onTrue(climber.lower());
+  //   stateMachine.onEnter(ClimbStates.RETRACTING).onTrue(climber.lower());
 
-    stateMachine.onEnter(ClimbStates.RETRACTED).onTrue(climber.calibrateZero());
-  }
+  //   stateMachine.onEnter(ClimbStates.RETRACTED).onTrue(climber.calibrateZero());
+  // }
 
   // public void bindDriveSysidTriggers() {
   //   pilot.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
