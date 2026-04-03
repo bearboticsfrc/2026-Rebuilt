@@ -104,6 +104,9 @@ public class DynamicShootingCalculator {
 
     /* Values for passing */
 
+    passFlywheelSpeedMap.put(1.0, 1.0);
+    passHoodAngleMap.put(1.0, 1.0);
+    passTimeOfFlightMap.put(1.0, 1.0);
   }
 
   public void clearLaunchingParameters() {
