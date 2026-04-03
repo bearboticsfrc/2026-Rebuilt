@@ -32,6 +32,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -39,7 +40,6 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
@@ -328,8 +328,9 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
                           + " Degrees (target "
                           + (int) target.in(Degrees)
                           + " Degrees)";
-                  SmartDashboard.putBoolean(ntKey + "/passed", selfTestPassed);
-                  SmartDashboard.putString(ntKey + "/message", result);
+                  var nt = NetworkTableInstance.getDefault();
+                  nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
+                  nt.getEntry(ntKey + "/message").setString(result);
                 }))
         .finallyDo(() -> motor.stopMotor());
   }

@@ -15,9 +15,9 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -297,9 +297,9 @@ public class Climber extends SubsystemBase implements SelfTestable {
                           + "\" (target "
                           + target.targetDist.in(Inches)
                           + ")";
-
-                  SmartDashboard.putBoolean(ntKey + "/passed", selfTestPassed);
-                  SmartDashboard.putString(ntKey + "/message", result);
+                  var nt = NetworkTableInstance.getDefault();
+                  nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
+                  nt.getEntry(ntKey + "/message").setString(result);
                 }))
         .finallyDo(() -> motor.stopMotor());
   }

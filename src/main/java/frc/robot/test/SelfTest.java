@@ -61,7 +61,7 @@ public class SelfTest {
     registry.put("spindexer", spindexer);
     registry.put("kicker", kicker);
 
-    // registry.put("turret", turret);
+    registry.put("turret", turret);
     registry.put("slider", slider);
     registry.put("climber", climber);
 
@@ -105,7 +105,13 @@ public class SelfTest {
                   }
                   return speed.equals("fast")
                       ? testable.selfTestFast().finallyDo(() -> runTestEntry.set(false))
-                      : testable.selfTestSlow().finallyDo(() -> runTestEntry.set(false));
+                      : testable
+                          .selfTestSlow()
+                          .finallyDo(
+                              () -> {
+                                System.out.println("setting test entry to false.");
+                                runTestEntry.set(false);
+                              });
                 },
                 Set.of()));
   }
