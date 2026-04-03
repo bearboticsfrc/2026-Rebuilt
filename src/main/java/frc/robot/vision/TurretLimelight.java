@@ -30,6 +30,8 @@ import limelight.networktables.LimelightPoseEstimator;
 import limelight.networktables.LimelightPoseEstimator.EstimationMode;
 import limelight.networktables.LimelightSettings;
 import limelight.networktables.LimelightSettings.ImuMode;
+//import limelight.networktables.LimelightSettings.RewindState;
+
 import limelight.networktables.LimelightTargetData;
 import limelight.networktables.Orientation3d;
 import limelight.networktables.PoseEstimate;
@@ -66,7 +68,7 @@ public class TurretLimelight {
 
     LimelightSettings settings = limelight.getSettings();
     settings.withThrottle(100).withImuMode(ImuMode.SyncInternalImu).save();
-
+// .withRewindEnable(RewindState.ENABLED)
     mode = useMegaTag2 ? EstimationMode.MEGATAG2 : EstimationMode.MEGATAG1;
 
     poseEstimator = limelight.createPoseEstimator(mode);
@@ -78,7 +80,7 @@ public class TurretLimelight {
             Commands.runOnce(
                 () -> {
                   rewindTimer.stop();
-                  captureVideo(rewindTimer.get());
+                  captureVideo(rewindTimer.get()+1);
                 }));
   }
 

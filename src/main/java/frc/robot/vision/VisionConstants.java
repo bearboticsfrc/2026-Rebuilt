@@ -39,7 +39,7 @@ public class VisionConstants {
 
   public static final Transform3d ROBOT_TO_RIGHT_CAMERA =
       new Transform3d(
-          new Translation3d(Inches.of(-12.442), Inches.of(8.0), Inches.of(16.435)),
+          new Translation3d(Inches.of(-12.442), Inches.of(-8.0), Inches.of(16.435)),
           new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.of(-90)));
 
   public static final VisionCamera FRONT_CAMERA =
