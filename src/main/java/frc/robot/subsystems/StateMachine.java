@@ -161,10 +161,7 @@ public class StateMachine extends SubsystemBase {
             robotState.isStopped() && pilot.getRightTriggerAxis() > 0.1);
         break;
       case OSCILLATE:
-        transition(
-            IntakeStates.OSCILLATE,
-            IntakeStates.RETRACT,
-            !robotState.isStopped() && pilot.getRightTriggerAxis() < 0.1);
+        transition(IntakeStates.OSCILLATE, IntakeStates.RETRACT, pilot.getRightTriggerAxis() < 0.1);
         transition(
             IntakeStates.OSCILLATE,
             IntakeStates.EXTENDING,
