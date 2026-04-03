@@ -108,9 +108,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private DynamicShootingCalculator calculator;
 
-  @Logged private StateMachine stateMachine;
-
   @Logged private RobotState robotState = RobotState.getInstance();
+
+  @Logged private StateMachine stateMachine;
 
   @Getter public Field2d field2d = new Field2d();
 
@@ -180,7 +180,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     Telemetry.print("All subsystems Initialized");
 
-    stateMachine = new StateMachine(pilot, copilot, flywheel, slider, climber, tracker);
+    stateMachine = new StateMachine(pilot, copilot, flywheel, slider, climber);
 
     interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer, kicker);
 

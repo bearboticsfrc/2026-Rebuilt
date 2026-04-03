@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.RobotState;
 import frc.robot.subsystems.intake.Slider;
 import frc.robot.subsystems.shooter.Flywheel;
-import frc.robot.util.HubTracker;
 import lombok.Getter;
 
 public class StateMachine extends SubsystemBase {
@@ -68,22 +67,19 @@ public class StateMachine extends SubsystemBase {
   private final Flywheel flywheel;
   private final Slider slider;
   private final Climber climber;
-  private final HubTracker tracker;
 
   public StateMachine(
       CommandXboxController pilot,
       CommandPS5Controller copilot,
       Flywheel flywheel,
       Slider slider,
-      Climber climber,
-      HubTracker tracker) {
+      Climber climber) {
 
     this.pilot = pilot;
     this.copilot = copilot;
     this.flywheel = flywheel;
     this.slider = slider;
     this.climber = climber;
-    this.tracker = tracker;
 
     this.state = States.DRIVE;
     this.previousState = States.DRIVE;
@@ -101,7 +97,7 @@ public class StateMachine extends SubsystemBase {
     this.previousClimbState = ClimbStates.IDLE;
   }
 
-  public void update() {
+  private void update() {
     switch (state) {
       case DRIVE:
         transition(States.DRIVE, States.INTAKE, pilot.getLeftTriggerAxis() > 0.1);
@@ -109,11 +105,8 @@ public class StateMachine extends SubsystemBase {
             States.DRIVE,
             States.SHOOTING,
             robotState.isInAllianceZone() && pilot.getRightTriggerAxis() > 0.1);
-        // && tracker.hubStatus());
         transition(
-            States.DRIVE,
-            States.CLIMB,
-            climber.isAtBottom() && copilot.povUp().getAsBoolean()); // && tracker.inEndGame());
+            States.DRIVE, States.CLIMB, climber.isAtBottom() && copilot.povUp().getAsBoolean());
         break;
       case SHOOTING:
         transition(
@@ -138,7 +131,7 @@ public class StateMachine extends SubsystemBase {
     }
   }
 
-  public void updateShootState() {
+  private void updateShootState() {
     switch (shootState) {
       case IDLE:
         break;
@@ -150,7 +143,7 @@ public class StateMachine extends SubsystemBase {
     }
   }
 
-  public void updateIntakeState() {
+  private void updateIntakeState() {
     switch (intakeState) {
       case RETRACT:
         transition(
@@ -180,7 +173,7 @@ public class StateMachine extends SubsystemBase {
     }
   }
 
-  public void updateTurretState() {
+  private void updateTurretState() {
     switch (turretState) {
       case IDLE:
         transition(TurretStates.IDLE, TurretStates.TRACK, true);
@@ -190,7 +183,7 @@ public class StateMachine extends SubsystemBase {
     }
   }
 
-  public void updateClimbState() {
+  private void updateClimbState() {
     switch (climbState) {
       case IDLE:
         break;
@@ -213,12 +206,12 @@ public class StateMachine extends SubsystemBase {
 
   @Override
   public void periodic() {
-    updatePreviousStates();
     update();
     updateShootState();
     updateIntakeState();
     updateTurretState();
     updateClimbState();
+    updatePreviousStates();
   }
 
   public void transition(States current, States goal, boolean condition) {
