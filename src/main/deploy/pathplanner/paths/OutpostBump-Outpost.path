@@ -32,12 +32,12 @@
     },
     {
       "anchor": {
-        "x": 1.0346136363636362,
-        "y": 0.6646704545454554
+        "x": 0.4809272467902993,
+        "y": 0.7291726105563499
       },
       "prevControl": {
-        "x": 1.797318181818182,
-        "y": 0.7162045454545465
+        "x": 1.243631792244845,
+        "y": 0.780706701465441
       },
       "nextControl": null,
       "isLocked": false,
@@ -69,7 +69,7 @@
   "folder": "OutpostSide",
   "idealStartingState": {
     "velocity": 2.5,
-    "rotation": 90.0
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

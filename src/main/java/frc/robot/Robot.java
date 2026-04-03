@@ -196,7 +196,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     registerPathplannerCommands();
 
-    autoChooser = AutoBuilder.buildAutoChooser("OutpostOverBump");
+    autoChooser = AutoBuilder.buildAutoChooser("O Bump");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();

@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepotBump-DepotNeutralBump"
+            "pathName": "OutpostBump-OutpostNeutralBump"
           }
         },
         {
@@ -19,49 +19,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepotNeutralBump-Collect"
+            "pathName": "OutpostNeutralBump-Collect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "DepotNeutralCollect"
+            "pathName": "OutpostCollect"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Collect-DepotNeutralBump"
+            "pathName": "Collect-OutpostNeutralBump"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "StopIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "DepotNeutralBump-DepotBump"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "DepotBump-DepotTower"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopShoot"
           }
         },
         {
@@ -73,13 +49,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepotTower-Climb"
+            "pathName": "OutpostNeutralBump-OutpostBump"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "DepotAutos",
+  "folder": "OutpostAutos",
   "choreoAuto": false
 }
