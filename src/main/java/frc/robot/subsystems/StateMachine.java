@@ -35,6 +35,7 @@ public class StateMachine extends SubsystemBase {
 
   public enum TurretStates {
     TRACK,
+    IDLE,
   }
 
   public enum ClimbStates {
@@ -93,7 +94,7 @@ public class StateMachine extends SubsystemBase {
     this.intakeState = IntakeStates.RETRACT;
     this.previousIntakeState = IntakeStates.RETRACT;
 
-    this.turretState = TurretStates.TRACK;
+    this.turretState = TurretStates.IDLE;
     this.previousTurretState = TurretStates.TRACK;
 
     this.climbState = ClimbStates.IDLE;
@@ -181,6 +182,9 @@ public class StateMachine extends SubsystemBase {
 
   public void updateTurretState() {
     switch (turretState) {
+      case IDLE:
+        transition(TurretStates.IDLE, TurretStates.TRACK, true);
+        break;
       case TRACK:
         break;
     }
