@@ -34,12 +34,12 @@ public class VisionConstants {
 
   public static final Transform3d ROBOT_TO_LEFT_CAMERA =
       new Transform3d(
-          new Translation3d(Inches.of(6.5), Inches.of(12.53), Inches.of(22.81)),
-          new Rotation3d(Radians.zero(), Degrees.of(-15), Degrees.of(90)));
+          new Translation3d(Inches.of(-9.5), Inches.of(12.802), Inches.of(19.765)),
+          new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.of(90)));
 
   public static final Transform3d ROBOT_TO_RIGHT_CAMERA =
       new Transform3d(
-          new Translation3d(Inches.of(7.5), Inches.of(-12.53), Inches.of(22.81)),
+          new Translation3d(Inches.of(-12.442), Inches.of(-8.0), Inches.of(16.435)),
           new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.of(-90)));
 
   public static final VisionCamera FRONT_CAMERA =
@@ -51,7 +51,7 @@ public class VisionConstants {
   public static final VisionCamera LEFT_CAMERA =
       new VisionCamera(LEFT_CAMERA_NAME, ROBOT_TO_LEFT_CAMERA);
 
-  public static final VisionCamera RIGHTT_CAMERA =
+  public static final VisionCamera RIGHT_CAMERA =
       new VisionCamera(RIGHT_CAMERA_NAME, ROBOT_TO_RIGHT_CAMERA);
 
   // The standard deviations of our vision estimated poses, which affect correction rate

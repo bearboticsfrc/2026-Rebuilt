@@ -66,6 +66,6 @@
   "java.dependency.enableDependencyCheckup": false,
 
   "wpilib.skipSelectSimulateExtension": true,
-  "java.compile.nullAnalysis.mode": "automatic"
+  "java.compile.nullAnalysis.mode": "disabled"
 
 }

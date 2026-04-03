@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
@@ -23,9 +24,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Robot;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.field.Field;
+import frc.robot.subsystems.turret.TurretVisionHelper.TurretAimResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import lombok.*;
@@ -45,11 +48,14 @@ public class TurretController extends SubsystemBase {
 
   PhotonCamera camera = new PhotonCamera(TURRET_CAMERA);
 
+  TurretVisionHelper turretVisionHelper = new TurretVisionHelper();
+
   public static final Transform3d TURRET_TRANSFORM =
       new Transform3d(
           new Translation3d(-.272, 0.172, 0.711),
           new Rotation3d(Degrees.zero(), Degrees.of(-18), Degrees.of(0)));
 
+  @SuppressWarnings("null")
   static final Map<Integer, Transform3d> tagToHubCenterMap =
       Map.ofEntries(
           Map.entry(2, new Transform3d(new Translation3d(-.5842, 0.0, 0.0), new Rotation3d())),
@@ -139,8 +145,38 @@ public class TurretController extends SubsystemBase {
   public void periodic() {
     if (active) {
       turretAngleRadians = turretAngle.get().in(Radians);
-      processCameraInput(camera);
+      processCameraInput();
     }
+  }
+
+  // Rolling average of the correction offset
+  private double correctionOffsetRads = 0.0;
+  private static final double CORRECTION_ALPHA = 0.15; // low pass filter weight
+  private static final double MAX_PLAUSIBLE_CORRECTION = Units.degreesToRadians(5.0);
+
+  public double getTargetTurretAngleRads(Pose2d globalRobotPose) {
+    double globalAzimuth = 0; // computeAzimuthFromPose(globalRobotPose);
+
+    Optional<TurretAimResult> visionResult = turretVisionHelper.getHubAimOffset();
+
+    if (visionResult.isPresent() && visionResult.get().tagCount() >= 2) {
+      double visionAzimuth = visionResult.get().yawOffset();
+      double rawCorrection = visionAzimuth - globalAzimuth;
+
+      // Reject implausible corrections - likely a bad solve
+      if (Math.abs(rawCorrection) < MAX_PLAUSIBLE_CORRECTION) {
+        // Low pass filter the correction to smooth it
+        correctionOffsetRads =
+            CORRECTION_ALPHA * rawCorrection + (1 - CORRECTION_ALPHA) * correctionOffsetRads;
+      }
+      // If correction is implausible, keep previous correction value
+    }
+
+    return globalAzimuth + correctionOffsetRads;
+  }
+
+  public void resetCorrection() {
+    correctionOffsetRads = 0.0;
   }
 
   public Command startTrackingCommand() {
@@ -167,7 +203,14 @@ public class TurretController extends SubsystemBase {
     turret.accept(Radians.of(turretAngleRadians));
   }
 
-  public void processCameraInput(PhotonCamera camera) {
+  public void processCameraInput() {
+
+    // Optional<TurretAimResult> turretAimResult = turretVisionHelper.getHubAimSolution();
+
+    // if (turretAimResult.isEmpty()) {
+    //   return;
+    // }
+
     List<PhotonPipelineResult> cameraResults = camera.getAllUnreadResults();
     if (cameraResults.isEmpty()) return;
 
