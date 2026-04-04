@@ -516,9 +516,21 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(flywheel.stopCommand().alongWith(hood.stopCommand()));
 
     // spindexer
-    stateMachine.onEnter(ShootStates.SHOOT).onTrue(kicker.run().andThen(spindexer.run()));
+    stateMachine
+        .onEnter(ShootStates.SHOOT)
+        .onTrue(
+            kicker
+                .run()
+                .andThen(spindexer.run())
+                .alongWith(Commands.runOnce(() -> robotState.setShooting(true))));
 
-    stateMachine.onExit(ShootStates.SHOOT).onTrue(kicker.stop().alongWith(spindexer.stop()));
+    stateMachine
+        .onExit(ShootStates.SHOOT)
+        .onTrue(
+            kicker
+                .stop()
+                .alongWith(spindexer.stop())
+                .alongWith(Commands.runOnce(() -> robotState.setShooting(false))));
 
     // intake
 
