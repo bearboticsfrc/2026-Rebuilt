@@ -203,7 +203,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     configureBindings();
     selfTest.bindTriggers();
     configureDefaultCommands();
-    // configureStateMachine();
+    configureStateMachine();
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);
@@ -476,7 +476,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
 
-    copilot.L2().toggleOnTrue(Commands.idle(turret));
+    // copilot.L2().toggleOnTrue(Commands.idle(turret));
 
     copilot.R2().whileTrue(drivetrain.applyRequest(() -> breakMode));
 
@@ -484,6 +484,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .square()
         .whileTrue(spindexer.reverse().andThen(kicker.reverse()))
         .onFalse(spindexer.stop().alongWith(kicker.stop()));
+
+    copilot.L2().onTrue(slider.calibrateZero());
   }
 
   public void configureStateMachine() {
@@ -492,8 +494,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onEnter(ShootStates.RAMP)
         .onTrue(
             flywheel
-                .runAtSpeed(calculator.getParameters().flywheelVelocity())
-                .alongWith(
+                .runAtSpeed(() -> calculator.getParameters().flywheelVelocity())
+                .andThen(
                     hood.goToSetpointRotationsDouble(
                         () -> calculator.getParameters().hoodAngle())));
 

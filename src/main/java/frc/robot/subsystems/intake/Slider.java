@@ -73,6 +73,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
   private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0);
   private final DutyCycleOut manualRequest = new DutyCycleOut(0);
+  private final DutyCycleOut calibrateRequest = new DutyCycleOut(0).withIgnoreSoftwareLimits(true);
 
   /* device status signals */
   private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
@@ -210,7 +211,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
   }
 
   private static final double kCalibrateOutput = -.12;
-  private static final double kCalibrateStallAmps = 25.0;
+  private static final double kCalibrateStallAmps = 50.0;
 
   /**
    * Recalibrates the slider zero point. This slowly drives the slider up until we see a drop in
@@ -220,9 +221,9 @@ public class Slider extends SubsystemBase implements SelfTestable {
    */
   public Command calibrateZero() {
     return run(() -> {
-          manualRequest.withOutput(kCalibrateOutput);
+          calibrateRequest.withOutput(kCalibrateOutput);
 
-          motor.setControl(manualRequest);
+          motor.setControl(calibrateRequest);
         })
         .until(() -> motorStatorCurrent.getValue().in(Amps) > kCalibrateStallAmps)
         .withTimeout(3.0)
