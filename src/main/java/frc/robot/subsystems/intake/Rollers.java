@@ -7,7 +7,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -31,7 +31,7 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   private final TalonFX motor = new TalonFX(CAN.ROLLERS, canivore);
 
-  private final VelocityVoltage velocityVoltage = new VelocityVoltage(0.0).withEnableFOC(true);
+  private final VelocityTorqueCurrentFOC velocityTorqueCurrent = new VelocityTorqueCurrentFOC(0.0);
 
   public final AngularVelocity ROLLER_SPEED = RPM.of(5000);
 
@@ -62,16 +62,11 @@ public class Rollers extends Mechanism implements SelfTestable {
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-    config.Slot0.kV =
-        0.133; // 12V / 90.1 RPS (6000 RPM / 1.11 gear ratio) — theoretical, tune down if it
-    // overshoots
-    config.Slot0.kS = 0.25; // static friction, tune on real robot
-    config.Slot0.kP = 0.15; // V per RPS of error — rollers don't need tight regulation
-    config.Slot0.kA = 0.0; // leave at 0, not needed for simple rollers
-
-    // For rollers, kV does most of the work — if kV is tuned well, kP just handles disturbances
-    // Start by tuning kS and kV until steady-state is accurate, then add a small kP if there's
-    // residual error under load.
+    // TorqueCurrentFOC gains — units are amps, not volts
+    config.Slot0.kS = 1.0;  // amps to overcome static friction — tune on real robot
+    config.Slot0.kV = 0.15; // amps per mechanism RPS — tune for steady-state accuracy under load
+    config.Slot0.kP = 0.5;  // amps per RPS of error — tune if residual error under load
+    config.Slot0.kA = 0.0;  // leave at 0, not needed for simple rollers
 
     config.Feedback.SensorToMechanismRatio = gearRatio;
 
@@ -111,7 +106,7 @@ public class Rollers extends Mechanism implements SelfTestable {
   }
 
   private void setOutput(AngularVelocity velocity) {
-    motor.setControl(velocityVoltage.withVelocity(velocity));
+    motor.setControl(velocityTorqueCurrent.withVelocity(velocity));
   }
 
   public Command run() {
@@ -164,7 +159,7 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   @Logged(name = "setpoint")
   public double getSetpoint() {
-    return velocityVoltage.Velocity;
+    return velocityTorqueCurrent.Velocity;
   }
 
   @Logged(name = "velocityRPM")
