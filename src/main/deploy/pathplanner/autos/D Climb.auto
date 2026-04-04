@@ -7,7 +7,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Raise Climb"
+            "name": "RaiseClimb"
           }
         },
         {
@@ -20,6 +20,12 @@
           "type": "path",
           "data": {
             "pathName": "D climb"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "LowerClimb"
           }
         }
       ]
