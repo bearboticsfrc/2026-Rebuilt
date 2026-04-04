@@ -192,10 +192,7 @@ public class StateMachine extends SubsystemBase {
         transition(ClimbStates.EXTENDING, ClimbStates.EXTENDED, climber.isAtTop());
         break;
       case EXTENDED:
-        transition(
-            ClimbStates.EXTENDED,
-            ClimbStates.RETRACTING,
-            climber.canClimb() && copilot.povDown().getAsBoolean());
+        transition(ClimbStates.EXTENDED, ClimbStates.RETRACTING, copilot.povDown().getAsBoolean());
         break;
       case RETRACTING:
         transition(ClimbStates.RETRACTING, ClimbStates.RETRACTED, climber.isAtBottom());

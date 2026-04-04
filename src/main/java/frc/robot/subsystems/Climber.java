@@ -168,13 +168,6 @@ public class Climber extends SubsystemBase implements SelfTestable {
     return Math.abs(getPositionInches() - Setpoint.Bottom.targetDist.in(Inches)) < .5;
   }
 
-  // may need to fix
-  public boolean canClimb() {
-    boolean event = wasBlocked && !climberBlocked();
-    wasBlocked = climberBlocked();
-    return event;
-  }
-
   /**
    * @return The Position of the climber
    */

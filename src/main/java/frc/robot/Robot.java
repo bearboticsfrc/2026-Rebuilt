@@ -203,7 +203,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     configureBindings();
     selfTest.bindTriggers();
     configureDefaultCommands();
-    configureStateMachine();
+    // configureStateMachine();
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);
