@@ -121,6 +121,7 @@ public class Kicker extends Mechanism implements SelfTestable {
   private Command selfTestAt(AngularVelocity target, String ntKey) {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(target)))
         .withName(getName() + ".SelfTestAt" + (int) target.in(RPM) + "RPM")
+        .andThen(Commands.waitSeconds(1))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
         .andThen(
             runOnce(

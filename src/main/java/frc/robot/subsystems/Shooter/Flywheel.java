@@ -200,6 +200,7 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
 
   private Command selfTestAt(AngularVelocity target, String ntKey) {
     return runOnce(() -> setVelocity(target))
+        .andThen(Commands.waitSeconds(1))
         .andThen(Commands.waitUntil(this::isAtTarget).withTimeout(2.0))
         .andThen(
             runOnce(

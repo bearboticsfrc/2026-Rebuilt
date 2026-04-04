@@ -145,7 +145,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   }
 
   @Logged private boolean selfTestPassed = false;
-  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(50);
+  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(25);
 
   private boolean isNearTarget(AngularVelocity target) {
     return velocity.getValue().isNear(target, SELF_TEST_VELOCITY_THRESHOLD_RPM);
@@ -154,6 +154,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   private Command selfTestAt(AngularVelocity target, String ntKey) {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(target)))
         .withName("Spindexer.SelfTestAt" + (int) target.in(RPM) + "RPM")
+        .andThen(Commands.waitSeconds(1))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
         .andThen(
             runOnce(

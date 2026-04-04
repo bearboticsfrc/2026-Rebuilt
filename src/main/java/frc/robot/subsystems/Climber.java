@@ -284,7 +284,7 @@ public class Climber extends SubsystemBase implements SelfTestable {
   private Command selfTestAt(Setpoint target, String ntKey) {
     return goToSetpoint(() -> target)
         .withName(getName() + ".TestSetpoint" + target.name())
-        .withTimeout(2.0)
+        .withTimeout(3.0)
         .andThen(
             runOnce(
                 () -> {

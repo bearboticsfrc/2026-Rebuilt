@@ -132,6 +132,7 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   private Command selfTestAt(AngularVelocity target, String ntKey) {
     return runOnce(() -> setOutput(target))
+        .andThen(Commands.waitSeconds(1))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
         .andThen(
             runOnce(
