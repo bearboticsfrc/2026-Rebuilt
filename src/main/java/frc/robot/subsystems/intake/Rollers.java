@@ -63,9 +63,9 @@ public class Rollers extends Mechanism implements SelfTestable {
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     // TorqueCurrentFOC gains — units are amps, not volts
-    config.Slot0.kS = 1.0; // amps to overcome static friction — tune on real robot
-    config.Slot0.kV = 0.15; // amps per mechanism RPS — tune for steady-state accuracy under load
-    config.Slot0.kP = 0.5; // amps per RPS of error — tune if residual error under load
+    config.Slot0.kS = 0.5; // amps to overcome static friction — tune on real robot
+    config.Slot0.kV = 0.12; // amps per mechanism RPS — tune for steady-state accuracy under load
+    config.Slot0.kP = 0.8; // amps per RPS of error — tune if residual error under load
     config.Slot0.kA = 0.0; // leave at 0, not needed for simple rollers
 
     config.Feedback.SensorToMechanismRatio = gearRatio;
@@ -157,9 +157,9 @@ public class Rollers extends Mechanism implements SelfTestable {
         .withName(getName() + ".SelfTestFast");
   }
 
-  @Logged(name = "setpoint")
+  @Logged(name = "setpointRPM")
   public double getSetpoint() {
-    return velocityTorqueCurrent.Velocity;
+    return velocityTorqueCurrent.Velocity * 60.0;
   }
 
   @Logged(name = "velocityRPM")

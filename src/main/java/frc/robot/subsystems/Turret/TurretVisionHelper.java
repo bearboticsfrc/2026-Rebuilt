@@ -7,10 +7,13 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.DriverStation;
 import java.util.Map;
 import java.util.Optional;
 import limelight.Limelight;
 import limelight.networktables.LimelightPoseEstimator;
+import limelight.networktables.LimelightSettings;
+import limelight.networktables.LimelightSettings.ImuMode;
 import limelight.networktables.PoseEstimate;
 
 // set throttle in disable/enable
@@ -59,7 +62,7 @@ public class TurretVisionHelper {
               ),
           new Rotation3d(
               0,
-              Units.degreesToRadians(20), // camera pitch down
+              Units.degreesToRadians(20), // camera pitch up
               0));
 
   // Known field coordinate of Hub opening center (get X/Y from field drawings)
@@ -76,6 +79,17 @@ public class TurretVisionHelper {
 
     // MegaTag1 - no gyro dependency, purely geometric solve
     poseEstimator = limelight.createPoseEstimator(LimelightPoseEstimator.EstimationMode.MEGATAG1);
+  }
+
+  // call on disableInit and enableInit
+  public void updateLimelightSettings() {
+    if (DriverStation.isDisabled()) {
+      LimelightSettings settings = limelight.getSettings();
+      settings.withThrottle(100).withImuMode(ImuMode.SyncInternalImu).save();
+    } else {
+      LimelightSettings settings = limelight.getSettings();
+      settings.withThrottle(0).withImuMode(ImuMode.InternalImuExternalAssist).save();
+    }
   }
 
   /**
@@ -125,12 +139,20 @@ public class TurretVisionHelper {
     NetworkTable table = limelight.getNTTable();
 
     long tid = table.getEntry("tid").getInteger(0);
+    DogLog.log("turretVisionHelper.tid", tid);
 
-    Pose3d hubCenter = cameraPoseTargetSpace.plus(tagToHubCenterMap.get(tid));
+    if (tagToHubCenterMap.get(Integer.valueOf((int) tid)) == null) {
+      return Optional.empty();
+    }
+    Pose3d hubCenter =
+        cameraPoseTargetSpace.plus(tagToHubCenterMap.get(Integer.valueOf((int) tid)));
+    DogLog.log("turretVisionHelper.hubCenter", hubCenter);
 
-    double distance = hubCenter.getTranslation().getNorm();
+    Rotation3d undoPitch = new Rotation3d(0, Units.degreesToRadians(-20), 0);
+    Translation3d hubHorizontal = hubCenter.getTranslation().rotateBy(undoPitch);
 
-    double radiansOffset = Math.atan(hubCenter.getY() / hubCenter.getX());
+    double radiansOffset = Math.atan2(hubHorizontal.getY(), hubHorizontal.getX());
+    double distance = hubHorizontal.getNorm();
 
     // Reject if distance is implausible - likely a bad solve
     if (distance < Units.inchesToMeters(24) || distance > Units.inchesToMeters(300)) {
@@ -157,9 +179,9 @@ public class TurretVisionHelper {
     // double[] rawPose = table.getEntry("camerapose_targetspace").getDoubleArray(new double[0]);
     long tid = table.getEntry("tid").getInteger(0);
 
-    DogLog.log("camerapose_targetspace", rawPose);
+    DogLog.log("targetpose_cameraspace", rawPose);
     DogLog.log("tid", tid);
-    DogLog.log("angle_to_primary_id", Units.radiansToDegrees(rawPose[5]));
+    DogLog.log("angle_to_primary_id", rawPose[5]);
 
     if (rawPose.length < 6) return null;
 
@@ -173,11 +195,15 @@ public class TurretVisionHelper {
     }
     if (allZero) return null;
 
-    return new Pose3d(
-        new Translation3d(rawPose[0], rawPose[1], rawPose[2]),
+    Rotation3d limelightRotation =
         new Rotation3d(
             Units.degreesToRadians(rawPose[3]),
             Units.degreesToRadians(rawPose[4]),
-            Units.degreesToRadians(rawPose[5])));
+            Units.degreesToRadians(rawPose[5]));
+
+    // Rotation3d frameChange =
+    //     new Rotation3d(MatBuilder.fill(Nat.N3(), Nat.N3(), 0, 0, 1, -1, 0, 0, 0, 1, 0));
+
+    return new Pose3d(new Translation3d(rawPose[2], -rawPose[0], rawPose[1]), limelightRotation);
   }
 }

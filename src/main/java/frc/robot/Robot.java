@@ -5,6 +5,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -23,6 +24,7 @@ import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -55,6 +57,8 @@ import frc.robot.subsystems.shooter.Hood;
 import frc.robot.subsystems.spindexer.Kicker;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretVisionHelper;
+import frc.robot.subsystems.turret.TurretVisionHelper.TurretAimResult;
 import frc.robot.test.SelfTest;
 import frc.robot.util.HubTracker;
 import frc.robot.vision.VisionConstants;
@@ -62,6 +66,7 @@ import frc.robot.vision.VisionSystem;
 import frc.spectrumLib.Telemetry;
 import frc.spectrumLib.Telemetry.PrintPriority;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.Getter;
 
@@ -113,6 +118,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged private StateMachine stateMachine;
 
   @Getter public Field2d field2d = new Field2d();
+
+  private final TurretVisionHelper turretVisionHelper;
 
   private Command introspectedAutoCommand;
 
@@ -177,6 +184,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
             drivetrain,
             () -> turret.getPositionDegrees(),
             () -> drivetrain.getState().Speeds.omegaRadiansPerSecond);
+
+    turretVisionHelper = new TurretVisionHelper();
 
     Telemetry.print("All subsystems Initialized");
 
@@ -277,6 +286,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void robotPeriodic() {
     DriverStation.getAlliance().ifPresent(AllianceColor::setAllianceColor);
     drivetrain.updatePoses();
+    getTargetTurretAngleRads();
     CommandScheduler.getInstance().run();
     DynamicShootingCalculator.getInstance().clearLaunchingParameters();
   }
@@ -346,6 +356,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Override
   public void autonomousInit() {
     vision.updateCameraSettings();
+    turretVisionHelper.updateLimelightSettings();
 
     CommandScheduler.getInstance().schedule(slider.retract());
     CommandScheduler.getInstance().schedule(climber.calibrateZero());
@@ -371,6 +382,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     }
 
     vision.updateCameraSettings();
+    turretVisionHelper.updateLimelightSettings();
   }
 
   @Override
@@ -550,6 +562,34 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   //   pilot.b().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
   //   pilot.x().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
   // }
+
+  // Rolling average of the correction offset
+  private double correctionOffsetRads = 0.0;
+  private static final double CORRECTION_ALPHA = 0.15; // low pass filter weight
+  private static final double MAX_PLAUSIBLE_CORRECTION = Units.degreesToRadians(5.0);
+
+  public double getTargetTurretAngleRads() {
+    double turretAngleRadians = calculator.getParameters().turretAngle().getMeasure().in(Radians);
+    Optional<TurretAimResult> visionResult = turretVisionHelper.getHubAimOffset();
+    DogLog.log("hasTurretVisionResult", visionResult.isPresent());
+
+    if (visionResult.isPresent() && visionResult.get().tagCount() >= 2) {
+      double rawCorrection = visionResult.get().yawOffset(); // already camera-relative offset
+      DogLog.log("turretVisionOffset", rawCorrection);
+
+      if (Math.abs(rawCorrection) < MAX_PLAUSIBLE_CORRECTION) {
+        correctionOffsetRads =
+            CORRECTION_ALPHA * rawCorrection + (1 - CORRECTION_ALPHA) * correctionOffsetRads;
+      }
+    }
+
+    DogLog.log("turretCorrection", correctionOffsetRads);
+    return turretAngleRadians + correctionOffsetRads;
+  }
+
+  public void resetCorrection() {
+    correctionOffsetRads = 0.0;
+  }
 
   public void setupSmartDashboardData() {
     SmartDashboard.putData("Field2d", field2d);
