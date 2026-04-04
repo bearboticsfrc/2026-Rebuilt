@@ -209,10 +209,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();
-    configureBindings();
+    // configureBindings();
     selfTest.bindTriggers();
     configureDefaultCommands();
-    // configureStateMachine();
+    configureStateMachine();
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);
@@ -438,7 +438,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    turret.setDefaultCommand(getTurretCommand());
+    // turret.setDefaultCommand(getTurretCommand());
   }
 
   public void configureBindings() {
@@ -516,21 +516,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(flywheel.stopCommand().alongWith(hood.stopCommand()));
 
     // spindexer
-    stateMachine
-        .onEnter(ShootStates.SHOOT)
-        .onTrue(
-            kicker
-                .run()
-                .andThen(spindexer.run())
-                .alongWith(Commands.runOnce(() -> robotState.setShooting(true))));
+    stateMachine.onEnter(ShootStates.SHOOT).onTrue(kicker.run().andThen(spindexer.run()));
 
-    stateMachine
-        .onExit(ShootStates.SHOOT)
-        .onTrue(
-            kicker
-                .stop()
-                .alongWith(spindexer.stop())
-                .alongWith(Commands.runOnce(() -> robotState.setShooting(false))));
+    stateMachine.onExit(ShootStates.SHOOT).onTrue(kicker.stop().alongWith(spindexer.stop()));
 
     // intake
 
@@ -556,6 +544,14 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     stateMachine.onEnter(ClimbStates.RETRACTING).onTrue(climber.lower());
 
     stateMachine.onEnter(ClimbStates.RETRACTED).onTrue(climber.calibrateZero());
+
+    // set shooting
+    stateMachine
+        .onEnter(States.SHOOTING)
+        .onTrue(Commands.runOnce(() -> robotState.setShooting(true)));
+    stateMachine
+        .onExit(States.SHOOTING)
+        .onTrue(Commands.runOnce(() -> robotState.setShooting(false)));
   }
 
   // public void bindDriveSysidTriggers() {
