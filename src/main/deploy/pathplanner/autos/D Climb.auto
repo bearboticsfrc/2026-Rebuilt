@@ -1,0 +1,31 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "Raise Climb"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D setup climb"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "D climb"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "DepotAutos",
+  "choreoAuto": false
+}

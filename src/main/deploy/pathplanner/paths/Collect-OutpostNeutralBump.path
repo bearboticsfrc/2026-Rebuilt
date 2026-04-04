@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.828791574260429,
-        "y": 3.5091086384099226
+        "x": 6.942656162491731,
+        "y": 3.2998994775500927
       },
       "isLocked": false,
       "linkedName": "O collect"
     },
     {
       "anchor": {
-        "x": 5.759900142653351,
-        "y": 2.6182168330955777
+        "x": 5.697466666666667,
+        "y": 2.6220555555555554
       },
       "prevControl": {
-        "x": 6.196924752827137,
-        "y": 2.7805798078086483
+        "x": 5.983651350918187,
+        "y": 2.7741755577441785
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "overbump O"
     }
   ],
   "rotationTargets": [],
@@ -48,7 +48,7 @@
   "folder": "OutpostSide",
   "idealStartingState": {
     "velocity": 1.75,
-    "rotation": 111.2505055071331
+    "rotation": 130.89114763320487
   },
   "useDefaultConstraints": false
 }

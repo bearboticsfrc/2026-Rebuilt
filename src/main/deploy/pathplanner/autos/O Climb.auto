@@ -1,0 +1,31 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "RaiseClimb"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "O start, setup Climb"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "O climb"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "OutpostAutos",
+  "choreoAuto": false
+}

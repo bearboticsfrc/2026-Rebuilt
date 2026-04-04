@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.697466666666667,
+        "x": 3.5634333333333332,
         "y": 2.6220555555555554
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.93478501970042,
-        "y": 2.5434425838947203
+        "x": 2.900811111111111,
+        "y": 2.5635888888888894
       },
       "isLocked": false,
-      "linkedName": "overbump O"
+      "linkedName": "O Start 1"
     },
     {
       "anchor": {
-        "x": 5.863409415121255,
-        "y": 2.6415444444444436
+        "x": 1.0980888888888887,
+        "y": 2.183555555555555
       },
       "prevControl": {
-        "x": 4.734832512352386,
-        "y": 2.722006490736863
+        "x": 1.9848333333333346,
+        "y": 2.4369111111111104
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "2nd swipe overbump collect O"
+      "linkedName": "O climb setup"
     }
   ],
   "rotationTargets": [],
@@ -33,16 +33,16 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 2.0,
+    "maxVelocity": 1.5,
+    "maxAcceleration": 1.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 2.0,
-    "rotation": 90.0
+    "velocity": 0,
+    "rotation": -90.0
   },
   "reversed": false,
   "folder": "OutpostSide",
@@ -50,5 +50,5 @@
     "velocity": 0,
     "rotation": 90.0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }

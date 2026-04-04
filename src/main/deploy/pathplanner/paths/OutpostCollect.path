@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.532496433666189,
-        "y": 1.4925534950071324
+        "x": 8.260255555555556,
+        "y": 0.25415555555555525
       },
       "isLocked": false,
       "linkedName": "O Neutral"
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 2.0,
-    "rotation": 111.2505055071331
+    "rotation": 130.89114763320487
   },
   "reversed": false,
   "folder": "OutpostSide",

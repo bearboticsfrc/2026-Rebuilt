@@ -41,9 +41,21 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "OutpostNeutralBump-OutpostBump"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.25
           }
         },
         {
@@ -55,55 +67,19 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopShoot"
+            "waitTime": 2.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "OutpostBump-OutpostNeutralBump"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Intake"
+            "pathName": "O start, setup Climb"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "O 2nd collect"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "O 2nd back"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "OutpostNeutralBump-OutpostBump"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
+            "pathName": "O climb"
           }
         }
       ]
