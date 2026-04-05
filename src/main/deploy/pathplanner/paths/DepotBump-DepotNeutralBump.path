@@ -12,7 +12,7 @@
         "y": 5.360615384615385
       },
       "isLocked": false,
-      "linkedName": "Depot1Bump"
+      "linkedName": null
     },
     {
       "anchor": {
@@ -25,7 +25,7 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "DepotNeutralBump"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],

@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.759900142653351,
-        "y": 4.307844444444444
+        "x": 7.843024251069899,
+        "y": 2.747603423680457
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.7738477307881135,
-        "y": 4.557455070791207
+        "x": 7.856971839204661,
+        "y": 2.9972140500272197
       },
       "isLocked": false,
       "linkedName": "O 2nd Collect end"
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 2.0,
-    "rotation": 90.0
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": "OutpostSide",
   "idealStartingState": {
     "velocity": 2.0,
-    "rotation": 90.0
+    "rotation": -44.06936608273146
   },
   "useDefaultConstraints": true
 }

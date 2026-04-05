@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.804208273894435,
-        "y": 3.795634807417975
+        "x": 7.7653922967189715,
+        "y": 3.420413694721826
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.942656162491731,
-        "y": 3.2998994775500927
+        "x": 6.903840185316267,
+        "y": 2.924678364853944
       },
       "isLocked": false,
       "linkedName": "O collect"
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 1.75,
-    "rotation": 90.0
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": "OutpostSide",

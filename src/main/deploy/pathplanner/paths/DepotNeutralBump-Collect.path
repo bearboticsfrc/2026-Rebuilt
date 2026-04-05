@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 7.956038461538462,
-        "y": 7.011820512820512
+        "x": 7.881840228245363,
+        "y": 7.224379457917262
       },
       "prevControl": {
-        "x": 6.790281868393142,
-        "y": 7.604394509674823
+        "x": 6.716083635100042,
+        "y": 7.816953454771573
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": "DepotSide",
   "idealStartingState": {
     "velocity": 1.75,
-    "rotation": 0.0
+    "rotation": 1.506634417163643
   },
   "useDefaultConstraints": false
 }

@@ -181,8 +181,9 @@ public class TurretVisionHelper {
 
     DogLog.log("targetpose_cameraspace", rawPose);
     DogLog.log("tid", tid);
-    DogLog.log("angle_to_primary_id", rawPose[5]);
-
+    if (rawPose.length > 0) {
+      DogLog.log("angle_to_primary_id", rawPose[5]);
+    }
     if (rawPose.length < 6) return null;
 
     // All zeros means no valid solve

@@ -35,7 +35,7 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   public final AngularVelocity ROLLER_SPEED = RPM.of(5000);
 
-  public final AngularVelocity ROLLER_SPEED_SLOW = RPM.of(1000);
+  public final AngularVelocity ROLLER_SPEED_SLOW = RPM.of(2500);
   private final double gearRatio = 1.11;
 
   private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);

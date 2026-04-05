@@ -70,7 +70,7 @@ public class DynamicShootingCalculator {
       new InterpolatingDoubleTreeMap();
 
   static {
-    maxDistance = 10;
+    maxDistance = 12;
     minDistance = 1.17;
 
     /* Values for shooting */
@@ -104,9 +104,14 @@ public class DynamicShootingCalculator {
 
     /* Values for passing */
 
-    passFlywheelSpeedMap.put(1.0, 1000.0);
-    passHoodAngleMap.put(1.0, 1.0);
-    passTimeOfFlightMap.put(1.0, 1.0);
+    passFlywheelSpeedMap.put(5.5, 3000.0);
+    passFlywheelSpeedMap.put(10.5, 5000.0);
+
+    passHoodAngleMap.put(5.5, 1.0);
+    passHoodAngleMap.put(10.5, 1.0);
+
+    passTimeOfFlightMap.put(5.5, 1.0);
+    passTimeOfFlightMap.put(10.5, 1.0);
   }
 
   public void clearLaunchingParameters() {

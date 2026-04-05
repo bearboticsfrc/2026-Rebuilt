@@ -49,13 +49,19 @@
         {
           "type": "named",
           "data": {
+            "name": "OscillateIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "Shoot"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 3.0
+            "waitTime": 8.0
           }
         },
         {
@@ -65,9 +71,9 @@
           }
         },
         {
-          "type": "path",
+          "type": "named",
           "data": {
-            "pathName": "OutpostBump-OutpostNeutralBump"
+            "name": "StopIntake"
           }
         },
         {
@@ -79,31 +85,13 @@
         {
           "type": "path",
           "data": {
+            "pathName": "2nd swipe over O"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
             "pathName": "O 2nd collect"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "O 2nd back"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "OutpostNeutralBump-OutpostBump"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
           }
         }
       ]

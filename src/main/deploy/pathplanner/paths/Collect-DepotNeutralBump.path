@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 1.75,
-    "rotation": 0.0
+    "rotation": 1.506634417163643
   },
   "reversed": false,
   "folder": "DepotSide",

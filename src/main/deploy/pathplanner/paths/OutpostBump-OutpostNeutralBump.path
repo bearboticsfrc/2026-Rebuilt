@@ -12,7 +12,7 @@
         "y": 2.6184063628418146
       },
       "isLocked": false,
-      "linkedName": "O Start 1"
+      "linkedName": null
     },
     {
       "anchor": {
@@ -25,7 +25,7 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "overbump O"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],

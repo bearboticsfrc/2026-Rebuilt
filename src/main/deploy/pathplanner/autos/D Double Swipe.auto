@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepotBump-DepotNeutralBump"
+            "pathName": "D 2 swipe start"
           }
         },
         {
@@ -41,21 +41,9 @@
           }
         },
         {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.25
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "DepotNeutralBump-DepotBump"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.25
           }
         },
         {
@@ -65,15 +53,15 @@
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 4.0
+            "name": "OscillateIntake"
           }
         },
         {
-          "type": "path",
+          "type": "wait",
           "data": {
-            "pathName": "DepotBump-DepotNeutralBump"
+            "waitTime": 8.0
           }
         },
         {
@@ -85,55 +73,25 @@
         {
           "type": "named",
           "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "Intake"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "DepotNeutralBump-Collect"
+            "pathName": "DepotBump-DepotNeutralBump"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "DepotNeutralCollect"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Collect-DepotNeutralBump"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.25
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "DepotNeutralBump-DepotBump"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.25
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
+            "pathName": "D 2nd swipe"
           }
         }
       ]

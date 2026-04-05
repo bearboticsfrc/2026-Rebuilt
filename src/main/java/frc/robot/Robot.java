@@ -48,8 +48,6 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DynamicShootingCalculator;
-import frc.robot.subsystems.StateMachine;
-import frc.robot.subsystems.StateMachine.*;
 import frc.robot.subsystems.intake.Rollers;
 import frc.robot.subsystems.intake.Slider;
 import frc.robot.subsystems.shooter.Flywheel;
@@ -114,8 +112,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged private DynamicShootingCalculator calculator;
 
   @Logged private RobotState robotState = RobotState.getInstance();
-
-  @Logged private StateMachine stateMachine;
 
   @Getter public Field2d field2d = new Field2d();
 
@@ -189,8 +185,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     Telemetry.print("All subsystems Initialized");
 
-    stateMachine = new StateMachine(pilot, copilot, flywheel, slider, climber);
-
     interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer, kicker);
 
     dynamicShootingCommand = new DynamicShootingCommand(hood, flywheel, spindexer, kicker, turret);
@@ -209,10 +203,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();
-    // configureBindings();
+    configureBindings();
     selfTest.bindTriggers();
     configureDefaultCommands();
-    configureStateMachine();
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);
@@ -320,8 +313,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     NamedCommands.registerCommand(
         "Shoot",
-        new ScheduleCommand(
-                dynamicShootingCommand.shoot().withTimeout(5).withName("TurretAndShoot5"))
+        new ScheduleCommand(dynamicShootingCommand.shoot().withName("TurretAndShoot5"))
             .withName("ScheduleShoot"));
 
     NamedCommands.registerCommand(
@@ -342,6 +334,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
 
     NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
+
+    NamedCommands.registerCommand("OscillateIntake", new ScheduleCommand(slider.lowOscillate()));
   }
 
   // set turret
@@ -438,7 +432,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    // turret.setDefaultCommand(getTurretCommand());
+    turret.setDefaultCommand(getTurretCommand());
   }
 
   public void configureBindings() {
@@ -460,14 +454,22 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onTrue(dynamicShootingCommand.shoot())
         .onFalse(dynamicShootingCommand.stop());
 
+    pilot
+        .leftBumper()
+        .whileTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
+        .onFalse(slider.retract().alongWith(rollers.stop()));
+
+    pilot
+        .rightBumper()
+        .whileTrue(slider.highOscillate().alongWith(rollers.runSlow()))
+        .onFalse(slider.retract().alongWith(rollers.stop()));
+
     // copilot controlls
     copilot.povUp().onTrue(climber.raise());
 
     copilot.povDown().onTrue(climber.lower());
 
     copilot.povRight().onTrue(climber.calibrateZero());
-
-    // copilot.circle().whileTrue(autoClimbCommand.climb());
 
     copilot
         .povLeft()
@@ -478,6 +480,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                 }));
 
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
+
     copilot
         .circle()
         .onTrue(Commands.runOnce(() -> drivetrain.getPigeon2().reset()).ignoringDisable(true));
@@ -498,60 +501,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onFalse(spindexer.stop().alongWith(kicker.stop()));
 
     copilot.L2().onTrue(slider.calibrateZero());
-  }
-
-  public void configureStateMachine() {
-    // shooter
-    stateMachine
-        .onEnter(ShootStates.RAMP)
-        .onTrue(
-            flywheel
-                .runAtSpeed(() -> calculator.getParameters().flywheelVelocity())
-                .andThen(
-                    hood.goToSetpointRotationsDouble(
-                        () -> calculator.getParameters().hoodAngle())));
-
-    stateMachine
-        .onExit(ShootStates.SHOOT)
-        .onTrue(flywheel.stopCommand().alongWith(hood.stopCommand()));
-
-    // spindexer
-    stateMachine.onEnter(ShootStates.SHOOT).onTrue(kicker.run().andThen(spindexer.run()));
-
-    stateMachine.onExit(ShootStates.SHOOT).onTrue(kicker.stop().alongWith(spindexer.stop()));
-
-    // intake
-
-    stateMachine.onEnter(IntakeStates.RETRACT).onTrue(slider.retract().alongWith(rollers.stop()));
-
-    stateMachine.onEnter(IntakeStates.EXTENDING).onTrue(slider.extend());
-
-    stateMachine.onEnter(IntakeStates.EXTENDED).onTrue(rollers.run());
-
-    stateMachine.onEnter(IntakeStates.OSCILLATE).onTrue(slider.oscillate());
-
-    // turret
-    stateMachine
-        .onEnter(TurretStates.TRACK)
-        .onTrue(
-            turret.setAngle(
-                () -> calculator.getParameters().turretAngle().getMeasure(),
-                () -> calculator.getParameters().turretVelocity()));
-
-    // climber
-    stateMachine.onEnter(ClimbStates.EXTENDING).onTrue(climber.raise());
-
-    stateMachine.onEnter(ClimbStates.RETRACTING).onTrue(climber.lower());
-
-    stateMachine.onEnter(ClimbStates.RETRACTED).onTrue(climber.calibrateZero());
-
-    // set shooting
-    stateMachine
-        .onEnter(States.SHOOTING)
-        .onTrue(Commands.runOnce(() -> robotState.setShooting(true)));
-    stateMachine
-        .onExit(States.SHOOTING)
-        .onTrue(Commands.runOnce(() -> robotState.setShooting(false)));
   }
 
   // public void bindDriveSysidTriggers() {
