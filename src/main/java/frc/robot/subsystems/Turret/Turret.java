@@ -328,9 +328,9 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
                   String result =
                       (selfTestPassed ? "PASS" : "FAIL")
                           + ": "
-                          + (int) getAngle().in(Degrees)
+                          + String.format("%.2f", getAngle().in(Degrees))
                           + " Deg (target "
-                          + (int) target.in(Degrees)
+                          + String.format("%.2f", target.in(Degrees))
                           + " Deg)";
                   var nt = NetworkTableInstance.getDefault();
                   nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);

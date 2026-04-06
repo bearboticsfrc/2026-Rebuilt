@@ -47,6 +47,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   private final MotionMagicVoltage positionReq =
       new MotionMagicVoltage(0.0).withEnableFOC(true).withSlot(1);
 
+  // Theoretical max RPM == 1045, under load probably 900
   private final AngularVelocity NORMAL_SPEED = RPM.of(600);
   private final AngularVelocity SLOW_SPEED = RPM.of(60);
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
@@ -67,14 +68,14 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-    config.CurrentLimits.StatorCurrentLimit = 120;
+    config.CurrentLimits.StatorCurrentLimit = 60;
     config.CurrentLimits.SupplyCurrentLimit = 60;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     // Velocity Control Gains
-    config.Slot0.kS = 0.1;
-    config.Slot0.kV = 0.75; // ~12V / (7530 RPM / 60 / 7.2) = 0.69
+    config.Slot0.kS = 0.2;  // was .1
+    config.Slot0.kV = 0.70; // was .75 // ~12V / (7530 RPM / 60 / 7.2) = 0.69
     config.Slot0.kA = 0;
     config.Slot0.kP = 0.15;
 
@@ -165,7 +166,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
             })
         .andThen(runOnce(() -> motor.setControl(velocityReq.withVelocity(target))))
         .withName("Spindexer.SelfTestAt" + (int) target.in(RPM) + "RPM")
-        .andThen(Commands.waitSeconds(1))
+        .andThen(Commands.waitSeconds(4))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
         .andThen(
             runOnce(
@@ -197,7 +198,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
         .withName(getName() + ".SelfTestFast");
   }
 
-  @Logged
+  @Logged(name = "velocity")
   public AngularVelocity getVelocity() {
     return velocity.getValue();
   }

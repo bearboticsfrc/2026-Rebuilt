@@ -35,6 +35,7 @@ public class Kicker extends Mechanism implements SelfTestable {
 
   private final VelocityVoltage velocityReq = new VelocityVoltage(0.0).withEnableFOC(true);
 
+  // theoretical max == 2400 RPM
   private final AngularVelocity NORMAL_SPEED = RPM.of(2200);
   private final AngularVelocity SLOW_SPEED = RPM.of(200);
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
@@ -54,15 +55,15 @@ public class Kicker extends Mechanism implements SelfTestable {
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    config.CurrentLimits.StatorCurrentLimit = 120;
+    config.CurrentLimits.StatorCurrentLimit = 60;
     config.CurrentLimits.SupplyCurrentLimit = 60;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     config.Slot0.kS = 0.25;
-    config.Slot0.kV = 0.3; // ~12V / (40 RPS) = 0.3
+    config.Slot0.kV = 0.32; // ~12V / (40 RPS) = 0.3  (was.3)
     config.Slot0.kA = 0.0;
-    config.Slot0.kP = 0.1;
+    config.Slot0.kP = 0.2; // was .1
 
     /*
       Tuning order:
@@ -79,7 +80,7 @@ public class Kicker extends Mechanism implements SelfTestable {
 
     if (Robot.isSimulation()) {
       simModel =
-          simulationInitKrakenX60(motor, kGearRatio, 0.025, ChassisReference.Clockwise_Positive);
+          simulationInitKrakenX60(motor, kGearRatio, 0.01, ChassisReference.Clockwise_Positive);
     }
 
     optimizeCAN();
@@ -131,7 +132,7 @@ public class Kicker extends Mechanism implements SelfTestable {
             })
         .andThen(runOnce(() -> motor.setControl(velocityReq.withVelocity(target))))
         .withName(getName() + ".SelfTestAt" + (int) target.in(RPM) + "RPM")
-        .andThen(Commands.waitSeconds(1))
+        .andThen(Commands.waitSeconds(4))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
         .andThen(
             runOnce(

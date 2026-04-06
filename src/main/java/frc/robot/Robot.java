@@ -387,6 +387,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Override
   public void testInit() {
     CommandScheduler.getInstance().cancelAll();
+
+    turret.removeDefaultCommand();
+  }
+
+  @Override
+  public void testExit() {
+    configureDefaultCommands();
   }
 
   /** Disabled periodic which updates the autonomous starting pose. */

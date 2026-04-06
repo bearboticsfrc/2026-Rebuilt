@@ -142,7 +142,7 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
   }
 
   public Command warmUp() {
-    return runAtSpeed(1600);
+    return runAtSpeed(() -> 1600.0);
   }
 
   /**
@@ -212,8 +212,8 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
               nt.getEntry(ntKey + "/passed").unpublish();
               ;
             })
-        .andThen(runOnce(() -> setVelocity(target)))
-        .andThen(Commands.waitSeconds(1))
+        .andThen(runAtSpeed(() -> target.in(RPM)))
+        .withTimeout(4)
         .andThen(Commands.waitUntil(this::isAtTarget).withTimeout(2.0))
         .andThen(
             runOnce(
@@ -290,7 +290,7 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
 
     motorSimModel =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.005, SIM_GEAR_RATIO),
+            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.004, SIM_GEAR_RATIO),
             DCMotor.getKrakenX60Foc(1));
 
     var simConfig = new TalonFXConfiguration();

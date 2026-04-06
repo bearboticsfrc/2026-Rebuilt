@@ -100,9 +100,9 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
                   .clone()
                   .withKP(2.4)
                   .withKI(0)
-                  .withKD(0)
-                  .withKS(0.2)
-                  .withKV(0.144) // reasonable range is .12 to .20
+                  .withKD(0.1)  // was 0
+                  .withKS(0.1)  // was .2
+                  .withKV(0.20) // was .144 // reasonable range is .12 to .20  (.3 works for 1 rot)
                   .withKA(0)
                   .withKG(0.28)
                   .withGravityType(GravityTypeValue.Elevator_Static))
@@ -117,8 +117,8 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
               motorInitialConfigs
                   .MotionMagic
                   .clone()
-                  .withMotionMagicCruiseVelocity(RotationsPerSecond.of(66))
-                  .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(300)));
+                  .withMotionMagicCruiseVelocity(RotationsPerSecond.of(8))
+                  .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(40)));
 
   public Hood() {
     super("Hood");
@@ -261,7 +261,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
                           + ": "
                           + String.format("%.2f", getRotations())
                           + " rot (target "
-                          + String.format("%.3f", Setpoint.Middle.target.in(Rotations))
+                          + String.format("%.3f", target.target.in(Rotations))
                           + " rot)";
                   var nt = NetworkTableInstance.getDefault();
                   nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
@@ -326,7 +326,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
 
     motorSimModel =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.01, gearRatio),
+            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.001, gearRatio),
             DCMotor.getKrakenX44Foc(1));
 
     var simConfig = new TalonFXConfiguration();

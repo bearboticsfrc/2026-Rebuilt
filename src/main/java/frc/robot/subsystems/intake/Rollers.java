@@ -36,6 +36,7 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   private final VelocityTorqueCurrentFOC velocityTorqueCurrent = new VelocityTorqueCurrentFOC(0.0);
 
+  // Theoretical max == 5400
   public final AngularVelocity ROLLER_SPEED = RPM.of(5000);
 
   public final AngularVelocity ROLLER_SPEED_SLOW = RPM.of(2500);
@@ -60,7 +61,7 @@ public class Rollers extends Mechanism implements SelfTestable {
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
-    config.CurrentLimits.StatorCurrentLimit = 120;
+    config.CurrentLimits.StatorCurrentLimit = 80;
     config.CurrentLimits.SupplyCurrentLimit = 60;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -80,7 +81,7 @@ public class Rollers extends Mechanism implements SelfTestable {
     if (Robot.isSimulation()) {
       motorSimModel =
           simulationInitKrakenX60(
-              motor, gearRatio, 0.025, ChassisReference.CounterClockwise_Positive);
+              motor, gearRatio, 0.001, ChassisReference.CounterClockwise_Positive);
     }
 
     System.out.println(getName() + " Subsystem Initialized");
@@ -89,7 +90,7 @@ public class Rollers extends Mechanism implements SelfTestable {
   private void optimizeCAN() {
     motorSupplyCurrent.setUpdateFrequency(50);
     motorStatorCurrent.setUpdateFrequency(50);
-    motorVelocity.setUpdateFrequency(100);
+    motorVelocity.setUpdateFrequency(250);
     motorTemperature.setUpdateFrequency(4);
     motorClosedLoopError.setUpdateFrequency(50);
 
@@ -137,7 +138,7 @@ public class Rollers extends Mechanism implements SelfTestable {
               ;
             })
         .andThen(runOnce(() -> setOutput(target)))
-        .andThen(Commands.waitSeconds(1))
+        .andThen(Commands.waitSeconds(4))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
         .andThen(
             runOnce(

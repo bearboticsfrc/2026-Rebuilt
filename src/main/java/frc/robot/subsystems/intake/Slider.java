@@ -33,6 +33,7 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Robot;
@@ -256,7 +257,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
             })
         .andThen(goToSetpoint(() -> target))
         .withName(getName() + ".TestSetpoint" + target.name())
-        .withTimeout(2.0)
+        .withTimeout(4.0)
         .andThen(
             runOnce(
                 () -> {
@@ -393,7 +394,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
     motorSimModel =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.025, gearRatio),
+            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.0012, gearRatio),
             DCMotor.getKrakenX44Foc(1));
 
     var simConfig = new TalonFXConfiguration();

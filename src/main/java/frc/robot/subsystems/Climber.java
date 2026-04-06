@@ -13,22 +13,25 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.CAN;
+import frc.robot.Mechanism;
+import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import lombok.Getter;
 
-public class Climber extends SubsystemBase implements SelfTestable {
+public class Climber extends Mechanism implements SelfTestable {
   /** Position setpoints for the climber. */
   public enum Setpoint {
     Bottom(Rotations.of(0)),
@@ -135,11 +138,19 @@ public class Climber extends SubsystemBase implements SelfTestable {
                   .withMotionMagicCruiseVelocity(RotationsPerSecond.of(1.2))
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(5.0)));
 
+  private DCMotorSim motorSimModel;
+
   public Climber() {
     super("Climber");
     applyConfig(() -> motor.getConfigurator().apply(motorConfigs), getName());
 
     optimizeCAN();
+
+    if (Robot.isSimulation()) {
+      motorSimModel =
+          simulationInitKrakenX60(
+              motor, kGearRatio, 0.01, ChassisReference.CounterClockwise_Positive);
+    }
     System.out.println(getName() + " Subsystem Initialized");
   }
 
@@ -353,5 +364,10 @@ public class Climber extends SubsystemBase implements SelfTestable {
         motorSupplyCurrent,
         motorStatorCurrent,
         motorClosedLoopError);
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    super.simulationPeriodic(motor, kGearRatio, motorSimModel);
   }
 }
