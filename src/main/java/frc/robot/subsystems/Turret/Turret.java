@@ -158,17 +158,19 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
 
   private void optimizeCAN() {
     if (Robot.isSimulation()) {
-      motor.getPosition().setUpdateFrequency(1000);
-      motor.getVelocity().setUpdateFrequency(1000);
-      motor.getClosedLoopReference().setUpdateFrequency(1000);
-    } else {
-      motor.getPosition().setUpdateFrequency(250);
-      motor.getVelocity().setUpdateFrequency(250);
-      motor.getClosedLoopReference().setUpdateFrequency(50);
-    }
+      motorVelocity.setUpdateFrequency(1000);
+      motorPosition.setUpdateFrequency(1000);
+      setpoint.setUpdateFrequency(1000);
 
-    motor.getSupplyCurrent().setUpdateFrequency(50);
-    motor.getDeviceTemp().setUpdateFrequency(4);
+    } else {
+      motorVelocity.setUpdateFrequency(250);
+      motorPosition.setUpdateFrequency(250);
+      setpoint.setUpdateFrequency(50);
+    }
+    motorSupplyCurrent.setUpdateFrequency(50);
+    motorStatorCurrent.setUpdateFrequency(50);
+    motorVoltage.setUpdateFrequency(50);
+    motorTemperature.setUpdateFrequency(10);
 
     motor.optimizeBusUtilization();
   }
@@ -212,14 +214,7 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   }
 
   @Override
-  public void initSendable(NTSendableBuilder builder) {
-    builder.addStringProperty("CurrentCommand", this::getCurrentCommandName, null);
-    // builder.addDoubleProperty("Motor Voltage", this::getVoltage, null);
-    // builder.addDoubleProperty("Rotations", this::getPositionRotations, null);
-    builder.addDoubleProperty("setPointDegrees", this::getSetpointDegrees, null);
-    // builder.addDoubleProperty("Velocity RPM", this::getVelocityRPM, null);
-    // builder.addDoubleProperty("StatorCurrent", this::getStatorCurrent, null);
-  }
+  public void initSendable(NTSendableBuilder builder) {}
 
   protected String getCurrentCommandName() {
     Command currentCommand = this.getCurrentCommand();
@@ -353,20 +348,6 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   private static final double LARGE_JUMP_THRESHOLD = 0.2; // rotations (~72 degrees)
 
   private void controlMotor(Angle angle, AngularVelocity velocity) {
-    Angle target = wrapDegreesToSoftLimits(angle);
-    double errorRotations = Math.abs(motorPosition.getValue().minus(target).in(Rotations));
-
-    if (errorRotations > LARGE_JUMP_THRESHOLD) {
-      // wrap around or large repositioning - use motion magic for deceleration
-      motor.setControl(motionMagicVoltage.withPosition(target));
-    } else {
-      Voltage velocityFeedForward = kV.times(velocity.in(RotationsPerSecond));
-
-      motor.setControl(positionVoltage.withPosition(target).withFeedForward(velocityFeedForward));
-    }
-  }
-
-  private void controlMotor_new(Angle angle, AngularVelocity velocity) {
     Angle target = wrapDegreesToSoftLimits(angle);
     double errorRotations = Math.abs(motorPosition.getValue().minus(target).in(Rotations));
 

@@ -54,8 +54,6 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
 
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
-  private final StatusSignal<Current> motorCurrent = motor.getSupplyCurrent(false);
-
   private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
   private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
   private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
@@ -108,8 +106,10 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
   }
 
   private void optimizeCAN() {
-    motorVelocity.setUpdateFrequency(50);
-    motorCurrent.setUpdateFrequency(50);
+    motorVelocity.setUpdateFrequency(250);
+    motorSupplyCurrent.setUpdateFrequency(50);
+    motorStatorCurrent.setUpdateFrequency(50);
+    motorClosedLoopError.setUpdateFrequency(50);
     motorTemperature.setUpdateFrequency(10);
 
     motor.optimizeBusUtilization();

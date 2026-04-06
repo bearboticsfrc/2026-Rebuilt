@@ -36,7 +36,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
-import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class Slider extends SubsystemBase implements SelfTestable {
@@ -64,14 +63,11 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
   private static final double gearRatio = 1.8; // 1.58; // 6.04; // motor-to-pinion gear reduction
 
-  private static final Distance kMaxTravel = Inches.of(11.25);
-
   private final CANBus canivore = new CANBus(CAN.NAME);
 
   private final TalonFX motor = new TalonFX(CAN.SLIDER, canivore);
 
   private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0);
-  private final DutyCycleOut manualRequest = new DutyCycleOut(0);
   private final DutyCycleOut calibrateRequest = new DutyCycleOut(0).withIgnoreSoftwareLimits(true);
 
   /* device status signals */
@@ -128,10 +124,12 @@ public class Slider extends SubsystemBase implements SelfTestable {
   }
 
   private void optimizeCAN() {
-    motor.getPosition().setUpdateFrequency(250);
-    motor.getVelocity().setUpdateFrequency(250);
-    motor.getSupplyCurrent().setUpdateFrequency(50);
-    motor.getDeviceTemp().setUpdateFrequency(4);
+    motorPosition.setUpdateFrequency(250);
+    motorVelocity.setUpdateFrequency(250);
+    motorSupplyCurrent.setUpdateFrequency(50);
+    motorStatorCurrent.setUpdateFrequency(50);
+    motorClosedLoopError.setUpdateFrequency(50);
+    motorTemperature.setUpdateFrequency(4);
 
     motor.optimizeBusUtilization();
   }
@@ -145,11 +143,11 @@ public class Slider extends SubsystemBase implements SelfTestable {
   }
 
   public Command mid() {
-    return goToSetpoint(() -> Setpoint.Middle);
+    return goToSetpoint(() -> Setpoint.Middle).withName(getName() + ".Mid");
   }
 
   public Command stop() {
-    return runOnce(() -> motor.stopMotor());
+    return runOnce(() -> motor.stopMotor()).withName(getName() + ".Stop");
   }
 
   public Command lowOscillate() {
@@ -161,11 +159,16 @@ public class Slider extends SubsystemBase implements SelfTestable {
         .andThen(extend())
         .withTimeout(.5)
         .andThen(retract().withTimeout(0.5))
-        .repeatedly();
+        .repeatedly()
+        .withName(getName() + ".lowOscillate");
   }
 
   public Command highOscillate() {
-    return mid().withTimeout(0.5).andThen(extend().withTimeout(0.5)).repeatedly();
+    return mid()
+        .withTimeout(0.5)
+        .andThen(extend().withTimeout(0.5))
+        .repeatedly()
+        .withName(getName() + ".highOscillate");
   }
 
   /**
@@ -174,7 +177,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
    * @param setpoint Function returning the setpoint to apply
    * @return Command to run
    */
-  public Command goToSetpoint(Supplier<Setpoint> setpoint) {
+  private Command goToSetpoint(Supplier<Setpoint> setpoint) {
     return run(
         () -> {
           motionMagicRequest.withPosition(setpoint.get().target);
@@ -188,7 +191,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
    * @param distance Function returning the target distance
    * @return Command to run
    */
-  public Command goToDistance(Supplier<Distance> distance) {
+  private Command goToDistance(Supplier<Distance> distance) {
     return run(
         () -> {
           double rotations = distance.get().in(Inches) / kPinionCircumference.in(Inches);
@@ -204,21 +207,8 @@ public class Slider extends SubsystemBase implements SelfTestable {
    */
   public Command holdPosition() {
     return runOnce(() -> motionMagicRequest.withPosition(motorPosition.getValue()))
-        .andThen(run(() -> motor.setControl(motionMagicRequest)));
-  }
-
-  /**
-   * Manually drives the slider with the provided duty cycle output.
-   *
-   * @param manualOutput Function returning the duty cycle to apply
-   * @return Command to run
-   */
-  public Command manualDrive(DoubleSupplier manualOutput) {
-    return run(
-        () -> {
-          manualRequest.withOutput(manualOutput.getAsDouble());
-          motor.setControl(manualRequest);
-        });
+        .andThen(run(() -> motor.setControl(motionMagicRequest)))
+        .withName(getName() + ".HoldPosition");
   }
 
   private static final double kCalibrateOutput = -.12;
@@ -369,7 +359,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
   @Logged
   public boolean isRetracted() {
     return getPositionInches()
-        >= Setpoint.Retracted.targetDist.in(Inches) - SELF_TEST_TOLERANCE_INCHES;
+        <= Setpoint.Retracted.targetDist.in(Inches) + SELF_TEST_TOLERANCE_INCHES;
   }
 
   @Override

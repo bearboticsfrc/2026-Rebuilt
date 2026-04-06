@@ -65,7 +65,6 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
   private final TalonFX motor = new TalonFX(CAN.HOOD, kCANBus);
 
   /* device status signals */
-
   private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
   private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
   private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
@@ -135,10 +134,13 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
   }
 
   private void optimizeCAN() {
-    motor.getPosition().setUpdateFrequency(100);
-    motor.getSupplyCurrent().setUpdateFrequency(50);
-    motor.getDeviceTemp().setUpdateFrequency(4);
-    motor.getClosedLoopReferenceSlope().setUpdateFrequency(100);
+    motorSupplyCurrent.setUpdateFrequency(50);
+    motorStatorCurrent.setUpdateFrequency(50);
+    motorVelocity.setUpdateFrequency(250);
+    motorTemperature.setUpdateFrequency(10);
+    motorClosedLoopError.setUpdateFrequency(50);
+    motorPosition.setUpdateFrequency(250);
+    motorProfileVelocity.setUpdateFrequency(50);
 
     motor.optimizeBusUtilization();
   }
@@ -217,7 +219,8 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
             run(
                 () -> {
                   motor.setControl(setpointRequest);
-                }));
+                }))
+        .withName(getName() + ".holdPosition");
   }
 
   /**
@@ -226,7 +229,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
    * @return The command to stop the hood.
    */
   public Command stopCommand() {
-    return runOnce(() -> stop());
+    return runOnce(() -> stop()).withName(getName());
   }
 
   // Stop the hood motor
@@ -278,15 +281,16 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
    * @return Command to run
    */
   public Command goToSetpoint(Supplier<Setpoint> setpoint) {
-    return run(() -> controlMotor(setpoint.get().target));
+    return run(() -> controlMotor(setpoint.get().target)).withName(getName() + ".goToSetpoint");
   }
 
   public Command goToSetpointAngle(Supplier<Angle> value) {
-    return run(() -> controlMotor(value.get()));
+    return run(() -> controlMotor(value.get())).withName(getName() + ".goToSetpointAngle");
   }
 
   public Command goToSetpointRotationsDouble(DoubleSupplier value) {
-    return run(() -> controlMotor(Rotations.of(value.getAsDouble())));
+    return run(() -> controlMotor(Rotations.of(value.getAsDouble())))
+        .withName(getName() + ".goToSetpointRotationsDouble");
   }
 
   @Override

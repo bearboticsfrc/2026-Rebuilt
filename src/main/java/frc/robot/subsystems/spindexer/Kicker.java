@@ -86,10 +86,12 @@ public class Kicker extends Mechanism implements SelfTestable {
   }
 
   private void optimizeCAN() {
-    motor.getPosition().setUpdateFrequency(50);
-    motor.getVelocity().setUpdateFrequency(50);
-    motor.getSupplyCurrent().setUpdateFrequency(50);
-    motor.getDeviceTemp().setUpdateFrequency(10);
+    supplyCurrent.setUpdateFrequency(50);
+    statorCurrent.setUpdateFrequency(50);
+    velocity.setUpdateFrequency(250);
+    motorTemperature.setUpdateFrequency(10);
+    motorClosedLoopError.setUpdateFrequency(50);
+
     motor.optimizeBusUtilization();
   }
 

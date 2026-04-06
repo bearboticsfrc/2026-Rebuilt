@@ -27,6 +27,8 @@ import frc.robot.test.SelfTestable;
 
 public class Rollers extends Mechanism implements SelfTestable {
 
+  private static final String NAME = "Rollers";
+
   private final CANBus canivore = new CANBus(CAN.NAME);
 
   private final TalonFX motor = new TalonFX(CAN.ROLLERS, canivore);
@@ -51,7 +53,7 @@ public class Rollers extends Mechanism implements SelfTestable {
   private DCMotorSim motorSimModel;
 
   public Rollers() {
-    super("Rollers");
+    super(NAME);
     TalonFXConfiguration config = new TalonFXConfiguration();
 
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -110,15 +112,15 @@ public class Rollers extends Mechanism implements SelfTestable {
   }
 
   public Command run() {
-    return runOnce(() -> setOutput(ROLLER_SPEED)).withName(getName() + ".Run");
+    return runOnce(() -> setOutput(ROLLER_SPEED)).withName(NAME + ".Run");
   }
 
   public Command runSlow() {
-    return runOnce(() -> setOutput(ROLLER_SPEED_SLOW)).withName(getName() + ".RunSlow");
+    return runOnce(() -> setOutput(ROLLER_SPEED_SLOW)).withName(NAME + ".RunSlow");
   }
 
   public Command stop() {
-    return runOnce(() -> motor.stopMotor()).withName(getName() + ".Stop");
+    return runOnce(() -> motor.stopMotor()).withName(NAME + ".Stop");
   }
 
   private boolean isNearTarget(AngularVelocity target) {

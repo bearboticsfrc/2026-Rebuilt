@@ -143,10 +143,13 @@ public class Climber extends SubsystemBase implements SelfTestable {
   }
 
   private void optimizeCAN() {
-    motor.getPosition().setUpdateFrequency(100);
-    motor.getVelocity().setUpdateFrequency(100);
-    motor.getSupplyCurrent().setUpdateFrequency(50);
-    motor.getDeviceTemp().setUpdateFrequency(4);
+    motorPosition.setUpdateFrequency(250);
+    motorTorqueCurrent.setUpdateFrequency(50);
+    motorSupplyCurrent.setUpdateFrequency(50);
+    motorStatorCurrent.setUpdateFrequency(50);
+    motorVelocity.setUpdateFrequency(250);
+    motorTemperature.setUpdateFrequency(10);
+    motorClosedLoopError.setUpdateFrequency(50);
 
     motor.optimizeBusUtilization();
   }
