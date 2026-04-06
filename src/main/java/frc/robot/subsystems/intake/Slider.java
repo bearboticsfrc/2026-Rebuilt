@@ -263,6 +263,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
                   nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
                   nt.getEntry(ntKey + "/message").setString(result);
                 }))
+        .andThen(retract().withTimeout(2.0))
         .finallyDo(() -> motor.stopMotor());
   }
 

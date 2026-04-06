@@ -23,6 +23,7 @@ import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Robot;
@@ -238,8 +239,12 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
 
   // TODO: safeguard the position of the hood, should start at 0
   private Command selfTestAt(Setpoint target, String ntKey) {
-    return goToSetpoint(() -> target)
-        .withName(getName() + ".TestSetpoint" + target.name())
+    return Commands.runOnce(
+            () ->
+                NetworkTableInstance.getDefault()
+                    .getEntry(ntKey + "/message")
+                    .setString("Running..."))
+        .andThen(goToSetpoint(() -> target).withName(getName() + ".TestSetpoint" + target.name()))
         .withTimeout(2.0)
         .andThen(
             runOnce(
@@ -257,6 +262,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
                   nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
                   nt.getEntry(ntKey + "/message").setString(result);
                 }))
+        .andThen(goToSetpoint(() -> Setpoint.Ground).withTimeout(2.0))
         .finallyDo(() -> motor.stopMotor());
   }
 
@@ -314,7 +320,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
 
     motorSimModel =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.005, gearRatio),
+            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.01, gearRatio),
             DCMotor.getKrakenX44Foc(1));
 
     var simConfig = new TalonFXConfiguration();

@@ -301,6 +301,7 @@ public class Climber extends SubsystemBase implements SelfTestable {
                   nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
                   nt.getEntry(ntKey + "/message").setString(result);
                 }))
+        .andThen(lower().withTimeout(3.0))
         .finallyDo(() -> motor.stopMotor());
   }
 

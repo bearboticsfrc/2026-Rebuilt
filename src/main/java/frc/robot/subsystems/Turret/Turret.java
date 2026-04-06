@@ -332,6 +332,7 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
                   nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
                   nt.getEntry(ntKey + "/message").setString(result);
                 }))
+        .andThen(setAngle(() -> Rotations.of(0)).withTimeout(1.0))
         .finallyDo(() -> motor.stopMotor());
   }
 

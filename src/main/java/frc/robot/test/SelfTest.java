@@ -66,16 +66,18 @@ public class SelfTest {
     registry.put("climber", climber);
 
     // Groups
-    TestGroup shooter = new TestGroup("shooter", turret, hood, flywheel);
-    TestGroup indexer = new TestGroup("indexer", spindexer, kicker);
-    TestGroup intake = new TestGroup("intake", slider, rollers);
 
+    TestGroup shooter = new TestGroup("shooter", turret, hood, flywheel);
     registry.put("shooter", shooter);
+
+    TestGroup indexer = new TestGroup("indexer", spindexer, kicker);
     registry.put("indexer", indexer);
+
+    TestGroup intake = new TestGroup("intake", slider, rollers);
     registry.put("intake", intake);
 
-    // Full suite — groups compose recursively
-    // registry.put("all", new TestGroup("all", shooter, intake, climber, drivetrain));
+    TestGroup all = new TestGroup("all", intake, indexer, shooter);
+    registry.put("all", all);
   }
 
   public void bindTriggers() {
@@ -84,11 +86,6 @@ public class SelfTest {
     StringEntry testGroupEntry = nt.getStringTopic("Robot/Commands/testGroup").getEntry("none");
     StringEntry testSpeedEntry = nt.getStringTopic("Robot/Commands/testSpeed").getEntry("slow");
     BooleanEntry runTestEntry = nt.getBooleanTopic("Robot/Commands/runTest").getEntry(false);
-
-    // publish defaults so topics appear in AdvantageScope
-    // testGroupEntry.set("none");
-    // testSpeedEntry.set("slow");
-    // runTestEntry.set(false);
 
     new Trigger(runTestEntry::get)
         .and(inTestMode)
