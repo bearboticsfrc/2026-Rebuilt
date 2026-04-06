@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -244,7 +245,14 @@ public class Slider extends SubsystemBase implements SelfTestable {
   // TODO: safeguard the position of the slider, should start at 0
   // TODO: retract slider at end of test
   private Command selfTestAt(Setpoint target, String ntKey) {
-    return goToSetpoint(() -> target)
+    return Commands.runOnce(
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
+        .andThen(goToSetpoint(() -> target))
         .withName(getName() + ".TestSetpoint" + target.name())
         .withTimeout(2.0)
         .andThen(
@@ -337,8 +345,8 @@ public class Slider extends SubsystemBase implements SelfTestable {
   }
 
   @Logged(name = "temperature")
-  public Temperature getTemperature() {
-    return motorTemperature.getValue();
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
   }
 
   @Logged(name = "closedLoopError")

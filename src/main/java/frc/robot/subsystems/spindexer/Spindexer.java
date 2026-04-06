@@ -1,5 +1,6 @@
 package frc.robot.subsystems.spindexer;
 
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
@@ -152,7 +153,14 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   }
 
   private Command selfTestAt(AngularVelocity target, String ntKey) {
-    return runOnce(() -> motor.setControl(velocityReq.withVelocity(target)))
+    return Commands.runOnce(
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
+        .andThen(runOnce(() -> motor.setControl(velocityReq.withVelocity(target))))
         .withName("Spindexer.SelfTestAt" + (int) target.in(RPM) + "RPM")
         .andThen(Commands.waitSeconds(1))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
@@ -212,8 +220,8 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   }
 
   @Logged(name = "temperature")
-  public Temperature getTemperature() {
-    return motorTemperature.getValue();
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
   }
 
   @Logged(name = "closedLoopError")

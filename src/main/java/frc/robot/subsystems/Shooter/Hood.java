@@ -199,8 +199,8 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
   }
 
   @Logged(name = "temperature")
-  public Temperature getTemperature() {
-    return motorTemperature.getValue();
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
   }
 
   private void controlMotor(Angle angle) {
@@ -240,10 +240,12 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
   // TODO: safeguard the position of the hood, should start at 0
   private Command selfTestAt(Setpoint target, String ntKey) {
     return Commands.runOnce(
-            () ->
-                NetworkTableInstance.getDefault()
-                    .getEntry(ntKey + "/message")
-                    .setString("Running..."))
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
         .andThen(goToSetpoint(() -> target).withName(getName() + ".TestSetpoint" + target.name()))
         .withTimeout(2.0)
         .andThen(

@@ -67,16 +67,16 @@ public class SelfTest {
 
     // Groups
 
-    TestGroup shooter = new TestGroup("shooter", turret, hood, flywheel);
-    registry.put("shooter", shooter);
+    TestGroup shooter = new TestGroup("shooter group", turret, flywheel, hood);
+    registry.put("shooter group", shooter);
 
-    TestGroup indexer = new TestGroup("indexer", spindexer, kicker);
-    registry.put("indexer", indexer);
+    TestGroup indexer = new TestGroup("indexing group", spindexer, kicker);
+    registry.put("indexing group", indexer);
 
-    TestGroup intake = new TestGroup("intake", slider, rollers);
-    registry.put("intake", intake);
+    TestGroup intake = new TestGroup("intake group", slider, rollers);
+    registry.put("intake group", intake);
 
-    TestGroup all = new TestGroup("all", intake, indexer, shooter);
+    TestGroup all = new TestGroup("all", indexer, intake, shooter, climber);
     registry.put("all", all);
   }
 

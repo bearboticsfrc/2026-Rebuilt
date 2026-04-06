@@ -19,6 +19,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.CAN;
@@ -222,8 +223,8 @@ public class Climber extends SubsystemBase implements SelfTestable {
   }
 
   @Logged(name = "temperature")
-  public Temperature getTemperature() {
-    return motorTemperature.getValue();
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
   }
 
   /**
@@ -282,7 +283,14 @@ public class Climber extends SubsystemBase implements SelfTestable {
   // TODO: safeguard the position of the climber, should start at 0
   // TODO: retract climber at end of test
   private Command selfTestAt(Setpoint target, String ntKey) {
-    return goToSetpoint(() -> target)
+    return Commands.runOnce(
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
+        .andThen(goToSetpoint(() -> target))
         .withName(getName() + ".TestSetpoint" + target.name())
         .withTimeout(3.0)
         .andThen(

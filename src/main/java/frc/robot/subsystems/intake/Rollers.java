@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
@@ -131,7 +132,14 @@ public class Rollers extends Mechanism implements SelfTestable {
   }
 
   private Command selfTestAt(AngularVelocity target, String ntKey) {
-    return runOnce(() -> setOutput(target))
+    return Commands.runOnce(
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
+        .andThen(runOnce(() -> setOutput(target)))
         .andThen(Commands.waitSeconds(1))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
         .andThen(
@@ -195,8 +203,8 @@ public class Rollers extends Mechanism implements SelfTestable {
   }
 
   @Logged(name = "temperature")
-  public Temperature getTemperature() {
-    return motorTemperature.getValue();
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
   }
 
   @Override

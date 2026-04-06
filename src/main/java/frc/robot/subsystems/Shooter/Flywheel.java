@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.applyConfig;
@@ -187,8 +188,8 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
   }
 
   @Logged(name = "temperature")
-  public Temperature getTemperature() {
-    return motorTemperature.getValue();
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
   }
 
   // Stop the flywheel motors
@@ -199,7 +200,14 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
   @Logged private boolean selfTestPassed = false;
 
   private Command selfTestAt(AngularVelocity target, String ntKey) {
-    return runOnce(() -> setVelocity(target))
+    return Commands.runOnce(
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
+        .andThen(runOnce(() -> setVelocity(target)))
         .andThen(Commands.waitSeconds(1))
         .andThen(Commands.waitUntil(this::isAtTarget).withTimeout(2.0))
         .andThen(
