@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -23,6 +24,7 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
@@ -30,7 +32,6 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
@@ -246,7 +247,14 @@ public class Slider extends SubsystemBase implements SelfTestable {
   // TODO: safeguard the position of the slider, should start at 0
   // TODO: retract slider at end of test
   private Command selfTestAt(Setpoint target, String ntKey) {
-    return goToSetpoint(() -> target)
+    return Commands.runOnce(
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
+        .andThen(goToSetpoint(() -> target))
         .withName(getName() + ".TestSetpoint" + target.name())
         .withTimeout(2.0)
         .andThen(
@@ -261,10 +269,11 @@ public class Slider extends SubsystemBase implements SelfTestable {
                           + "\" (target "
                           + String.format("%.2f", target.targetDist.in(Inches))
                           + ")";
-
-                  SmartDashboard.putBoolean(ntKey + "/passed", selfTestPassed);
-                  SmartDashboard.putString(ntKey + "/message", result);
+                  var nt = NetworkTableInstance.getDefault();
+                  nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
+                  nt.getEntry(ntKey + "/message").setString(result);
                 }))
+        .andThen(retract().withTimeout(2.0))
         .finallyDo(() -> motor.stopMotor());
   }
 
@@ -338,8 +347,8 @@ public class Slider extends SubsystemBase implements SelfTestable {
   }
 
   @Logged(name = "temperature")
-  public Temperature getTemperature() {
-    return motorTemperature.getValue();
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
   }
 
   @Logged(name = "closedLoopError")

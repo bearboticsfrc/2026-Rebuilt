@@ -1,5 +1,6 @@
 package frc.robot.subsystems.spindexer;
 
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
@@ -19,13 +20,13 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -148,15 +149,23 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   }
 
   @Logged private boolean selfTestPassed = false;
-  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(50);
+  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(25);
 
   private boolean isNearTarget(AngularVelocity target) {
     return velocity.getValue().isNear(target, SELF_TEST_VELOCITY_THRESHOLD_RPM);
   }
 
   private Command selfTestAt(AngularVelocity target, String ntKey) {
-    return runOnce(() -> motor.setControl(velocityReq.withVelocity(target)))
+    return Commands.runOnce(
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
+        .andThen(runOnce(() -> motor.setControl(velocityReq.withVelocity(target))))
         .withName("Spindexer.SelfTestAt" + (int) target.in(RPM) + "RPM")
+        .andThen(Commands.waitSeconds(1))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
         .andThen(
             runOnce(
@@ -169,8 +178,9 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
                           + " RPM (target "
                           + (int) target.in(RPM)
                           + " RPM)";
-                  SmartDashboard.putBoolean(ntKey + "/passed", selfTestPassed);
-                  SmartDashboard.putString(ntKey + "/message", result);
+                  var nt = NetworkTableInstance.getDefault();
+                  nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
+                  nt.getEntry(ntKey + "/message").setString(result);
                 }))
         .finallyDo(() -> motor.stopMotor());
   }
@@ -213,8 +223,8 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   }
 
   @Logged(name = "temperature")
-  public Temperature getTemperature() {
-    return motorTemperature.getValue();
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
   }
 
   @Logged(name = "closedLoopError")

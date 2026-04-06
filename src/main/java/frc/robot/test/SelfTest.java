@@ -61,21 +61,23 @@ public class SelfTest {
     registry.put("spindexer", spindexer);
     registry.put("kicker", kicker);
 
-    // registry.put("turret", turret);
+    registry.put("turret", turret);
     registry.put("slider", slider);
     registry.put("climber", climber);
 
     // Groups
-    TestGroup shooter = new TestGroup("shooter", turret, hood, flywheel);
-    TestGroup indexer = new TestGroup("indexer", spindexer, kicker);
-    TestGroup intake = new TestGroup("intake", slider, rollers);
 
-    registry.put("shooter", shooter);
-    registry.put("indexer", indexer);
-    registry.put("intake", intake);
+    TestGroup shooter = new TestGroup("shooter group", turret, flywheel, hood);
+    registry.put("shooter group", shooter);
 
-    // Full suite — groups compose recursively
-    // registry.put("all", new TestGroup("all", shooter, intake, climber, drivetrain));
+    TestGroup indexer = new TestGroup("indexing group", spindexer, kicker);
+    registry.put("indexing group", indexer);
+
+    TestGroup intake = new TestGroup("intake group", slider, rollers);
+    registry.put("intake group", intake);
+
+    TestGroup all = new TestGroup("all", indexer, intake, shooter, climber);
+    registry.put("all", all);
   }
 
   public void bindTriggers() {
@@ -84,11 +86,6 @@ public class SelfTest {
     StringEntry testGroupEntry = nt.getStringTopic("Robot/Commands/testGroup").getEntry("none");
     StringEntry testSpeedEntry = nt.getStringTopic("Robot/Commands/testSpeed").getEntry("slow");
     BooleanEntry runTestEntry = nt.getBooleanTopic("Robot/Commands/runTest").getEntry(false);
-
-    // publish defaults so topics appear in AdvantageScope
-    // testGroupEntry.set("none");
-    // testSpeedEntry.set("slow");
-    // runTestEntry.set(false);
 
     new Trigger(runTestEntry::get)
         .and(inTestMode)
@@ -105,7 +102,13 @@ public class SelfTest {
                   }
                   return speed.equals("fast")
                       ? testable.selfTestFast().finallyDo(() -> runTestEntry.set(false))
-                      : testable.selfTestSlow().finallyDo(() -> runTestEntry.set(false));
+                      : testable
+                          .selfTestSlow()
+                          .finallyDo(
+                              () -> {
+                                System.out.println("setting test entry to false.");
+                                runTestEntry.set(false);
+                              });
                 },
                 Set.of()));
   }

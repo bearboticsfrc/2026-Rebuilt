@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
@@ -13,11 +14,11 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.CAN;
@@ -128,7 +129,15 @@ public class Rollers extends Mechanism implements SelfTestable {
   }
 
   private Command selfTestAt(AngularVelocity target, String ntKey) {
-    return runOnce(() -> setOutput(target))
+    return Commands.runOnce(
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
+        .andThen(runOnce(() -> setOutput(target)))
+        .andThen(Commands.waitSeconds(1))
         .andThen(Commands.waitUntil(() -> isNearTarget(target)).withTimeout(2.0))
         .andThen(
             runOnce(
@@ -141,8 +150,9 @@ public class Rollers extends Mechanism implements SelfTestable {
                           + " RPM (target "
                           + (int) target.in(RPM)
                           + " RPM)";
-                  SmartDashboard.putBoolean(ntKey + "/passed", selfTestPassed);
-                  SmartDashboard.putString(ntKey + "/message", result);
+                  var nt = NetworkTableInstance.getDefault();
+                  nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
+                  nt.getEntry(ntKey + "/message").setString(result);
                 }))
         .finallyDo(() -> motor.stopMotor());
   }
@@ -190,8 +200,8 @@ public class Rollers extends Mechanism implements SelfTestable {
   }
 
   @Logged(name = "temperature")
-  public Temperature getTemperature() {
-    return motorTemperature.getValue();
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
   }
 
   @Override
