@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.field.Field;
 import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.util.HubTracker;
@@ -30,6 +31,8 @@ public class RobotState {
     if (instance == null) instance = new RobotState();
     return instance;
   }
+
+  public Trigger staticShooting = new Trigger(()-> isShooting() && isStopped());
 
   public boolean updatePoseInAutonomous = true;
 
@@ -61,9 +64,9 @@ public class RobotState {
 
   // needs work
   public boolean isStopped() {
-    return getFieldVelocity().vxMetersPerSecond < 0.1
-        && getFieldVelocity().vyMetersPerSecond < 0.1
-        && getFieldVelocity().omegaRadiansPerSecond < 0.1;
+    return getFieldVelocity().vxMetersPerSecond < 0.001
+        && getFieldVelocity().vyMetersPerSecond < 0.001
+        && getFieldVelocity().omegaRadiansPerSecond < 0.001;
   }
 
   @Logged
@@ -111,6 +114,16 @@ public class RobotState {
     return Field.getMyHub().getDistance((robotPose.transformBy(turretToRobot).getTranslation()));
   }
 
+  @Logged
+  public double getTargetDistance() {
+    if (isInNeutralZone()) {
+      return (iSLeft())
+          ? Field.getMyLeft().getDistance((robotPose.transformBy(turretToRobot).getTranslation()))
+          : Field.getMyRight().getDistance(robotPose.transformBy(turretToRobot).getTranslation());
+    }
+    return Field.getMyHub().getDistance((robotPose.transformBy(turretToRobot).getTranslation()));
+  }
+
   public double getLookaheadDistanceToHub() {
     return Field.getMyHub()
         .getDistance(
@@ -118,9 +131,5 @@ public class RobotState {
                 .getLookaheadPose()
                 // .transformBy(turretToRobot)
                 .getTranslation()));
-  }
-
-  public boolean hubActive() {
-    return HubTracker.isActive();
   }
 }
