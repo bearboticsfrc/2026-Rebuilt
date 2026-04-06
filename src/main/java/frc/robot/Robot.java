@@ -433,6 +433,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
     turret.setDefaultCommand(getTurretCommand());
+
+    // robotState.staticShooting.onTrue(slider.lowOscillate()).onFalse(slider.retract());
   }
 
   public void configureBindings() {
