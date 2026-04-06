@@ -200,7 +200,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     registerPathplannerCommands();
 
-    autoChooser = AutoBuilder.buildAutoChooser("O Bump");
+    autoChooser = AutoBuilder.buildAutoChooser("Double Swipe O");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();
@@ -565,10 +565,15 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void updateAlliance(Alliance alliance) {
     if (!initialPoseSet) {
       Command firstAuto = autoChooser.getSelected();
-      System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FirstAuto: " + firstAuto.getName());
-      drivetrain.resetPose(AllianceFlipUtil.apply(((PathPlannerAuto) firstAuto).getStartingPose()));
-      vision.resetPose();
-      initialPoseSet = true;
+      if (firstAuto instanceof PathPlannerAuto) {
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FirstAuto: " + firstAuto.getName());
+        drivetrain.resetPose(
+            AllianceFlipUtil.apply(((PathPlannerAuto) firstAuto).getStartingPose()));
+        vision.resetPose();
+        initialPoseSet = true;
+      } else {
+        System.out.println("Firstauto is not a PathPlannerAuto:" + firstAuto.getName());
+      }
     }
   }
 }
