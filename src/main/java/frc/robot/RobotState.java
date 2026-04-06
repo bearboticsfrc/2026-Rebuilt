@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.field.Field;
 import frc.robot.subsystems.DynamicShootingCalculator;
-import frc.robot.util.HubTracker;
 import lombok.*;
 
 public class RobotState {
@@ -32,7 +31,7 @@ public class RobotState {
     return instance;
   }
 
-  public Trigger staticShooting = new Trigger(()-> isShooting() && isStopped());
+  public Trigger staticShooting = new Trigger(() -> isShooting() && isStopped());
 
   public boolean updatePoseInAutonomous = true;
 

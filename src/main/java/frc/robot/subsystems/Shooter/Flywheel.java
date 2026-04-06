@@ -137,7 +137,11 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
    */
   public Command runAtSpeed(double rpm) {
     // Command to run the flywheel at a given speed
-    return runOnce(() -> setVelocity(RPM.of(rpm)));
+    return runOnce(() -> setVelocity(RPM.of(rpm))).withName(getName() + ".runAtSpeed(double)");
+  }
+
+  public Command warmUp() {
+    return runAtSpeed(1600);
   }
 
   /**
@@ -147,7 +151,8 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
    */
   public Command runAtSpeed(DoubleSupplier rpm) {
     // Command to run the flywheel at a given speed
-    return run(() -> setVelocity(RPM.of(rpm.getAsDouble())));
+    return run(() -> setVelocity(RPM.of(rpm.getAsDouble())))
+        .withName(getName() + ".runAtSpeed(supplier)");
   }
 
   /**

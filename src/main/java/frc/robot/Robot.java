@@ -19,6 +19,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.events.EventTrigger;
 import dev.doglog.DogLog;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
@@ -336,6 +337,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
 
     NamedCommands.registerCommand("OscillateIntake", new ScheduleCommand(slider.lowOscillate()));
+
+    NamedCommands.registerCommand("WarmUpFlywheel", new ScheduleCommand(flywheel.warmUp()));
+
+    new EventTrigger("PrepareShoot").onTrue(flywheel.warmUp());
   }
 
   // set turret
