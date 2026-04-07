@@ -3,6 +3,7 @@ package frc.robot.subsystems.turret;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
@@ -319,7 +320,7 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
               nt.getEntry(ntKey + "/passed").unpublish();
               ;
             })
-        .andThen(setAngle(() -> target))
+        .andThen(setAngle(() -> target, () -> RadiansPerSecond.of(0.1)))
         .withTimeout(2.0)
         .andThen(
             runOnce(

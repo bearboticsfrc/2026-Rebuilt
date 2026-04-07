@@ -296,6 +296,7 @@ public class Climber extends Mechanism implements SelfTestable {
               nt.getEntry(ntKey + "/passed").unpublish();
               ;
             })
+        .andThen(calibrateZero())
         .andThen(goToSetpoint(() -> target))
         .withName(getName() + ".TestSetpoint" + target.name())
         .withTimeout(3.0)

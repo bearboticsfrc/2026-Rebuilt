@@ -255,6 +255,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
               nt.getEntry(ntKey + "/passed").unpublish();
               ;
             })
+        .andThen(calibrateZero())
         .andThen(goToSetpoint(() -> target))
         .withName(getName() + ".TestSetpoint" + target.name())
         .withTimeout(4.0)
