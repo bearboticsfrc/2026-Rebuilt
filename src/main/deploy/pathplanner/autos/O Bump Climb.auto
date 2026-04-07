@@ -35,21 +35,15 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 0.25
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "OutpostNeutralBump-OutpostBump"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "OscillateIntake"
           }
         },
         {
@@ -61,7 +55,13 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.0
+            "waitTime": 2.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
           }
         },
         {

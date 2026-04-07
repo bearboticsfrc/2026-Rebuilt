@@ -31,7 +31,7 @@ public class RobotState {
     return instance;
   }
 
-  public Trigger staticShooting = new Trigger(() -> isShooting() && isStopped());
+  @Logged public Trigger stopped = new Trigger(() -> isStopped());
 
   public boolean updatePoseInAutonomous = true;
 
@@ -63,9 +63,9 @@ public class RobotState {
 
   // needs work
   public boolean isStopped() {
-    return getFieldVelocity().vxMetersPerSecond < 0.001
-        && getFieldVelocity().vyMetersPerSecond < 0.001
-        && getFieldVelocity().omegaRadiansPerSecond < 0.001;
+    return getFieldVelocity().vxMetersPerSecond < 0.00000001
+        && getFieldVelocity().vyMetersPerSecond < 0.000000001
+        && Math.abs(getFieldVelocity().omegaRadiansPerSecond) < 0.00000000001;
   }
 
   @Logged

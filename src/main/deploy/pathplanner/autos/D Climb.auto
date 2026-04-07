@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "DepotBump-DepotNeutralBump"
+            "pathName": "D 2 swipe start"
           }
         },
         {
@@ -35,12 +35,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "DepotNeutralBump-DepotBump"
@@ -49,13 +43,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Shoot"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
+            "name": "OscillateIntake"
           }
         },
         {
@@ -71,21 +59,33 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "D setup climb"
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "StopShoot"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "D climb"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopShoot"
           }
         },
         {

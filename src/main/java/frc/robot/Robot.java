@@ -445,8 +445,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
     turret.setDefaultCommand(getTurretCommand());
-
-    // robotState.staticShooting.onTrue(slider.lowOscillate()).onFalse(slider.retract());
   }
 
   public void configureBindings() {
@@ -469,13 +467,14 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onFalse(dynamicShootingCommand.stop());
 
     pilot
-        .leftBumper()
-        .whileTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
+        .rightTrigger()
+        .and(robotState.stopped)
+        .onTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
         .onFalse(slider.retract().alongWith(rollers.stop()));
 
     pilot
-        .rightBumper()
-        .whileTrue(slider.highOscillate().alongWith(rollers.runSlow()))
+        .leftBumper()
+        .whileTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
         .onFalse(slider.retract().alongWith(rollers.stop()));
 
     // copilot controlls

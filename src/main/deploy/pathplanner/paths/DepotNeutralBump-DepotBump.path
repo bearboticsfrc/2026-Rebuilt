@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.7757499999999995,
-        "y": 5.360615384615385
+        "x": 5.6046362339514975,
+        "y": 5.749372325249644
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.76232523668994,
-        "y": 5.3597042074780665
+        "x": 4.566591918283819,
+        "y": 5.680419082804832
       },
       "isLocked": false,
       "linkedName": "DepotNeutralBump"
     },
     {
       "anchor": {
-        "x": 3.5605769230769244,
-        "y": 5.361
+        "x": 3.4050641940085593,
+        "y": 5.723495007132667
       },
       "prevControl": {
-        "x": 3.8105769230769244,
-        "y": 5.361
+        "x": 3.6549336934562837,
+        "y": 5.731571717214358
       },
       "nextControl": null,
       "isLocked": false,
@@ -34,7 +34,7 @@
   "eventMarkers": [
     {
       "name": "PrepareShoot",
-      "waypointRelativePos": 0.48296199213629654,
+      "waypointRelativePos": 0.27548953409859345,
       "endWaypointRelativePos": null,
       "command": null
     }

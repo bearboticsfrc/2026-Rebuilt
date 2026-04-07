@@ -74,7 +74,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     // Velocity Control Gains
-    config.Slot0.kS = 0.2;  // was .1
+    config.Slot0.kS = 0.2; // was .1
     config.Slot0.kV = 0.70; // was .75 // ~12V / (7530 RPM / 60 / 7.2) = 0.69
     config.Slot0.kA = 0;
     config.Slot0.kP = 0.15;

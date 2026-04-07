@@ -73,12 +73,6 @@
         {
           "type": "named",
           "data": {
-            "name": "StopIntake"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
             "name": "Intake"
           }
         },

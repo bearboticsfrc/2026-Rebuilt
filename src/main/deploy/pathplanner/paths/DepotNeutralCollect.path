@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.881840228245363,
-        "y": 7.224379457917262
+        "x": 7.480741797432238,
+        "y": 7.043238231098431
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.262634917151324,
-        "y": 6.909953454771574
+        "x": 7.861536486338199,
+        "y": 6.7288122279527425
       },
       "isLocked": false,
       "linkedName": "D Neutral"
@@ -47,7 +47,7 @@
   "reversed": false,
   "folder": "DepotSide",
   "idealStartingState": {
-    "velocity": 1.75,
+    "velocity": 2.0,
     "rotation": -90.0
   },
   "useDefaultConstraints": true

@@ -154,13 +154,13 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
   public Command lowOscillate() {
     return mid()
-        .withTimeout(0.5)
-        .andThen(retract().withTimeout(0.5))
+        .withTimeout(0.75)
+        .andThen(retract().withTimeout(0.75))
         .andThen(mid())
-        .withTimeout(0.5)
+        .withTimeout(0.75)
         .andThen(extend())
-        .withTimeout(.5)
-        .andThen(retract().withTimeout(0.5))
+        .withTimeout(.75)
+        .andThen(retract().withTimeout(0.75))
         .repeatedly()
         .withName(getName() + ".lowOscillate");
   }
