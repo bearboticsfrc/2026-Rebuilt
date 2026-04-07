@@ -71,6 +71,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "StopShoot"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "O climb"

@@ -341,6 +341,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     NamedCommands.registerCommand("WarmUpFlywheel", new ScheduleCommand(flywheel.warmUp()));
 
     new EventTrigger("PrepareShoot").onTrue(flywheel.warmUp());
+
+    new EventTrigger("TurretZero").onTrue(turret.setAngle(Rotations.of(0)));
   }
 
   // set turret
