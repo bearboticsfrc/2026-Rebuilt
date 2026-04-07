@@ -452,7 +452,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    // turret.setDefaultCommand(getTurretCommand());
+    turret.setDefaultCommand(getTurretCommand());
   }
 
   public void configureBindings() {
@@ -501,8 +501,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                         .withHeadingPID(13, 0, 2)
                         .withTargetDirection(robotState.getAngleToHub())));
 
-    /* copilot controlls */
-
+    // copilot controlls
     /* climber */
     copilot.povUp().onTrue(climber.raise());
 
@@ -519,30 +518,36 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                 }));
 
     /* turret */
-    copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
+    copilot.R2().and(copilot.triangle()).onTrue(turret.setAngle(Rotations.of(0)));
 
-    copilot
-        .circle()
-        .onTrue(Commands.runOnce(() -> drivetrain.getPigeon2().reset()).ignoringDisable(true));
+    copilot.R2().and(copilot.square()).onTrue(turret.setAngle(Rotations.of(-.25)));
 
-    copilot.cross().onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
-
-    copilot.L1().onTrue(turret.setAngle(Rotations.of(-.25)));
-
-    copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
-    // copilot.L2().toggleOnTrue(Commands.idle(turret));
+    copilot.R2().and(copilot.circle()).onTrue(turret.setAngle(Rotations.of(.25)));
+    copilot.R1().toggleOnTrue(Commands.idle(turret));
 
     /* jiggle for drivetrain */
-    copilot.R2().whileTrue(drivetrain.applyRequest(() -> breakMode));
+    copilot.L1().whileTrue(drivetrain.applyRequest(() -> breakMode));
 
     /* reverse spindexer */
     copilot
-        .square()
-        .whileTrue(spindexer.reverse().andThen(kicker.reverse()))
+        .L2()
+        .and(copilot.square())
+        .whileTrue(spindexer.reverse().alongWith(kicker.reverse()))
         .onFalse(spindexer.stop().alongWith(kicker.stop()));
 
     /* intake */
-    copilot.L2().onTrue(slider.calibrateZero());
+    copilot.L2().and(copilot.circle()).onTrue(slider.calibrateZero());
+
+    /* pose */
+    copilot
+        .L2()
+        .and(copilot.triangle())
+        .onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
+
+    copilot
+        .L2()
+        .and(copilot.cross())
+        .onTrue(Commands.runOnce(() -> drivetrain.getPigeon2().reset()).ignoringDisable(true));
   }
 
   // public void bindDriveSysidTriggers() {
