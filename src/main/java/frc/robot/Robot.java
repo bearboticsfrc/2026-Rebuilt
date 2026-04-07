@@ -147,6 +147,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
+  private final SwerveRequest.FieldCentricFacingAngle hubAlign =
+      new SwerveRequest.FieldCentricFacingAngle()
+          .withDeadband(MaxSpeed * 0.1)
+          .withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+          .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
   private final SwerveRequest.SwerveDriveBrake breakMode = new SwerveRequest.SwerveDriveBrake();
 
   private final DriveTelemetry driveTelemetry = new DriveTelemetry();
@@ -452,6 +458,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void configureBindings() {
 
     // pilot controlls
+
     pilot
         .leftTrigger()
         .onTrue(rollers.run().alongWith(slider.extend()).withName("ParallelIntake"))
@@ -480,7 +487,23 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .whileTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
         .onFalse(slider.retract().alongWith(rollers.stop()));
 
-    // copilot controlls
+    pilot
+        .x()
+        .whileTrue(
+            drivetrain.applyRequest(
+                () ->
+                    hubAlign
+                        .withVelocityX(
+                            -pilot.getLeftY()
+                                * getMaxLinearVelocity()
+                                    .get()) // Drive forward with negative Y (forward)
+                        .withVelocityY(-pilot.getLeftX() * getMaxLinearVelocity().get())
+                        .withHeadingPID(13, 0, 2)
+                        .withTargetDirection(robotState.getAngleToHub())));
+
+    /* copilot controlls */
+
+    /* climber */
     copilot.povUp().onTrue(climber.raise());
 
     copilot.povDown().onTrue(climber.lower());
@@ -495,6 +518,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                   if (climber.getCurrentCommand() != null) climber.getCurrentCommand().cancel();
                 }));
 
+    /* turret */
     copilot.triangle().onTrue(turret.setAngle(Rotations.of(0)));
 
     copilot
@@ -506,16 +530,18 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.L1().onTrue(turret.setAngle(Rotations.of(-.25)));
 
     copilot.R1().onTrue(turret.setAngle(Rotations.of(.25)));
-
     // copilot.L2().toggleOnTrue(Commands.idle(turret));
 
+    /* jiggle for drivetrain */
     copilot.R2().whileTrue(drivetrain.applyRequest(() -> breakMode));
 
+    /* reverse spindexer */
     copilot
         .square()
         .whileTrue(spindexer.reverse().andThen(kicker.reverse()))
         .onFalse(spindexer.stop().alongWith(kicker.stop()));
 
+    /* intake */
     copilot.L2().onTrue(slider.calibrateZero());
   }
 

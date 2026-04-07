@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
 import edu.wpi.first.epilogue.Logged;
@@ -106,7 +107,8 @@ public class RobotState {
   public Rotation2d getAngleToHub() {
     return Field.getMyHub()
         .minus((robotPose.transformBy(turretToRobot).getTranslation()))
-        .getAngle();
+        .getAngle()
+        .plus(new Rotation2d(Degrees.of(180)));
   }
 
   public double getDistanceToHub() {
