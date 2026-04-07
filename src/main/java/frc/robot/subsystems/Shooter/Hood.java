@@ -100,8 +100,8 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
                   .clone()
                   .withKP(2.4)
                   .withKI(0)
-                  .withKD(0.1)  // was 0
-                  .withKS(0.1)  // was .2
+                  .withKD(0.1) // was 0
+                  .withKS(0.1) // was .2
                   .withKV(0.20) // was .144 // reasonable range is .12 to .20  (.3 works for 1 rot)
                   .withKA(0)
                   .withKG(0.28)

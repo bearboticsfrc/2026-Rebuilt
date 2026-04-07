@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.AutoClimbCommand;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
@@ -228,6 +229,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     scheduler.onCommandFinish(
         command -> DogLog.log("Misc/Robot Status", "Finished: " + command.getName()));
 
+    new Trigger(() -> RobotState.getInstance().isInAllianceZone())
+        .onTrue(Commands.runOnce(() -> resetCorrection()));
     // DogLog.setPdh(new PowerDistribution());
   }
 
@@ -354,6 +357,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void autonomousInit() {
+    resetCorrection();
     vision.updateCameraSettings();
     turretVisionHelper.updateLimelightSettings();
 
@@ -381,6 +385,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     }
 
     vision.updateCameraSettings();
+    resetCorrection();
     turretVisionHelper.updateLimelightSettings();
   }
 
