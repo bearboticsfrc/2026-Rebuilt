@@ -34,7 +34,7 @@ import lombok.Getter;
 public class Climber extends Mechanism implements SelfTestable {
   /** Position setpoints for the climber. */
   public enum Setpoint {
-    Bottom(Rotations.of(0)),
+    Bottom(Rotations.of(1)),
     Middle(Inches.of(3.5)),
     Top(Inches.of(6.5));
 

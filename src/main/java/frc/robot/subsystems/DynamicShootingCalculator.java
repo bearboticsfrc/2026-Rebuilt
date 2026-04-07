@@ -104,14 +104,20 @@ public class DynamicShootingCalculator {
 
     /* Values for passing */
 
-    passFlywheelSpeedMap.put(5.5, 3000.0);
-    passFlywheelSpeedMap.put(10.5, 5000.0);
+    passFlywheelSpeedMap.put(4.7, 2000.0);
+    passFlywheelSpeedMap.put(7.2, 2800.0);
+    passFlywheelSpeedMap.put(8.7, 3200.0);
+    passFlywheelSpeedMap.put(11.8, 4250.0);
+    passFlywheelSpeedMap.put(14.5, 5400.0);
 
-    passHoodAngleMap.put(5.5, 1.0);
-    passHoodAngleMap.put(10.5, 1.0);
+    passHoodAngleMap.put(4.7, 1.0);
+    passHoodAngleMap.put(7.2, 1.0);
+    passHoodAngleMap.put(8.7, 1.0);
+    passHoodAngleMap.put(11.8, 1.0);
+    passHoodAngleMap.put(14.5, 1.0);
 
-    passTimeOfFlightMap.put(5.5, 1.0);
-    passTimeOfFlightMap.put(10.5, 1.0);
+    passTimeOfFlightMap.put(4.7, 1.0);
+    passTimeOfFlightMap.put(14.5, 1.0);
   }
 
   public void clearLaunchingParameters() {

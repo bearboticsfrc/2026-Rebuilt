@@ -446,7 +446,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-    turret.setDefaultCommand(getTurretCommand());
+    // turret.setDefaultCommand(getTurretCommand());
   }
 
   public void configureBindings() {
@@ -463,6 +463,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                         .andThen(rollers.stop())
                         .andThen(Commands.waitSeconds(2)))
                 .withName("ParallelRetractIntake"));
+
     pilot
         .rightTrigger()
         .onTrue(dynamicShootingCommand.shoot())
