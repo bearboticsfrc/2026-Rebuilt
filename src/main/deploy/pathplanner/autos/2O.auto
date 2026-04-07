@@ -55,19 +55,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.5
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "O start, setup Climb"
+            "waitTime": 8.0
           }
         },
         {
@@ -77,9 +65,21 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Intake"
+          }
+        },
+        {
           "type": "path",
           "data": {
-            "pathName": "O climb"
+            "pathName": "2nd swipe over O"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "O 2nd collect"
           }
         }
       ]

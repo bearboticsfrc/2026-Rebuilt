@@ -79,7 +79,7 @@
   "reversed": false,
   "folder": "DepotSide",
   "idealStartingState": {
-    "velocity": 0.0,
+    "velocity": 2.0,
     "rotation": 1.506634417163643
   },
   "useDefaultConstraints": true

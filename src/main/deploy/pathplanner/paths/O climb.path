@@ -31,7 +31,14 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "TurretZero",
+      "waypointRelativePos": 0.09453072248480607,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 0.5,
     "maxAcceleration": 0.5,
@@ -47,7 +54,7 @@
   "reversed": false,
   "folder": "OutpostSide",
   "idealStartingState": {
-    "velocity": 0,
+    "velocity": 0.5,
     "rotation": -90.0
   },
   "useDefaultConstraints": false
