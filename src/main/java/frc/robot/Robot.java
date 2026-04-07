@@ -26,6 +26,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -350,8 +351,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private Command getTurretCommand() {
     return turret
         .setAngle(
-            () -> getTargetTurretAngleRads(),
-            () -> calculator.getParameters().turretVelocity())
+            () -> getTargetTurretAngleRads(), () -> calculator.getParameters().turretVelocity())
         .withName("TurretCommand");
   }
 

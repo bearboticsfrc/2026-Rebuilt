@@ -16,10 +16,8 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
-import frc.robot.RobotState;
 import frc.robot.field.Field;
 import frc.robot.vision.VisionSystem.RejectionReason;
 import frc.robot.vision.VisionSystem.VisionEstimate;
@@ -72,15 +70,15 @@ public class TurretLimelight {
 
     poseEstimator = limelight.createPoseEstimator(mode);
 
-    rewindTrigger = new Trigger(() -> RobotState.getInstance().isShooting());
-    rewindTrigger
-        .onTrue(Commands.runOnce(() -> rewindTimer.restart()))
-        .onFalse(
-            Commands.runOnce(
-                () -> {
-                  rewindTimer.stop();
-                  captureVideo(rewindTimer.get() + 1);
-                }));
+    // rewindTrigger = new Trigger(() -> RobotState.getInstance().isShooting());
+    // rewindTrigger
+    //     .onTrue(Commands.runOnce(() -> rewindTimer.restart()))
+    //     .onFalse(
+    //         Commands.runOnce(
+    //             () -> {
+    //               rewindTimer.stop();
+    //               captureVideo(rewindTimer.get() + 1);
+    //             }));
   }
 
   // call on disableInit and enableInit
