@@ -350,7 +350,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private Command getTurretCommand() {
     return turret
         .setAngle(
-            () -> calculator.getParameters().turretAngle().getMeasure(),
+            () -> getTargetTurretAngleRads(),
             () -> calculator.getParameters().turretVelocity())
         .withName("TurretCommand");
   }
@@ -544,7 +544,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private static final double CORRECTION_ALPHA = 0.15; // low pass filter weight
   private static final double MAX_PLAUSIBLE_CORRECTION = Units.degreesToRadians(5.0);
 
-  public double getTargetTurretAngleRads() {
+  public Angle getTargetTurretAngleRads() {
     double turretAngleRadians = calculator.getParameters().turretAngle().getMeasure().in(Radians);
     Optional<TurretAimResult> visionResult = turretVisionHelper.getHubAimOffset();
     DogLog.log("hasTurretVisionResult", visionResult.isPresent());
@@ -560,7 +560,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     }
 
     DogLog.log("turretCorrection", correctionOffsetRads);
-    return turretAngleRadians + correctionOffsetRads;
+    return Radians.of(turretAngleRadians + correctionOffsetRads);
   }
 
   public void resetCorrection() {
