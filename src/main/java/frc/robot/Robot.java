@@ -31,8 +31,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.DriverStation.MatchType;
-import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -289,7 +287,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     Epilogue.configure(
         config -> {
-          if (DriverStation.getMatchType() != MatchType.None) {
+          if (DriverStation.isFMSAttached()) {
             // Log only to disk, instead of the default NetworkTables logging
             // Note that this means data cannot be analyzed in realtime by a dashboard
             config.backend = new FileBackend(DataLogManager.getLog());
@@ -298,8 +296,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         });
 
     Epilogue.bind(this);
-
-    DogLog.setPdh(new PowerDistribution());
   }
 
   @Override
@@ -580,7 +576,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   // Rolling average of the correction offset
   private double correctionOffsetRads = 0.0;
-  private static final double CORRECTION_ALPHA = 0.15; // low pass filter weight
+  private static final double CORRECTION_ALPHA = 0.3; // 0.15; // low pass filter weight
   private static final double MAX_PLAUSIBLE_CORRECTION = Units.degreesToRadians(5.0);
 
   public Angle getTargetTurretAngleRads() {
@@ -588,9 +584,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     Optional<TurretAimResult> visionResult = turretVisionHelper.getHubAimOffset();
     DogLog.log("hasTurretVisionResult", visionResult.isPresent());
 
-    if (visionResult.isPresent() && visionResult.get().tagCount() >= 2  && RobotState.getInstance().isInAllianceZone()) {
+    if (visionResult.isPresent()
+        && visionResult.get().tagCount() >= 2
+        && RobotState.getInstance().isInAllianceZone()) {
       double rawCorrection = visionResult.get().yawOffset(); // already camera-relative offset
       DogLog.log("turretVisionOffset", rawCorrection);
+
+      DogLog.log("usingCorrection", (Math.abs(rawCorrection) < MAX_PLAUSIBLE_CORRECTION));
 
       if (Math.abs(rawCorrection) < MAX_PLAUSIBLE_CORRECTION) {
         correctionOffsetRads =
