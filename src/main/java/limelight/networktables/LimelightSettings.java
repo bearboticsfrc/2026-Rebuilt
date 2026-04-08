@@ -443,7 +443,7 @@ public class LimelightSettings {
   }
 
   /** Rewind state. */
-  enum RewindState {
+  public enum RewindState {
     /** Disable rewind */
     DISABLED,
     /** Enable rewind */

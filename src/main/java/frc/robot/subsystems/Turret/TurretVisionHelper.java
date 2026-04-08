@@ -8,12 +8,17 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.RobotState;
 import java.util.Map;
 import java.util.Optional;
 import limelight.Limelight;
 import limelight.networktables.LimelightPoseEstimator;
 import limelight.networktables.LimelightSettings;
 import limelight.networktables.LimelightSettings.ImuMode;
+import limelight.networktables.LimelightSettings.RewindState;
 import limelight.networktables.PoseEstimate;
 
 // set throttle in disable/enable
@@ -25,6 +30,9 @@ public class TurretVisionHelper {
   private final Limelight limelight;
   private final String LIMELIGHT_NAME = "limelight";
   private final LimelightPoseEstimator poseEstimator;
+
+  private Trigger rewindTrigger;
+  private Timer rewindTimer = new Timer();
 
   static final Map<Integer, Transform3d> tagToHubCenterMap =
       Map.ofEntries(
@@ -79,17 +87,42 @@ public class TurretVisionHelper {
 
     // MegaTag1 - no gyro dependency, purely geometric solve
     poseEstimator = limelight.createPoseEstimator(LimelightPoseEstimator.EstimationMode.MEGATAG1);
+
+    rewindTrigger = new Trigger(() -> RobotState.getInstance().isShooting());
+    rewindTrigger
+        .onTrue(Commands.runOnce(() -> rewindTimer.restart()))
+        .onFalse(
+            Commands.waitSeconds(2)
+                .andThen(
+                    Commands.runOnce(
+                        () -> {
+                          rewindTimer.stop();
+                          captureVideo(rewindTimer.get() + 1);
+                        })));
   }
 
   // call on disableInit and enableInit
   public void updateLimelightSettings() {
     if (DriverStation.isDisabled()) {
       LimelightSettings settings = limelight.getSettings();
-      settings.withThrottle(100).withImuMode(ImuMode.SyncInternalImu).save();
+      settings
+          .withThrottle(100)
+          .withImuMode(ImuMode.SyncInternalImu)
+          .withRewindEnable(RewindState.ENABLED)
+          .save();
     } else {
       LimelightSettings settings = limelight.getSettings();
-      settings.withThrottle(0).withImuMode(ImuMode.InternalImuExternalAssist).save();
+      settings
+          .withThrottle(0)
+          .withImuMode(ImuMode.InternalImuExternalAssist)
+          .withRewindEnable(RewindState.ENABLED)
+          .save();
     }
+  }
+
+  public void captureVideo(double durationSeconds) {
+    LimelightSettings settings = limelight.getSettings();
+    settings.rewindCapture(durationSeconds);
   }
 
   /**

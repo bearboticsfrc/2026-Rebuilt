@@ -27,6 +27,7 @@ import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.epilogue.logging.FileBackend;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -43,6 +44,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.AutoClimbCommand;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
@@ -238,6 +240,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                     + (interrupter.isPresent() ? interrupter.get().getName() : "")));
     scheduler.onCommandFinish(
         command -> DogLog.log("Misc/Robot Status", "Finished: " + command.getName()));
+
+    new Trigger(() -> RobotState.getInstance().isInAllianceZone())
+        .onTrue(Commands.runOnce(() -> resetCorrection()))
+        .onFalse(Commands.runOnce(() -> resetCorrection()));
   }
 
   public CommandSwerveDrivetrain getSwerve() {
@@ -359,13 +365,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private Command getTurretCommand() {
     return turret
         .setAngle(
-            () -> calculator.getParameters().turretAngle().getMeasure(),
-            () -> calculator.getParameters().turretVelocity())
+            () -> getTargetTurretAngleRads(), () -> calculator.getParameters().turretVelocity())
         .withName("TurretCommand");
   }
 
   @Override
   public void autonomousInit() {
+    resetCorrection();
     vision.updateCameraSettings();
     turretVisionHelper.updateLimelightSettings();
 
@@ -393,6 +399,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     }
 
     vision.updateCameraSettings();
+    resetCorrection();
     turretVisionHelper.updateLimelightSettings();
   }
 
@@ -576,12 +583,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private static final double CORRECTION_ALPHA = 0.15; // low pass filter weight
   private static final double MAX_PLAUSIBLE_CORRECTION = Units.degreesToRadians(5.0);
 
-  public double getTargetTurretAngleRads() {
+  public Angle getTargetTurretAngleRads() {
     double turretAngleRadians = calculator.getParameters().turretAngle().getMeasure().in(Radians);
     Optional<TurretAimResult> visionResult = turretVisionHelper.getHubAimOffset();
     DogLog.log("hasTurretVisionResult", visionResult.isPresent());
 
-    if (visionResult.isPresent() && visionResult.get().tagCount() >= 2) {
+    if (visionResult.isPresent() && visionResult.get().tagCount() >= 2  && RobotState.getInstance().isInAllianceZone()) {
       double rawCorrection = visionResult.get().yawOffset(); // already camera-relative offset
       DogLog.log("turretVisionOffset", rawCorrection);
 
@@ -592,7 +599,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     }
 
     DogLog.log("turretCorrection", correctionOffsetRads);
-    return turretAngleRadians + correctionOffsetRads;
+    return Radians.of(turretAngleRadians + correctionOffsetRads);
   }
 
   public void resetCorrection() {
