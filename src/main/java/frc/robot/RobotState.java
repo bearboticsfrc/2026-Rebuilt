@@ -64,9 +64,9 @@ public class RobotState {
 
   // needs work
   public boolean isStopped() {
-    return getFieldVelocity().vxMetersPerSecond < 0.00000001
-        && getFieldVelocity().vyMetersPerSecond < 0.000000001
-        && Math.abs(getFieldVelocity().omegaRadiansPerSecond) < 0.00000000001;
+    return getFieldVelocity().vxMetersPerSecond < 0.05
+        && getFieldVelocity().vyMetersPerSecond < 0.05
+        && Math.abs(getFieldVelocity().omegaRadiansPerSecond) < 0.05;
   }
 
   @Logged
