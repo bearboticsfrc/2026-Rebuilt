@@ -231,7 +231,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         command -> DogLog.log("Misc/Robot Status", "Finished: " + command.getName()));
 
     new Trigger(() -> RobotState.getInstance().isInAllianceZone())
-        .onTrue(Commands.runOnce(() -> resetCorrection()));
+        .onTrue(Commands.runOnce(() -> resetCorrection()))
+        .onFalse(Commands.runOnce(() -> resetCorrection()));
     // DogLog.setPdh(new PowerDistribution());
   }
 
@@ -549,7 +550,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     Optional<TurretAimResult> visionResult = turretVisionHelper.getHubAimOffset();
     DogLog.log("hasTurretVisionResult", visionResult.isPresent());
 
-    if (visionResult.isPresent() && visionResult.get().tagCount() >= 2) {
+    if (visionResult.isPresent() && visionResult.get().tagCount() >= 2  && RobotState.getInstance().isInAllianceZone()) {
       double rawCorrection = visionResult.get().yawOffset(); // already camera-relative offset
       DogLog.log("turretVisionOffset", rawCorrection);
 
