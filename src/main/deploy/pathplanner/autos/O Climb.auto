@@ -65,15 +65,15 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "O start, setup Climb"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "RaiseClimb"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "O start, setup Climb"
           }
         },
         {

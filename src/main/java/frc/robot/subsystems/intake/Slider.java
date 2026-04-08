@@ -92,7 +92,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
 
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    config.CurrentLimits.StatorCurrentLimit = Amps.of(150).in(Amps);
+    config.CurrentLimits.StatorCurrentLimit = Amps.of(70).in(Amps);
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.Slot0.kS = 0.7; //  1.0; // 1.5;
     config.Slot0.kV = 0.17;

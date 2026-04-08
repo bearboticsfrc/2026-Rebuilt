@@ -206,7 +206,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     registerPathplannerCommands();
 
-    autoChooser = AutoBuilder.buildAutoChooser("Double Swipe O");
+    autoChooser = AutoBuilder.buildAutoChooser("2O");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
     configureLogging();
@@ -299,23 +299,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     // named commands for autonomous
     NamedCommands.registerCommand(
         "Intake",
-        new ScheduleCommand(
-                rollers
-                    .run()
-                    .alongWith(slider.extend())
-                    .alongWith(spindexer.oscillate())
-                    .withName("ParallelRollerArm"))
+        new ScheduleCommand(rollers.run().alongWith(slider.extend()).withName("ParallelRollerArm"))
             .withName("ScheduleIntake"));
 
     NamedCommands.registerCommand(
         "StopIntake",
         new ScheduleCommand(
-                slider
-                    .retract()
-                    .alongWith(spindexer.stop())
-                    .alongWith(kicker.stop())
-                    .alongWith(rollers.stop())
-                    .withName("ParallelRetractStop"))
+                slider.retract().alongWith(rollers.stop()).withName("ParallelRetractStop"))
             .withName("ScheduleStopIntake"));
 
     NamedCommands.registerCommand(

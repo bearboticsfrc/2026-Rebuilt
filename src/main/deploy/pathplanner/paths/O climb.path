@@ -34,7 +34,7 @@
   "eventMarkers": [
     {
       "name": "TurretZero",
-      "waypointRelativePos": 0.09453072248480607,
+      "waypointRelativePos": 0.10533423362593125,
       "endWaypointRelativePos": null,
       "command": null
     }

@@ -34,9 +34,9 @@ import lombok.Getter;
 public class Climber extends Mechanism implements SelfTestable {
   /** Position setpoints for the climber. */
   public enum Setpoint {
-    Bottom(Rotations.of(1)),
+    Bottom(Inches.of(1)),
     Middle(Inches.of(3.5)),
-    Top(Inches.of(6.5));
+    Top(Inches.of(5.2)); // 6.5
 
     /** The position target of the setpoint in angular units. */
     public final Angle target;
@@ -92,7 +92,7 @@ public class Climber extends Mechanism implements SelfTestable {
               () -> {
                 return motorVelocity.getValue().abs(RotationsPerSecond) < 1
                     && motorTorqueCurrent.getValue().abs(Amps)
-                        > 10; // consider changing to statorcurrent for reliability
+                        > 4; // consider changing to statorcurrent for reliability
               })
           .debounce(0.1);
 
