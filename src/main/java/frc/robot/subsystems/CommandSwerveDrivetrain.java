@@ -12,10 +12,12 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
@@ -30,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotState;
+import frc.robot.field.Field;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import java.util.function.Supplier;
 
@@ -306,6 +309,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
               });
     }
+    clampPoseToField();
   }
 
   /**
@@ -368,6 +372,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     RobotState.getInstance().setRobotVelocity(getState().Speeds);
     RobotState.getInstance().updatePose();
     poseHistory.addSample(Utils.getCurrentTimeSeconds(), this.getState().Pose);
+  }
+
+  private static final double HALF_ROBOT = Field.ROBOT_WIDTH / 2.0;
+
+  private void clampPoseToField() {
+    Pose2d current = getStateCopy().Pose;
+    double clampedX = MathUtil.clamp(current.getX(), HALF_ROBOT, Field.LENGTH - HALF_ROBOT);
+    double clampedY = MathUtil.clamp(current.getY(), HALF_ROBOT, Field.WIDTH - HALF_ROBOT);
+    if (clampedX != current.getX() || clampedY != current.getY()) {
+      resetPose(new Pose2d(new Translation2d(clampedX, clampedY), current.getRotation()));
+    }
   }
 
   private void startSimThread() {
