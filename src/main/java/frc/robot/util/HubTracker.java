@@ -2,11 +2,12 @@ package frc.robot.util;
 
 import static edu.wpi.first.units.Units.Seconds;
 
-import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.networktables.GenericEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import java.util.Optional;
@@ -15,24 +16,28 @@ public class HubTracker {
 
   private static Optional<Alliance> autoWinner = getAutoWinner();
 
-  @Logged
+  private static final double HUBTRACKER_LOOP_PERIOD = 0.1;
+
+  private Notifier notifier = new Notifier(this::publishToNT);
+
+  public HubTracker() {
+    notifier.startPeriodic(HUBTRACKER_LOOP_PERIOD);
+  }
+
   public boolean hubStatus() {
     return isActive();
   }
 
-  @Logged(name = "Time Left in Active Shift")
   public double shiftTimeRemaining() {
     if (!isActive()) return -1;
     return timeRemainingInCurrentShift().orElse(Seconds.of(-1)).in(Seconds);
   }
 
-  @Logged(name = "Time Left in Inactive Shift")
   public double inactiveShiftTimeRemaining() {
     if (isActive()) return -1;
     return timeRemainingInCurrentShift().orElse(Seconds.of(-1)).in(Seconds);
   }
 
-  @Logged(name = "Seconds until inactive")
   public double timeUntilShiftInactive() {
     if (!isActive()) {
       return -1;
@@ -44,17 +49,14 @@ public class HubTracker {
     }
   }
 
-  @Logged(name = "Shift")
   public String shiftName() {
     return getCurrentShift().isEmpty() ? "Not Set" : getCurrentShift().get().toString();
   }
 
-  @Logged(name = "Match Time")
   public double getMatchTimeDouble() {
     return getMatchTime();
   }
 
-  @Logged(name = "Auto Winner")
   public String getAutoWinnerString() {
     return getAutoWinner().isPresent() ? getAutoWinner().get().toString() : "Not Set";
   }
@@ -101,7 +103,6 @@ public class HubTracker {
     }
   }
 
-  @Logged(name = "In Endgame")
   public boolean inEndGame() {
     return getCurrentShift() == Optional.of(Shift.ENDGAME);
   }
@@ -290,5 +291,18 @@ public class HubTracker {
     BOTH,
     AUTO_WINNER,
     AUTO_LOSER
+  }
+
+  public void publishToNT() {
+    String ntKey = "Robot/tracker";
+    NetworkTableInstance nt = NetworkTableInstance.getDefault();
+    nt.getEntry(ntKey + "/hubStatus").setBoolean(hubStatus());
+    nt.getEntry(ntKey + "/In Endgame").setBoolean(inEndGame());
+    nt.getEntry(ntKey + "/Time Left in Active Shift").setDouble(shiftTimeRemaining());
+    nt.getEntry(ntKey + "/Time Left in Inactive Shift").setDouble(inactiveShiftTimeRemaining());
+    nt.getEntry(ntKey + "/Seconds until inactive").setDouble(timeUntilShiftInactive());
+    nt.getEntry(ntKey + "/Shift").setString(shiftName());
+    nt.getEntry(ntKey + "/Match Time").setDouble(getMatchTimeDouble());
+    nt.getEntry(ntKey + "/Auto Winner").setString(getAutoWinnerString());
   }
 }

@@ -89,7 +89,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final CommandPS5Controller copilot = new CommandPS5Controller(1);
 
-  @Logged private final HubTracker tracker;
+  private final HubTracker tracker;
 
   @Logged private final Rollers rollers;
 
