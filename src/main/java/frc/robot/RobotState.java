@@ -64,9 +64,12 @@ public class RobotState {
 
   // needs work
   public boolean isStopped() {
-    return getFieldVelocity().vxMetersPerSecond < 0.05
-        && getFieldVelocity().vyMetersPerSecond < 0.05
-        && Math.abs(getFieldVelocity().omegaRadiansPerSecond) < 0.05;
+    if (isInAllianceZone()) {
+      return getFieldVelocity().vxMetersPerSecond < 0.00005
+          && getFieldVelocity().vyMetersPerSecond < 0.00005
+          && Math.abs(getFieldVelocity().omegaRadiansPerSecond) < 0.00005;
+    }
+    return false;
   }
 
   @Logged

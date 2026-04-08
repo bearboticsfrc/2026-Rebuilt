@@ -484,12 +484,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .onFalse(dynamicShootingCommand.stop());
 
     pilot
-        .rightTrigger()
-        .and(robotState.stopped)
-        .onTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
-        .onFalse(slider.retract().alongWith(rollers.stop()));
-
-    pilot
         .leftBumper()
         .whileTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
         .onFalse(slider.retract().alongWith(rollers.stop()));
