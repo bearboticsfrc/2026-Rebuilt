@@ -69,7 +69,6 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   @Getter private double torqueCurrentLimit = 400;
 
   @Getter private double gearRatio = 10.44;
-  @Getter private double statorLimit = 200;
 
   private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
   private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
@@ -129,9 +128,9 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     config.Feedback.RotorToSensorRatio = 1.0;
     config.Feedback.SensorToMechanismRatio = gearRatio;
 
-    config.CurrentLimits.SupplyCurrentLimit = 60;
+    config.CurrentLimits.SupplyCurrentLimit = 80;
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.CurrentLimits.StatorCurrentLimit = statorLimit;
+    config.CurrentLimits.StatorCurrentLimit = 80;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
 
     config.TorqueCurrent.PeakForwardTorqueCurrent = 120; // amps -- tune up from here

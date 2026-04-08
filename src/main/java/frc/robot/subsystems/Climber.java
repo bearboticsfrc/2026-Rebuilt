@@ -109,7 +109,9 @@ public class Climber extends Mechanism implements SelfTestable {
                   .CurrentLimits
                   .clone()
                   .withStatorCurrentLimit(Amps.of(120))
-                  .withStatorCurrentLimitEnable(true))
+                  .withStatorCurrentLimitEnable(true)
+                  .withSupplyCurrentLimit(Amps.of(80))
+                  .withSupplyCurrentLimitEnable(true))
           .withSlot0(
               motorInitialConfigs
                   .Slot0

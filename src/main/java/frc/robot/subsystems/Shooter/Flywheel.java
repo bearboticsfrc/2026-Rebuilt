@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.shooter;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
@@ -93,6 +94,11 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     config.TorqueCurrent.PeakReverseTorqueCurrent = 0;
     config.MotorOutput.PeakForwardDutyCycle = 1;
     config.MotorOutput.PeakReverseDutyCycle = 0;
+
+    config.CurrentLimits.StatorCurrentLimit = Amps.of(100).in(Amps);
+    config.CurrentLimits.StatorCurrentLimitEnable = true;
+    config.CurrentLimits.SupplyCurrentLimit = Amps.of(80).in(Amps);
+    config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     // Try to apply config multiple time. Break after successfully applying
     applyConfig(() -> motor.getConfigurator().apply(config), getName());

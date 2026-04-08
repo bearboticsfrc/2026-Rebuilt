@@ -92,8 +92,10 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
               motorInitialConfigs
                   .CurrentLimits
                   .clone()
-                  .withStatorCurrentLimit(Amps.of(120))
-                  .withStatorCurrentLimitEnable(true))
+                  .withStatorCurrentLimit(Amps.of(40))
+                  .withStatorCurrentLimitEnable(true)
+                  .withSupplyCurrentLimit(Amps.of(30))
+                  .withSupplyCurrentLimitEnable(true))
           .withSlot0(
               motorInitialConfigs
                   .Slot0
