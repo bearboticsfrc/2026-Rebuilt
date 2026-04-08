@@ -24,11 +24,14 @@ import dev.doglog.DogLog;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
+import edu.wpi.first.epilogue.logging.FileBackend;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.DriverStation.MatchType;
+import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -164,6 +167,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public Robot() {
     instance = this;
     Telemetry.start(true, false, PrintPriority.NORMAL);
+    configureLogging();
+
     tracker = new HubTracker();
     rollers = new Rollers();
     slider = new Slider();
@@ -178,11 +183,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     calculator = DynamicShootingCalculator.getInstance();
 
-    // spectrumVision = new SpectrumVision(new SpectrumVision.VisionConfig());
-
     vision =
         new VisionSystem(
-            Arrays.asList(VisionConstants.REAR_CAMERA, VisionConstants.RIGHT_CAMERA),
+            Arrays.asList(
+                VisionConstants.REAR_CAMERA,
+                VisionConstants.LEFT_CAMERA,
+                VisionConstants.RIGHT_CAMERA),
             false,
             drivetrain,
             () -> turret.getPositionDegrees(),
@@ -209,7 +215,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     autoChooser = AutoBuilder.buildAutoChooser("2O");
     SmartDashboard.putData("Auto Mode", autoChooser);
 
-    configureLogging();
     configureBindings();
     selfTest.bindTriggers();
     configureDefaultCommands();
@@ -217,7 +222,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);
 
-    DriverStation.silenceJoystickConnectionWarning(true);
+    DriverStation.silenceJoystickConnectionWarning(false);
 
     // Set the scheduler to log when a command initializes, interrupts, or finishes
     CommandScheduler scheduler = CommandScheduler.getInstance();
@@ -233,8 +238,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                     + (interrupter.isPresent() ? interrupter.get().getName() : "")));
     scheduler.onCommandFinish(
         command -> DogLog.log("Misc/Robot Status", "Finished: " + command.getName()));
-
-    // DogLog.setPdh(new PowerDistribution());
   }
 
   public CommandSwerveDrivetrain getSwerve() {
@@ -250,7 +253,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   }
 
   private boolean getTuningMode() {
-    return true;
+    return false;
   }
 
   @Logged
@@ -275,11 +278,22 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void configureLogging() {
     Shuffleboard.stopRecording();
 
-    DataLogManager.start("", "", 0.1);
+    // DataLogManager.start("", "", 0.1);
     DriverStation.startDataLog(DataLogManager.getLog());
 
-    Epilogue.configure(config -> config.minimumImportance = this.MINIMUM_IMPORTANCE);
+    Epilogue.configure(
+        config -> {
+          if (DriverStation.getMatchType() != MatchType.None) {
+            // Log only to disk, instead of the default NetworkTables logging
+            // Note that this means data cannot be analyzed in realtime by a dashboard
+            config.backend = new FileBackend(DataLogManager.getLog());
+          }
+          config.minimumImportance = this.MINIMUM_IMPORTANCE;
+        });
+
     Epilogue.bind(this);
+
+    DogLog.setPdh(new PowerDistribution());
   }
 
   @Override
