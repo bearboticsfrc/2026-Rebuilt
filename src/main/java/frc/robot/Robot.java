@@ -24,7 +24,6 @@ import dev.doglog.DogLog;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
-import edu.wpi.first.epilogue.logging.FileBackend;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -287,11 +286,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     Epilogue.configure(
         config -> {
-          if (DriverStation.isFMSAttached()) {
-            // Log only to disk, instead of the default NetworkTables logging
-            // Note that this means data cannot be analyzed in realtime by a dashboard
-            config.backend = new FileBackend(DataLogManager.getLog());
-          }
+          // if (DriverStation.isFMSAttached()) {
+          //   // Log only to disk, instead of the default NetworkTables logging
+          //   // Note that this means data cannot be analyzed in realtime by a dashboard
+          //   config.backend = new FileBackend(DataLogManager.getLog());
+          // }
           config.minimumImportance = this.MINIMUM_IMPORTANCE;
         });
 
@@ -371,7 +370,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     vision.updateCameraSettings();
     turretVisionHelper.updateLimelightSettings();
 
-    CommandScheduler.getInstance().schedule(slider.retract());
+    CommandScheduler.getInstance().schedule(slider.calibrateZero());
     CommandScheduler.getInstance().schedule(climber.calibrateZero());
 
     m_autonomousCommand = getAutonomousCommand();
