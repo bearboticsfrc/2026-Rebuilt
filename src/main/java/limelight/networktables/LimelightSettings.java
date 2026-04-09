@@ -125,7 +125,7 @@ public class LimelightSettings {
     ledMode = limelightTable.getEntry("ledMode");
 
     rewindEnable = limelightTable.getEntry("rewind_enable_set");
-    rewindCapture = limelightTable.getDoubleArrayTopic("rewind_capture").getEntry(new double[2]);
+    rewindCapture = limelightTable.getDoubleArrayTopic("capture_rewind").getEntry(new double[2]);
     keystone = limelightTable.getDoubleArrayTopic("keystone_set").getEntry(new double[2]);
     throttleSet = limelightTable.getEntry("throttle_set");
     pipelineIndex = limelightTable.getEntry("pipeline");
