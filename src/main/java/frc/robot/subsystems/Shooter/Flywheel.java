@@ -94,9 +94,9 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     config.TorqueCurrent.PeakReverseTorqueCurrent = 0;
     config.MotorOutput.PeakForwardDutyCycle = 1;
     config.MotorOutput.PeakReverseDutyCycle = 0;
-    config.CurrentLimits.StatorCurrentLimit = Amps.of(100).in(Amps);
+    config.CurrentLimits.StatorCurrentLimit = Amps.of(80).in(Amps);
     config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLimit = Amps.of(80).in(Amps);
+    config.CurrentLimits.SupplyCurrentLimit = Amps.of(60).in(Amps);
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
 
     // Try to apply config multiple time. Break after successfully applying

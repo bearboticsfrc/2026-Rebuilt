@@ -268,7 +268,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   // the hub and faster when far away
   public Supplier<Double> getMaxLinearVelocity() {
     double distanceToHub = robotState.getDistanceToHub();
-    return () -> (robotState.isShooting()) ? 1.25 - ((distanceToHub / 5.5) * 0.5) : MaxSpeed;
+    return () -> (robotState.isShooting()) ? 1.15 - ((distanceToHub / 5.5) * 0.5) : MaxSpeed - 0.5;
   }
 
   public Supplier<Double> getMaxAngularVelocity() {
@@ -281,16 +281,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void configureLogging() {
     Shuffleboard.stopRecording();
 
-    // DataLogManager.start("", "", 0.1);
+    DataLogManager.start("", "", 0.1);
     DriverStation.startDataLog(DataLogManager.getLog());
 
     Epilogue.configure(
         config -> {
-          // if (DriverStation.isFMSAttached()) {
-          //   // Log only to disk, instead of the default NetworkTables logging
-          //   // Note that this means data cannot be analyzed in realtime by a dashboard
-          //   config.backend = new FileBackend(DataLogManager.getLog());
-          // }
           config.minimumImportance = this.MINIMUM_IMPORTANCE;
         });
 
