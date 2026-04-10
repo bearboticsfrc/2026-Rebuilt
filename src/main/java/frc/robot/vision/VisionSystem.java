@@ -442,7 +442,7 @@ public class VisionSystem {
                     + poseB.getRotation().getSin() / varianceB.get(2, 0)
                 == 0)) {
           System.out.println("Fixing rotation2d in fuse");
-          fusedHeading = poseA.getRotation();
+          fusedHeading = poseB.getRotation();
 
         } else {
           fusedHeading =
@@ -454,7 +454,7 @@ public class VisionSystem {
         }
       } catch (RuntimeException ex) {
         System.out.println("Caught runtime: " + ex);
-        fusedHeading = poseA.getRotation();
+        fusedHeading = poseB.getRotation();
       }
     }
 
