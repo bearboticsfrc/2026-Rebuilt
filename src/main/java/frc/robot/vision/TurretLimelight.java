@@ -2,7 +2,6 @@ package frc.robot.vision;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
-import dev.doglog.DogLog;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -211,7 +210,7 @@ public class TurretLimelight {
 
     latestTags = poseEstimate.rawFiducials;
 
-    DogLog.log("limelightPose", currentPose);
+    // DogLog.log("limelightPose", currentPose);
 
     return new VisionEstimate(
         currentPose,
@@ -303,8 +302,8 @@ public class TurretLimelight {
             .transformBy(
                 new Transform3d(new Translation3d(), new Rotation3d(0, 0, turretAngleRads)))
             .transformBy(TURRET_TO_CAMERA);
-    DogLog.log("cameraPose", cameraPose);
-    DogLog.log("cameraYaw", cameraPose.getRotation().toRotation2d().getDegrees());
+    //  DogLog.log("cameraPose", cameraPose);
+    //  DogLog.log("cameraYaw", cameraPose.getRotation().toRotation2d().getDegrees());
 
     limelight.getSettings().withCameraOffset(cameraPose);
   }
