@@ -434,12 +434,17 @@ public class VisionSystem {
 
     Rotation2d fusedHeading = poseB.getRotation();
     if (varianceA.get(2, 0) < LARGE_VARIANCE && varianceB.get(2, 0) < LARGE_VARIANCE) {
-      fusedHeading =
-          new Rotation2d(
-              poseA.getRotation().getCos() / varianceA.get(2, 0)
-                  + poseB.getRotation().getCos() / varianceB.get(2, 0),
-              poseA.getRotation().getSin() / varianceA.get(2, 0)
-                  + poseB.getRotation().getSin() / varianceB.get(2, 0));
+      try {
+        fusedHeading =
+            new Rotation2d(
+                poseA.getRotation().getCos() / varianceA.get(2, 0)
+                    + poseB.getRotation().getCos() / varianceB.get(2, 0),
+                poseA.getRotation().getSin() / varianceA.get(2, 0)
+                    + poseB.getRotation().getSin() / varianceB.get(2, 0));
+      } catch (RuntimeException ex) {
+        System.out.println("Caught runtime: " + ex);
+        fusedHeading = new Rotation2d();
+      }
     }
 
     double weightAx = 1.0 / varianceA.get(0, 0);

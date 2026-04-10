@@ -21,11 +21,13 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.events.EventTrigger;
 import dev.doglog.DogLog;
+import dev.doglog.DogLogOptions;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -166,7 +168,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public Robot() {
     instance = this;
     Telemetry.start(true, false, PrintPriority.NORMAL);
-    configureLogging();
 
     tracker = new HubTracker();
     rollers = new Rollers();
@@ -213,6 +214,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     autoChooser = AutoBuilder.buildAutoChooser("2O");
     SmartDashboard.putData("Auto Mode", autoChooser);
+    configureLogging();
 
     configureBindings();
     selfTest.bindTriggers();
@@ -226,7 +228,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     // Set the scheduler to log when a command initializes, interrupts, or finishes
     CommandScheduler scheduler = CommandScheduler.getInstance();
     scheduler.onCommandInitialize(
-        command -> DogLog.log("Misc/Robot Status", "Initialized: " + command.getName()));
+        command ->
+            NetworkTableInstance.getDefault()
+                .getEntry("Misc/Robot Status")
+                .setString("Initialized: " + command.getName()));
     scheduler.onCommandInterrupt(
         (command, interrupter) ->
             DogLog.log(
@@ -284,12 +289,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     DataLogManager.start("", "", 0.1);
     DriverStation.startDataLog(DataLogManager.getLog());
 
-    Epilogue.configure(
-        config -> {
-          config.minimumImportance = this.MINIMUM_IMPORTANCE;
-        });
+    Epilogue.configure(config -> config.minimumImportance = this.MINIMUM_IMPORTANCE);
 
     Epilogue.bind(this);
+
+    DogLog.setOptions(new DogLogOptions().withNtPublish(true).withCaptureNt(true));
   }
 
   @Override
@@ -365,8 +369,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     vision.updateCameraSettings();
     turretVisionHelper.updateLimelightSettings();
 
-    CommandScheduler.getInstance().schedule(slider.calibrateZero());
-    CommandScheduler.getInstance().schedule(climber.calibrateZero());
+    CommandScheduler.getInstance()
+        .schedule(
+            slider.calibrateZero().andThen(slider.retract()).alongWith(climber.calibrateZero()));
 
     m_autonomousCommand = getAutonomousCommand();
 
@@ -518,7 +523,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot.R2().and(copilot.square()).onTrue(turret.setAngle(Rotations.of(-.25)));
 
     copilot.R2().and(copilot.circle()).onTrue(turret.setAngle(Rotations.of(.25)));
-    copilot.R1().toggleOnTrue(Commands.idle(turret));
+    copilot.R1().whileTrue(Commands.idle(turret));
 
     /* jiggle for drivetrain */
     copilot.L1().whileTrue(drivetrain.applyRequest(() -> breakMode));
