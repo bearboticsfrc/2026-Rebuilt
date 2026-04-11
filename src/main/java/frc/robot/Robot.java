@@ -24,6 +24,7 @@ import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
@@ -182,9 +183,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     vision =
         new VisionSystem(
             Arrays.asList(
-                VisionConstants.REAR_CAMERA,
-                VisionConstants.LEFT_CAMERA,
-                VisionConstants.RIGHT_CAMERA),
+                VisionConstants.REAR_CAMERA, VisionConstants.LEFT_CAMERA
+                /*  ,VisionConstants.RIGHT_CAMERA */ ),
             false,
             drivetrain,
             () -> turret.getPositionDegrees(),
@@ -543,7 +543,17 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot
         .L2()
         .and(copilot.cross())
-        .onTrue(Commands.runOnce(() -> drivetrain.getPigeon2().reset()).ignoringDisable(true));
+        .onTrue(
+            Commands.runOnce(() -> drivetrain.resetPose(getPoseToResetTo())).ignoringDisable(true));
+  }
+
+  public Pose2d getPoseToResetTo() {
+
+    Pose2d resetPose = AllianceFlipUtil.apply(new Pose2d(3.5, 4, new Rotation2d()));
+    if (!RobotState.getInstance().isInAllianceZone()) {
+      resetPose = AllianceFlipUtil.apply(new Pose2d(8.3, 4, new Rotation2d()));
+    }
+    return AllianceFlipUtil.apply(resetPose);
   }
 
   // public void bindDriveSysidTriggers() {
