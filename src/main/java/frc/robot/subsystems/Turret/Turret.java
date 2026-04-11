@@ -2,7 +2,6 @@ package frc.robot.subsystems.turret;
 
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -462,54 +461,54 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   }
 
   // What the calculator is commanding (calc error only)
-  @Logged
-  public Translation2d getCommandedAimPoint() {
-    Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
-    double commanded =
-        DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
-            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
-            + Math.PI; // back to field frame
-    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
-    return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
-  }
+  // @Logged
+  // public Translation2d getCommandedAimPoint() {
+  //   Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
+  //   double commanded =
+  //       DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
+  //           + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+  //           + Math.PI; // back to field frame
+  //   double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+  //   return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
+  // }
 
   // Where the turret is actually pointing (calc + tracking error)
-  @Logged
-  public Translation2d getActualAimPoint() {
-    Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
-    double actual =
-        getAngle().in(Radians)
-            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
-            + Math.PI;
-    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
-    return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
-  }
+  // @Logged
+  // public Translation2d getActualAimPoint() {
+  //   Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
+  //   double actual =
+  //       getAngle().in(Radians)
+  //           + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+  //           + Math.PI;
+  //   double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+  //   return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
+  // }
 
   // What the calculator is commanding (calc error only)
-  @Logged
-  public Translation2d getCommandedAimPointFromLookahead() {
-    Translation2d turretPos =
-        DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
-    double commanded =
-        DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
-            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
-            + Math.PI; // back to field frame
-    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
-    return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
-  }
+  // @Logged
+  // public Translation2d getCommandedAimPointFromLookahead() {
+  //   Translation2d turretPos =
+  //       DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
+  //   double commanded =
+  //       DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
+  //           + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+  //           + Math.PI; // back to field frame
+  //   double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+  //   return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
+  // }
 
   // Where the turret is actually pointing (calc + tracking error)
-  @Logged
-  public Translation2d getActualAimPointFromLookahead() {
-    Translation2d turretPos =
-        DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
-    double actual =
-        getAngle().in(Radians)
-            + RobotState.getInstance().getRobotPose().getRotation().getRadians()
-            + Math.PI;
-    double dist = RobotState.getInstance().getLookaheadDistanceToHub();
-    return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
-  }
+  // @Logged
+  // public Translation2d getActualAimPointFromLookahead() {
+  //   Translation2d turretPos =
+  //       DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
+  //   double actual =
+  //       getAngle().in(Radians)
+  //           + RobotState.getInstance().getRobotPose().getRotation().getRadians()
+  //           + Math.PI;
+  //   double dist = RobotState.getInstance().getLookaheadDistanceToHub();
+  //   return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
+  // }
 
   //
   // Simulation

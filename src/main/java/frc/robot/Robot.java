@@ -20,12 +20,11 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.events.EventTrigger;
-import dev.doglog.DogLog;
-import dev.doglog.DogLogOptions;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
@@ -66,8 +65,6 @@ import frc.robot.test.SelfTest;
 import frc.robot.util.HubTracker;
 import frc.robot.vision.VisionConstants;
 import frc.robot.vision.VisionSystem;
-import frc.spectrumLib.Telemetry;
-import frc.spectrumLib.Telemetry.PrintPriority;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -167,7 +164,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   public Robot() {
     instance = this;
-    Telemetry.start(true, false, PrintPriority.NORMAL);
+    // Telemetry.start(true, false, PrintPriority.NORMAL);
 
     tracker = new HubTracker();
     rollers = new Rollers();
@@ -186,9 +183,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     vision =
         new VisionSystem(
             Arrays.asList(
-                VisionConstants.REAR_CAMERA,
-                VisionConstants.LEFT_CAMERA,
-                VisionConstants.RIGHT_CAMERA),
+                VisionConstants.REAR_CAMERA, VisionConstants.LEFT_CAMERA
+                  ,VisionConstants.RIGHT_CAMERA),
             false,
             drivetrain,
             () -> turret.getPositionDegrees(),
@@ -196,7 +192,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     turretVisionHelper = new TurretVisionHelper();
 
-    Telemetry.print("All subsystems Initialized");
+    System.out.println("All subsystems Initialized");
 
     interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer, kicker);
 
@@ -226,22 +222,22 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     DriverStation.silenceJoystickConnectionWarning(false);
 
     // Set the scheduler to log when a command initializes, interrupts, or finishes
-    CommandScheduler scheduler = CommandScheduler.getInstance();
-    scheduler.onCommandInitialize(
-        command ->
-            NetworkTableInstance.getDefault()
-                .getEntry("Misc/Robot Status")
-                .setString("Initialized: " + command.getName()));
-    scheduler.onCommandInterrupt(
-        (command, interrupter) ->
-            DogLog.log(
-                "Misc/Robot Status",
-                "Interrupted: "
-                    + command.getName()
-                    + " , by: "
-                    + (interrupter.isPresent() ? interrupter.get().getName() : "")));
-    scheduler.onCommandFinish(
-        command -> DogLog.log("Misc/Robot Status", "Finished: " + command.getName()));
+    // CommandScheduler scheduler = CommandScheduler.getInstance();
+    // scheduler.onCommandInitialize(
+    //     command ->
+    //         NetworkTableInstance.getDefault()
+    //             .getEntry("Misc/Robot Status")
+    //             .setString("Initialized: " + command.getName()));
+    // scheduler.onCommandInterrupt(
+    //     (command, interrupter) ->
+    //         DogLog.log(
+    //             "Misc/Robot Status",
+    //             "Interrupted: "
+    //                 + command.getName()
+    //                 + " , by: "
+    //                 + (interrupter.isPresent() ? interrupter.get().getName() : "")));
+    // scheduler.onCommandFinish(
+    //     command -> DogLog.log("Misc/Robot Status", "Finished: " + command.getName()));
 
     new Trigger(() -> RobotState.getInstance().isInAllianceZone())
         .onTrue(Commands.runOnce(() -> resetCorrection()))
@@ -293,7 +289,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     Epilogue.bind(this);
 
-    DogLog.setOptions(new DogLogOptions().withNtPublish(true).withCaptureNt(true));
+    // DogLog.setOptions(new DogLogOptions().withNtPublish(true).withCaptureNt(true));
   }
 
   @Override
@@ -547,7 +543,17 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     copilot
         .L2()
         .and(copilot.cross())
-        .onTrue(Commands.runOnce(() -> drivetrain.getPigeon2().reset()).ignoringDisable(true));
+        .onTrue(
+            Commands.runOnce(() -> drivetrain.resetPose(getPoseToResetTo())).ignoringDisable(true));
+  }
+
+  public Pose2d getPoseToResetTo() {
+
+    Pose2d resetPose = AllianceFlipUtil.apply(new Pose2d(3.5, 4, new Rotation2d()));
+    if (!RobotState.getInstance().isInAllianceZone()) {
+      resetPose = AllianceFlipUtil.apply(new Pose2d(8.3, 4, new Rotation2d()));
+    }
+    return AllianceFlipUtil.apply(resetPose);
   }
 
   // public void bindDriveSysidTriggers() {
@@ -575,15 +581,18 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public Angle getTargetTurretAngleRads() {
     double turretAngleRadians = calculator.getParameters().turretAngle().getMeasure().in(Radians);
     Optional<TurretAimResult> visionResult = turretVisionHelper.getHubAimOffset();
-    DogLog.log("hasTurretVisionResult", visionResult.isPresent());
+    NetworkTableInstance nt = NetworkTableInstance.getDefault();
+    nt.getEntry("hasTurretVisionResult").setBoolean(visionResult.isPresent());
+    // DogLog.log("hasTurretVisionResult", visionResult.isPresent());
 
     if (visionResult.isPresent()
         && visionResult.get().tagCount() >= 2
         && RobotState.getInstance().isInAllianceZone()) {
       double rawCorrection = visionResult.get().yawOffset(); // already camera-relative offset
-      DogLog.log("turretVisionOffset", rawCorrection);
+      nt.getEntry("turretVisionOffset").setDouble(rawCorrection);
 
-      DogLog.log("usingCorrection", (Math.abs(rawCorrection) < MAX_PLAUSIBLE_CORRECTION));
+      nt.getEntry("usingCorrection")
+          .setBoolean((Math.abs(rawCorrection) < MAX_PLAUSIBLE_CORRECTION));
 
       if (Math.abs(rawCorrection) < MAX_PLAUSIBLE_CORRECTION) {
         correctionOffsetRads =
@@ -591,7 +600,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
       }
     }
 
-    DogLog.log("turretCorrection", correctionOffsetRads);
+    nt.getEntry("turretCorrection").setDouble(correctionOffsetRads);
+    // DogLog.log("turretCorrection", correctionOffsetRads);
     return Radians.of(turretAngleRadians + correctionOffsetRads);
   }
 

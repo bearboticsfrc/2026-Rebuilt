@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import dev.doglog.DogLog;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
@@ -357,22 +356,22 @@ public class StateMachine extends SubsystemBase {
   }
 
   private void logStateTransition(States from, States to) {
-    DogLog.log("StateMachine/States ", from + " -> " + to);
+    //  DogLog.log("StateMachine/States ", from + " -> " + to);
   }
 
   private void logStateTransition(ShootStates from, ShootStates to) {
-    DogLog.log("StateMachine/ShootStates ", from + " -> " + to);
+    //  DogLog.log("StateMachine/ShootStates ", from + " -> " + to);
   }
 
   private void logStateTransition(IntakeStates from, IntakeStates to) {
-    DogLog.log("StateMachine/IntakeStates ", from + " -> " + to);
+    //  DogLog.log("StateMachine/IntakeStates ", from + " -> " + to);
   }
 
   private void logStateTransition(TurretStates from, TurretStates to) {
-    DogLog.log("StateMachine/TurretStates ", from + " -> " + to);
+    //  DogLog.log("StateMachine/TurretStates ", from + " -> " + to);
   }
 
   private void logStateTransition(ClimbStates from, ClimbStates to) {
-    DogLog.log("StateMachine/ClimbStates ", from + " -> " + to);
+    //  DogLog.log("StateMachine/ClimbStates ", from + " -> " + to);
   }
 }

@@ -309,6 +309,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
               });
     }
+    checkForNAN();
+
     clampPoseToField();
   }
 
@@ -375,6 +377,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   }
 
   private static final double HALF_ROBOT = Field.ROBOT_WIDTH / 2.0;
+
+  private void checkForNAN() {
+    Pose2d current = getStateCopy().Pose;
+    if (current.getX() == Double.NaN || current.getY() == Double.NaN) {
+
+      Pose2d lastPose = getPoseAtTimestamp(Utils.getCurrentTimeSeconds() - 0.02);
+      System.out.println(
+          ">>>>>>>>>>>>>> reseting pose to " + lastPose.getX() + ", " + lastPose.getY());
+      resetPose(lastPose);
+    }
+  }
 
   private void clampPoseToField() {
     Pose2d current = getStateCopy().Pose;

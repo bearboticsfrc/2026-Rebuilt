@@ -411,6 +411,19 @@ public class VisionSystem {
 
   /** Fuses two vision pose estimates using inverse-variance weighting. (FRC254 2025) */
   private VisionEstimate fuseEstimates(VisionEstimate a, VisionEstimate b) {
+
+    // hack to avoid crash
+    if (a.timestampSeconds() < b.timestampSeconds()) {
+      return b;
+    }
+    if (b.timestampSeconds() < a.timestampSeconds()) {
+      return a;
+    }
+
+    if (a.timestampSeconds() == b.timestampSeconds()) {
+      return a;
+    }
+
     // Ensure b is the newer measurement
     if (b.timestampSeconds() < a.timestampSeconds()) {
       VisionEstimate tmp = a;

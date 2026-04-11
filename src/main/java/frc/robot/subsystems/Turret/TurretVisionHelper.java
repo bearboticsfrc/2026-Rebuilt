@@ -1,12 +1,12 @@
 package frc.robot.subsystems.turret;
 
-import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -171,15 +171,16 @@ public class TurretVisionHelper {
 
     NetworkTable table = limelight.getNTTable();
 
+    NetworkTableInstance nt = NetworkTableInstance.getDefault();
+
     long tid = table.getEntry("tid").getInteger(0);
-    DogLog.log("turretVisionHelper.tid", tid);
+    nt.getEntry("turretVisionHelper.tid").setInteger(tid);
 
     if (tagToHubCenterMap.get(Integer.valueOf((int) tid)) == null) {
       return Optional.empty();
     }
     Pose3d hubCenter =
         cameraPoseTargetSpace.plus(tagToHubCenterMap.get(Integer.valueOf((int) tid)));
-    DogLog.log("turretVisionHelper.hubCenter", hubCenter);
 
     Rotation3d undoPitch = new Rotation3d(0, Units.degreesToRadians(-20), 0);
     Translation3d hubHorizontal = hubCenter.getTranslation().rotateBy(undoPitch);
@@ -212,10 +213,14 @@ public class TurretVisionHelper {
     // double[] rawPose = table.getEntry("camerapose_targetspace").getDoubleArray(new double[0]);
     long tid = table.getEntry("tid").getInteger(0);
 
-    DogLog.log("targetpose_cameraspace", rawPose);
-    DogLog.log("tid", tid);
+    // DogLog.log("targetpose_cameraspace", rawPose);
+    NetworkTableInstance nt = NetworkTableInstance.getDefault();
+
+    nt.getEntry("tid").setInteger(tid);
+
+    // DogLog.log("tid", tid);
     if (rawPose.length > 0) {
-      DogLog.log("angle_to_primary_id", rawPose[5]);
+      nt.getEntry("angle_to_primary_id").setDouble(rawPose[5]);
     }
     if (rawPose.length < 6) return null;
 
