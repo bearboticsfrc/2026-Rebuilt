@@ -311,7 +311,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
     checkForNAN();
 
-    // clampPoseToField();
+    clampPoseToField();
   }
 
   /**
