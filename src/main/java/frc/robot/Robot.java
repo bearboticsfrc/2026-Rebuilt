@@ -184,7 +184,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         new VisionSystem(
             Arrays.asList(
                 VisionConstants.REAR_CAMERA, VisionConstants.LEFT_CAMERA
-                /*  ,VisionConstants.RIGHT_CAMERA */ ),
+                  ,VisionConstants.RIGHT_CAMERA),
             false,
             drivetrain,
             () -> turret.getPositionDegrees(),
