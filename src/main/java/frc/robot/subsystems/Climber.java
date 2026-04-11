@@ -36,7 +36,7 @@ public class Climber extends Mechanism implements SelfTestable {
   public enum Setpoint {
     Bottom(Inches.of(1)),
     Middle(Inches.of(3.5)),
-    Top(Inches.of(5.2)); // 6.5
+    Top(Inches.of(6.4)); // 6.5
 
     /** The position target of the setpoint in angular units. */
     public final Angle target;
