@@ -151,7 +151,7 @@ public class PoseEstimate {
     if (!hasData) {
       return 1;
     }
-    double minTagAmbiguity = Double.MAX_VALUE;
+    double minTagAmbiguity = 1e9;
     for (RawFiducial tag : rawFiducials) {
       minTagAmbiguity = Math.min(minTagAmbiguity, tag.ambiguity);
     }

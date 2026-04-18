@@ -83,8 +83,7 @@ public class VisionSystem {
     POSE_JUMP_TOO_LARGE,
   }
 
-  private static final Matrix<N3, N1> MAX_STD_DEVS =
-      VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+  private static final Matrix<N3, N1> MAX_STD_DEVS = VecBuilder.fill(1e9, 1e9, 1e9);
   private Matrix<N3, N1> curStdDevs;
 
   // Simulation
@@ -156,13 +155,6 @@ public class VisionSystem {
     List<VisionEstimate> visionEstimates = getEstimatedGlobalPoses();
 
     integrateMultipleEstimates(visionEstimates);
-
-    // for (VisionEstimate visionEstimate : visionEstimates) {
-    //   drivetrain.addVisionMeasurement(
-    //       visionEstimate.pose.toPose2d(),
-    //       Utils.fpgaToCurrentTime(visionEstimate.timestampSeconds),
-    //       visionEstimate.stdDevs());
-    // }
   }
 
   /**
@@ -273,12 +265,6 @@ public class VisionSystem {
         updatedTargetPosesFromLimelight(turretLimelight.getTagList());
       }
     }
-
-    // Optional<VisionEstimate> turretEstimate = getTurretPose();
-    // if (turretEstimate.isPresent()) {
-    //   visionEstimates.add(turretEstimate.get());
-    //   updatedTargetPosesFromLimelight(turretLimelight.getRawFiducial());
-    // }
 
     return visionEstimates;
   }
@@ -411,19 +397,6 @@ public class VisionSystem {
 
   /** Fuses two vision pose estimates using inverse-variance weighting. (FRC254 2025) */
   private VisionEstimate fuseEstimates(VisionEstimate a, VisionEstimate b) {
-
-    // hack to avoid crash
-    if (a.timestampSeconds() < b.timestampSeconds()) {
-      return b;
-    }
-    if (b.timestampSeconds() < a.timestampSeconds()) {
-      return a;
-    }
-
-    if (a.timestampSeconds() == b.timestampSeconds()) {
-      return a;
-    }
-
     // Ensure b is the newer measurement
     if (b.timestampSeconds() < a.timestampSeconds()) {
       VisionEstimate tmp = a;
@@ -447,28 +420,12 @@ public class VisionSystem {
 
     Rotation2d fusedHeading = poseB.getRotation();
     if (varianceA.get(2, 0) < LARGE_VARIANCE && varianceB.get(2, 0) < LARGE_VARIANCE) {
-      try {
-        if ((poseA.getRotation().getCos() / varianceA.get(2, 0)
-                    + poseB.getRotation().getCos() / varianceB.get(2, 0)
-                == 0)
-            && (poseA.getRotation().getSin() / varianceA.get(2, 0)
-                    + poseB.getRotation().getSin() / varianceB.get(2, 0)
-                == 0)) {
-          System.out.println("Fixing rotation2d in fuse");
-          fusedHeading = poseB.getRotation();
-
-        } else {
-          fusedHeading =
-              new Rotation2d(
-                  poseA.getRotation().getCos() / varianceA.get(2, 0)
-                      + poseB.getRotation().getCos() / varianceB.get(2, 0),
-                  poseA.getRotation().getSin() / varianceA.get(2, 0)
-                      + poseB.getRotation().getSin() / varianceB.get(2, 0));
-        }
-      } catch (RuntimeException ex) {
-        System.out.println("Caught runtime: " + ex);
-        fusedHeading = poseB.getRotation();
-      }
+      fusedHeading =
+          new Rotation2d(
+              poseA.getRotation().getCos() / varianceA.get(2, 0)
+                  + poseB.getRotation().getCos() / varianceB.get(2, 0),
+              poseA.getRotation().getSin() / varianceA.get(2, 0)
+                  + poseB.getRotation().getSin() / varianceB.get(2, 0));
     }
 
     double weightAx = 1.0 / varianceA.get(0, 0);
