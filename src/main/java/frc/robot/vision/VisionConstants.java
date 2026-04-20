@@ -3,7 +3,6 @@ package frc.robot.vision;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -58,8 +57,18 @@ public class VisionConstants {
   public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(0.4, 0.4, 2.0);
   public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(0.1, 0.1, 0.5);
 
-  public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT =
-      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+  // public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT =
+  //     AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
+  public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT = loadAprilTagFieldLayout();
+
+  private static AprilTagFieldLayout loadAprilTagFieldLayout() {
+    try {
+      return AprilTagFieldLayout.loadFromResource("frc/robot/vision/demoFieldMap.json");
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to load AprilTag field layout", e);
+    }
+  }
 
   public static final AprilTagFieldLayout HUB_TAGS_ONLY_LAYOUT =
       new AprilTagFieldLayout(

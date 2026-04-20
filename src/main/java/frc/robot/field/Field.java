@@ -27,7 +27,7 @@ public class Field {
   }
 
   public static Translation2d getMyHub() {
-    return AllianceFlipUtil.apply(BLUE_HUB);
+    return new Translation2d(8.2709, 4.00685);
   }
 
   public static Translation3d getMyHub3d() {

@@ -74,16 +74,18 @@ public class RobotState {
 
   @Logged
   public boolean isInAllianceZone() {
-    if (isBlueAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
-    else if (isRedAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
-    else return false;
+    return true;
+    // if (isBlueAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
+    // else if (isRedAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
+    // else return false;
   }
 
   @Logged
   public boolean isInNeutralZone() {
-    if (isBlueAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
-    else if (isRedAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
-    else return false;
+    // if (isBlueAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
+    // else if (isRedAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
+    // else
+    return false;
   }
 
   @Logged
