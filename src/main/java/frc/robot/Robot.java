@@ -220,7 +220,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);
 
-    DriverStation.silenceJoystickConnectionWarning(false);
+    DriverStation.silenceJoystickConnectionWarning(true);
 
     // Set the scheduler to log when a command initializes, interrupts, or finishes
     // CommandScheduler scheduler = CommandScheduler.getInstance();

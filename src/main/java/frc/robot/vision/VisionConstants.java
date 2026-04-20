@@ -10,6 +10,9 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Filesystem;
+import java.io.File;
+import java.io.IOException;
 
 public class VisionConstants {
   public static final double CULLING_DISTANCE = 4.0; // Meters
@@ -64,8 +67,12 @@ public class VisionConstants {
 
   private static AprilTagFieldLayout loadAprilTagFieldLayout() {
     try {
-      return AprilTagFieldLayout.loadFromResource("frc/robot/vision/demoFieldMap.json");
-    } catch (Exception e) {
+      String path = Filesystem.getDeployDirectory() + File.separator + "demoFieldMap.json";
+      System.out.println("Loading apriltag map from " + path);
+      return new AprilTagFieldLayout(path);
+    } catch (IOException e) {
+      System.out.println("Error loading AprilTagFieldLayout " + e);
+      e.printStackTrace();
       throw new RuntimeException("Failed to load AprilTag field layout", e);
     }
   }
