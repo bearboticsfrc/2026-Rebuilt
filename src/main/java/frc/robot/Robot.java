@@ -26,12 +26,14 @@ import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -125,8 +127,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   private Pose2d autoStartPose;
 
   // for shot tuning
-  private TunableNumber rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
-  private TunableNumber angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
+  private final GenericEntry shotTune;
+  private TunableNumber rpm;
+  private TunableNumber angle;
 
   private final InterpolatedShootCommand interpolatedShootCommand;
 
@@ -162,6 +165,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final SelfTest selfTest;
 
+  private final GenericEntry spin =
+      Shuffleboard.getTab("Robot")
+          .add("Spin", false)
+          .withWidget(BuiltInWidgets.kToggleButton)
+          .getEntry();
+
   public Robot() {
     instance = this;
     // Telemetry.start(true, false, PrintPriority.NORMAL);
@@ -194,6 +203,16 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     turretVisionHelper = new TurretVisionHelper();
 
     System.out.println("All subsystems Initialized");
+
+    shotTune =
+        Shuffleboard.getTab("Robot")
+            .add("ShotTune", false)
+            .withWidget(BuiltInWidgets.kToggleButton)
+            .getEntry();
+
+    rpm = new TunableNumber("RPM", 3600, () -> this.getTuningMode());
+
+    angle = new TunableNumber("Angle", .6, () -> this.getTuningMode());
 
     interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer, kicker);
 
@@ -257,8 +276,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     return tracker;
   }
 
-  private boolean getTuningMode() {
-    return false;
+  @Logged
+  public boolean getTuningMode() {
+    return shotTune.getBoolean(false);
   }
 
   @Logged
@@ -266,8 +286,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     return RobotState.getInstance().getDistanceToHub();
   }
 
-  // TODO: Make max speed relative to distance to hub, so that we can be more precise when close to
-  // the hub and faster when far away
   public Supplier<Double> getMaxLinearVelocity() {
     double distanceToHub = robotState.getDistanceToHub();
     return () -> (robotState.isShooting()) ? 1.15 - ((distanceToHub / 5.5) * 0.5) : MaxSpeed - 0.5;
@@ -358,6 +376,14 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .setAngle(
             () -> getTargetTurretAngleRads(), () -> calculator.getParameters().turretVelocity())
         .withName("TurretCommand");
+  }
+
+  private Command getShootCommand() {
+    return (getTuningMode()) ? staticShootCommand.shoot() : dynamicShootingCommand.shoot();
+  }
+
+  private Command getStopShootCommand() {
+    return (getTuningMode()) ? staticShootCommand.stop() : dynamicShootingCommand.stop();
   }
 
   @Override
@@ -474,29 +500,33 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                         .andThen(Commands.waitSeconds(2)))
                 .withName("ParallelRetractIntake"));
 
-    pilot
-        .rightTrigger()
-        .onTrue(dynamicShootingCommand.shoot())
-        .onFalse(dynamicShootingCommand.stop());
+    pilot.rightTrigger().onTrue(getShootCommand()).onFalse(getStopShootCommand());
 
     pilot
         .leftBumper()
         .whileTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
         .onFalse(slider.retract().alongWith(rollers.stop()));
 
-    pilot
-        .x()
+    new Trigger(() -> spin.get().getBoolean() == true)
         .whileTrue(
-            drivetrain.applyRequest(
-                () ->
-                    hubAlign
-                        .withVelocityX(
-                            -pilot.getLeftY()
-                                * getMaxLinearVelocity()
-                                    .get()) // Drive forward with negative Y (forward)
-                        .withVelocityY(-pilot.getLeftX() * getMaxLinearVelocity().get())
-                        .withHeadingPID(13, 0, 2)
-                        .withTargetDirection(robotState.getAngleToHub())));
+            drivetrain
+                .applyRequest(
+                    () -> drive.withVelocityX(0.0).withVelocityY(0.0).withRotationalRate(0.5))
+                .alongWith(Commands.idle(turret)));
+
+    // pilot
+    //     .x()
+    //     .whileTrue(
+    //         drivetrain.applyRequest(
+    //             () ->
+    //                 hubAlign
+    //                     .withVelocityX(
+    //                         -pilot.getLeftY()
+    //                             * getMaxLinearVelocity()
+    //                                 .get()) // Drive forward with negative Y (forward)
+    //                     .withVelocityY(-pilot.getLeftX() * getMaxLinearVelocity().get())
+    //                     .withHeadingPID(13, 0, 2)
+    //                     .withTargetDirection(robotState.getAngleToHub())));
 
     // copilot controlls
     /* climber */
@@ -506,46 +536,47 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     copilot.povRight().onTrue(climber.calibrateZero());
 
-    copilot
-        .povLeft()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  if (climber.getCurrentCommand() != null) climber.getCurrentCommand().cancel();
-                }));
+    // copilot
+    //     .povLeft()
+    //     .onTrue(
+    //         Commands.runOnce(
+    //             () -> {
+    //               if (climber.getCurrentCommand() != null) climber.getCurrentCommand().cancel();
+    //             }));
 
     /* turret */
-    copilot.R2().and(copilot.triangle()).onTrue(turret.setAngle(Rotations.of(0)));
+    // copilot.R2().and(copilot.triangle()).onTrue(turret.setAngle(Rotations.of(0)));
 
-    copilot.R2().and(copilot.square()).onTrue(turret.setAngle(Rotations.of(-.25)));
+    // copilot.R2().and(copilot.square()).onTrue(turret.setAngle(Rotations.of(-.25)));
 
-    copilot.R2().and(copilot.circle()).onTrue(turret.setAngle(Rotations.of(.25)));
+    // copilot.R2().and(copilot.circle()).onTrue(turret.setAngle(Rotations.of(.25)));
     copilot.R1().whileTrue(Commands.idle(turret));
 
     /* jiggle for drivetrain */
-    copilot.L1().whileTrue(drivetrain.applyRequest(() -> breakMode));
+    // copilot.L1().whileTrue(drivetrain.applyRequest(() -> breakMode));
 
     /* reverse spindexer */
-    copilot
-        .L2()
-        .and(copilot.square())
-        .whileTrue(spindexer.reverse().alongWith(kicker.reverse()))
-        .onFalse(spindexer.stop().alongWith(kicker.stop()));
+    // copilot
+    //     .L2()
+    //     .and(copilot.square())
+    //     .whileTrue(spindexer.reverse().alongWith(kicker.reverse()))
+    //     .onFalse(spindexer.stop().alongWith(kicker.stop()));
 
     /* intake */
     copilot.L2().and(copilot.circle()).onTrue(slider.calibrateZero());
 
     /* pose */
-    copilot
-        .L2()
-        .and(copilot.triangle())
-        .onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
+    // copilot
+    //     .L2()
+    //     .and(copilot.triangle())
+    //     .onTrue(Commands.runOnce(() -> vision.resetToFrontCameraPose()));
 
-    copilot
-        .L2()
-        .and(copilot.cross())
-        .onTrue(
-            Commands.runOnce(() -> drivetrain.resetPose(getPoseToResetTo())).ignoringDisable(true));
+    // copilot
+    //     .L2()
+    //     .and(copilot.cross())
+    //     .onTrue(
+    //         Commands.runOnce(() ->
+    // drivetrain.resetPose(getPoseToResetTo())).ignoringDisable(true));
   }
 
   public Pose2d getPoseToResetTo() {

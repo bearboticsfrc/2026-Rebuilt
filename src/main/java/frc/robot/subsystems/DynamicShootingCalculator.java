@@ -69,12 +69,20 @@ public class DynamicShootingCalculator {
   private static final InterpolatingDoubleTreeMap passTimeOfFlightMap =
       new InterpolatingDoubleTreeMap();
 
+  private static final InterpolatingDoubleTreeMap demoFlywheelSpeedMap =
+      new InterpolatingDoubleTreeMap();
+
+  private static final InterpolatingDoubleTreeMap demoHoodAngleMap =
+      new InterpolatingDoubleTreeMap();
+
+  private static final InterpolatingDoubleTreeMap demoTimeOfFlightMap =
+      new InterpolatingDoubleTreeMap();
+
   static {
     maxDistance = 12;
     minDistance = 1.17;
 
     /* Values for shooting */
-
     flywheelSpeedMap.put(1.17, 2400.0);
     flywheelSpeedMap.put(2.0, 2425.0);
     flywheelSpeedMap.put(2.67, 2625.0);
@@ -103,7 +111,6 @@ public class DynamicShootingCalculator {
     timeOfFlightMap.put(5.5, 1.59);
 
     /* Values for passing */
-
     passFlywheelSpeedMap.put(4.7, 2000.0);
     passFlywheelSpeedMap.put(7.2, 2800.0);
     passFlywheelSpeedMap.put(8.7, 3200.0);
@@ -118,6 +125,10 @@ public class DynamicShootingCalculator {
 
     passTimeOfFlightMap.put(4.7, 1.0);
     passTimeOfFlightMap.put(14.5, 1.0);
+
+    /* Demo Mode */
+    // add values
+
   }
 
   public void clearLaunchingParameters() {
@@ -258,25 +269,32 @@ public class DynamicShootingCalculator {
   }
 
   private Translation2d selectTarget() {
-    // RobotState state = RobotState.getInstance();
-    // if (state.isInAllianceZone()) return Field.getMyHub();
-    // if (state.isLeftNeutralZone()) return Field.getMyLeft();
-    // if (state.isRightNeutralZone()) return Field.getMyRight();
+    RobotState state = RobotState.getInstance();
+    if (state.isInAllianceZone()) return Field.getMyHub();
+    if (state.isLeftNeutralZone()) return Field.getMyLeft();
+    if (state.isRightNeutralZone()) return Field.getMyRight();
+    if (state.isDemoMode()) return Field.getDemo();
     return Field.getMyHub();
   }
 
   private InterpolatingDoubleTreeMap getFlywheelMap() {
     RobotState state = RobotState.getInstance();
-    return (!state.isInAllianceZone()) ? passFlywheelSpeedMap : flywheelSpeedMap;
+    if (!state.isInAllianceZone()) return passFlywheelSpeedMap;
+    if (state.isDemoMode()) return demoFlywheelSpeedMap;
+    return flywheelSpeedMap;
   }
 
   private InterpolatingDoubleTreeMap getHoodMap() {
     RobotState state = RobotState.getInstance();
-    return (!state.isInAllianceZone()) ? passHoodAngleMap : hoodAngleMap;
+    if (!state.isInAllianceZone()) return passHoodAngleMap;
+    if (state.isDemoMode()) return demoHoodAngleMap;
+    return hoodAngleMap;
   }
 
   private InterpolatingDoubleTreeMap getTOFMap() {
     RobotState state = RobotState.getInstance();
-    return (!state.isInAllianceZone()) ? passTimeOfFlightMap : timeOfFlightMap;
+    if (!state.isInAllianceZone()) return passTimeOfFlightMap;
+    if (state.isDemoMode()) return demoTimeOfFlightMap;
+    return timeOfFlightMap;
   }
 }

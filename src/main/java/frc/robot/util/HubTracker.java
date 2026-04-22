@@ -80,21 +80,21 @@ public class HubTracker {
           .getEntry();
 
   public void blueWonAuto() {
-    if (blueWonAuto.getBoolean(true) && autoWinner == null) {
+    if (blueWonAuto.get().getBoolean() == true && autoWinner == null) {
       autoWinner = Optional.of(Alliance.Blue);
     }
     autoWinner = getAutoWinner();
   }
 
   public void redWonAuto() {
-    if (redWonAuto.getBoolean(true) && autoWinner == null) {
+    if (redWonAuto.get().getBoolean() == true && autoWinner == null) {
       autoWinner = Optional.of(Alliance.Blue);
     }
     autoWinner = getAutoWinner();
   }
 
   public void overrideAutoWinner() {
-    if (overrideAutoWinner.getBoolean(true) && autoWinner == Optional.of(Alliance.Blue)) {
+    if (overrideAutoWinner.get().getBoolean() == true && autoWinner == Optional.of(Alliance.Blue)) {
       autoWinner = Optional.of(Alliance.Red);
     } else if (overrideAutoWinner.getBoolean(true) && autoWinner == Optional.of(Alliance.Red)) {
       autoWinner = Optional.of(Alliance.Blue);

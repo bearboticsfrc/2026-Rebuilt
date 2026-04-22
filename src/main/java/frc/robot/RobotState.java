@@ -9,11 +9,15 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.GenericEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.field.Field;
 import frc.robot.subsystems.DynamicShootingCalculator;
+import java.util.function.BooleanSupplier;
 import lombok.*;
 
 public class RobotState {
@@ -48,6 +52,14 @@ public class RobotState {
   @Getter @Setter public ChassisSpeeds robotVelocity = new ChassisSpeeds();
   @Logged @Getter @Setter public boolean shooting;
 
+  public final GenericEntry enableDemoMode =
+      Shuffleboard.getTab("RobotState")
+          .add("Demo_Mode", false)
+          .withWidget(BuiltInWidgets.kToggleButton)
+          .getEntry();
+
+  @Logged public BooleanSupplier demoMode = () -> enableDemoMode.getBoolean(false);
+
   public Rotation2d getRotation() {
     return robotPose.getRotation();
   }
@@ -62,7 +74,6 @@ public class RobotState {
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
   }
 
-  // needs work
   public boolean isStopped() {
     if (isInAllianceZone()) {
       return getFieldVelocity().vxMetersPerSecond < 0.00005
@@ -72,20 +83,22 @@ public class RobotState {
     return false;
   }
 
+  public boolean isDemoMode() {
+    return demoMode.getAsBoolean();
+  }
+
   @Logged
   public boolean isInAllianceZone() {
-    return true;
-    // if (isBlueAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
-    // else if (isRedAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
-    // else return false;
+    if (isBlueAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
+    else if (isRedAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
+    else return false;
   }
 
   @Logged
   public boolean isInNeutralZone() {
-    // if (isBlueAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
-    // else if (isRedAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
-    // else
-    return false;
+    if (isBlueAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
+    else if (isRedAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
+    else return false;
   }
 
   @Logged
