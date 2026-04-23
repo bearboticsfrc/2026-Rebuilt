@@ -49,8 +49,7 @@ public class TurretLimelight {
   private final LimelightPoseEstimator poseEstimator;
   private final EstimationMode mode;
 
-  private static final Matrix<N3, N1> MAX_STD_DEVS =
-      VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+  private static final Matrix<N3, N1> MAX_STD_DEVS = VecBuilder.fill(1e9, 1e9, 1e9);
 
   private Pose3d lastAcceptedPose = null;
 
