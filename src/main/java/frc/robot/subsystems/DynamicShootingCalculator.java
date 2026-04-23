@@ -270,31 +270,31 @@ public class DynamicShootingCalculator {
 
   private Translation2d selectTarget() {
     RobotState state = RobotState.getInstance();
+    if (state.isDemoMode()) return Field.getDemo();
     if (state.isInAllianceZone()) return Field.getMyHub();
     if (state.isLeftNeutralZone()) return Field.getMyLeft();
     if (state.isRightNeutralZone()) return Field.getMyRight();
-    if (state.isDemoMode()) return Field.getDemo();
     return Field.getMyHub();
   }
 
   private InterpolatingDoubleTreeMap getFlywheelMap() {
     RobotState state = RobotState.getInstance();
-    if (!state.isInAllianceZone()) return passFlywheelSpeedMap;
     if (state.isDemoMode()) return demoFlywheelSpeedMap;
+    if (!state.isInAllianceZone()) return passFlywheelSpeedMap;
     return flywheelSpeedMap;
   }
 
   private InterpolatingDoubleTreeMap getHoodMap() {
     RobotState state = RobotState.getInstance();
-    if (!state.isInAllianceZone()) return passHoodAngleMap;
     if (state.isDemoMode()) return demoHoodAngleMap;
+    if (!state.isInAllianceZone()) return passHoodAngleMap;
     return hoodAngleMap;
   }
 
   private InterpolatingDoubleTreeMap getTOFMap() {
     RobotState state = RobotState.getInstance();
-    if (!state.isInAllianceZone()) return passTimeOfFlightMap;
     if (state.isDemoMode()) return demoTimeOfFlightMap;
+    if (!state.isInAllianceZone()) return passTimeOfFlightMap;
     return timeOfFlightMap;
   }
 }
