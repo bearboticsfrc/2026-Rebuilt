@@ -135,6 +135,10 @@ public class RobotState {
 
   @Logged
   public double getTargetDistance() {
+    if (isDemoMode()) {
+      return Field.getDemo().getDistance((robotPose.transformBy(turretToRobot).getTranslation()));
+    }
+
     if (isInNeutralZone()) {
       return (iSLeft())
           ? Field.getMyLeft().getDistance((robotPose.transformBy(turretToRobot).getTranslation()))

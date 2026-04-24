@@ -278,7 +278,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged
   public boolean getTuningMode() {
-    return shotTune.getBoolean(false);
+    // return shotTune.getBoolean(false);
+    return false;
   }
 
   @Logged

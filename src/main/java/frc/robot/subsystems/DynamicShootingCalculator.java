@@ -129,6 +129,19 @@ public class DynamicShootingCalculator {
     /* Demo Mode */
     // add values
 
+    demoFlywheelSpeedMap.put(0.6, 1150.0);
+    demoHoodAngleMap.put(0.6, 0.0);
+    demoTimeOfFlightMap.put(1.0, 1.0);
+
+    demoFlywheelSpeedMap.put(1.4, 1750.0);
+
+    demoFlywheelSpeedMap.put(2.0, 2000.0);
+
+    demoFlywheelSpeedMap.put(2.5, 2200.0);
+
+    demoFlywheelSpeedMap.put(3.0, 2450.0);
+    demoHoodAngleMap.put(3.0, 0.0);
+    demoTimeOfFlightMap.put(3.0, 1.0);
   }
 
   public void clearLaunchingParameters() {
