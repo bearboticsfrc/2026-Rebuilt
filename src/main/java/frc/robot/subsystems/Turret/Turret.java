@@ -1,5 +1,7 @@
 package frc.robot.subsystems.turret;
 
+import static edu.wpi.first.units.Units.Degrees;
+
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -15,6 +17,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Copilot;
 import frc.spectrumLib.CachedDouble;
 import frc.spectrumLib.util.Conversions;
 import java.util.function.DoubleSupplier;
@@ -237,5 +240,17 @@ public class Turret extends SubsystemBase implements NTSendable {
   public Command setAngle(Supplier<Angle> angle) {
     return Commands.run(() -> motor.setControl(motionMagicVoltage.withPosition(angle.get())), this)
         .withName(this.getName() + " SetAngleSupplier");
+  }
+
+  public void buttonMappings() {
+    Copilot.turret0Degrees().onTrue(setAngle(Degrees.of(0)));
+    Copilot.turret45Degrees().onTrue(setAngle(Degrees.of(45)));
+    Copilot.turret90Degrees().onTrue(setAngle(Degrees.of(90)));
+    Copilot.turret135Degrees().onTrue(setAngle(Degrees.of(135)));
+    Copilot.turret180Degrees().onTrue(setAngle(Degrees.of(180)));
+    Copilot.turret225Degrees().onTrue(setAngle(Degrees.of(225)));
+    Copilot.turret270Degrees().onTrue(setAngle(Degrees.of(270)));
+    Copilot.turret315Degrees().onTrue(setAngle(Degrees.of(315)));
+    Copilot.turretIdle().onTrue(setAngle(Degrees.of(360)));
   }
 }
