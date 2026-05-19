@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
+import frc.robot.Copilot;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.Set;
@@ -51,6 +52,8 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   private final AngularVelocity NORMAL_SPEED = RPM.of(600);
   private final AngularVelocity SLOW_SPEED = RPM.of(60);
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
+  private final AngularVelocity REVERSE_SPEED_SLOW = RPM.of(-60);
+
 
   private final StatusSignal<Current> supplyCurrent = motor.getSupplyCurrent(false);
   private final StatusSignal<Current> statorCurrent = motor.getStatorCurrent(false);
@@ -114,9 +117,19 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
         .withName(getName() + ".Run");
   }
 
+  public Command runSlow() {
+    return runOnce(() -> motor.setControl(velocityReq.withVelocity(SLOW_SPEED)))
+        .withName(getName() + ".RunSlow");
+  }
+
   public Command reverse() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED)))
         .withName(getName() + ".Reverse");
+  }
+
+  public Command reverseSlow() {
+    return runOnce(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED_SLOW)))
+        .withName(getName() + ".ReverseSlow");
   }
 
   public Command stop() {
@@ -260,5 +273,13 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
     simModel.update(0.020);
     sim.setRawRotorPosition(simModel.getAngularPosition().times(kGearRatio));
     sim.setRotorVelocity(simModel.getAngularVelocity().times(kGearRatio));
+  }
+
+  public void buttonMappings(){
+    Copilot.spindexerIdle().onTrue(stop());
+    Copilot.spindexerFwdSlow().onTrue(runSlow()).onFalse(stop());
+    Copilot.spindexerFwdFast().onTrue(run()).onFalse(stop());
+    Copilot.spindexerRevSlow().onTrue(reverseSlow()).onFalse(stop());
+    Copilot.spindexerRevFast().onTrue(reverse()).onFalse(stop());
   }
 }

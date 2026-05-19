@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CAN;
+import frc.robot.Copilot;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
@@ -324,5 +325,12 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     // DCMotorSim returns mechanism position/velocity (after gear ratio)
     talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(SIM_GEAR_RATIO));
     talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(SIM_GEAR_RATIO));
+  }
+
+  public void buttonMappings(){
+    Copilot.flywheelIdle().onTrue(stopCommand());
+    Copilot.flywheel500().onTrue(runAtSpeed(500.0));
+    Copilot.flywheel1200().onTrue(runAtSpeed(1200.0));
+    Copilot.flywheel3700().onTrue(runAtSpeed(3700.0));
   }
 }

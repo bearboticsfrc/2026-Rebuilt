@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.CAN;
+import frc.robot.Copilot;
 import frc.robot.Mechanism;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
@@ -38,8 +39,11 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   // Theoretical max == 5400
   public final AngularVelocity ROLLER_SPEED = RPM.of(5000);
+  public final AngularVelocity ROLLER_SPEED_REVERSE = RPM.of(-5000);
 
   public final AngularVelocity ROLLER_SPEED_SLOW = RPM.of(3500);
+  public final AngularVelocity ROLLER_SPEED_SLOW_REVERSE = RPM.of(-3500);
+
   private final double gearRatio = 1.11;
 
   private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
@@ -117,8 +121,16 @@ public class Rollers extends Mechanism implements SelfTestable {
     return runOnce(() -> setOutput(ROLLER_SPEED)).withName(NAME + ".Run");
   }
 
+  public Command runReverse() {
+    return runOnce(() -> setOutput(ROLLER_SPEED_REVERSE)).withName(NAME + ".RunReverse");
+  }
+
   public Command runSlow() {
     return runOnce(() -> setOutput(ROLLER_SPEED_SLOW)).withName(NAME + ".RunSlow");
+  }
+
+  public Command runSlowReverse() {
+    return runOnce(() -> setOutput(ROLLER_SPEED_SLOW_REVERSE)).withName(NAME + ".RunSlowReverse");
   }
 
   public Command stop() {
@@ -208,5 +220,13 @@ public class Rollers extends Mechanism implements SelfTestable {
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, gearRatio, motorSimModel);
+  }
+
+  public void buttonMappings() {
+    Copilot.rollerIdle().onTrue(stop());
+    Copilot.rollerFwdSlow().onTrue(runSlow()).onFalse(stop());
+    Copilot.rollerFwdFast().onTrue(run()).onFalse(stop());
+    Copilot.rollerRevSlow().onTrue(runSlowReverse()).onFalse(stop());
+    Copilot.rollerRevFast().onTrue(runReverse()).onFalse(stop());
   }
 }

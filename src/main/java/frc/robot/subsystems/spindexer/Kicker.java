@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.CAN;
+import frc.robot.Copilot;
 import frc.robot.Mechanism;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
@@ -39,6 +40,8 @@ public class Kicker extends Mechanism implements SelfTestable {
   private final AngularVelocity NORMAL_SPEED = RPM.of(2200);
   private final AngularVelocity SLOW_SPEED = RPM.of(200);
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
+  private final AngularVelocity REVERSE_SPEED_SLOW = RPM.of(-20);
+
 
   private final StatusSignal<Current> supplyCurrent = motor.getSupplyCurrent(false);
   private final StatusSignal<Current> statorCurrent = motor.getStatorCurrent(false);
@@ -102,8 +105,18 @@ public class Kicker extends Mechanism implements SelfTestable {
         .withName(getName() + ".Run");
   }
 
+  public Command runSlow() {
+    return runOnce(() -> motor.setControl(velocityReq.withVelocity(SLOW_SPEED)))
+        .withName(getName() + ".RunSlow");
+  }
+
   public Command reverse() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED)))
+        .withName(getName() + ".Reverse");
+  }
+
+  public Command reverseSlow() {
+    return runOnce(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED_SLOW)))
         .withName(getName() + ".Reverse");
   }
 
@@ -209,5 +222,13 @@ public class Kicker extends Mechanism implements SelfTestable {
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, kGearRatio, simModel);
+  }
+  public void buttonMappings(){
+    Copilot.kickerIdle().onTrue(stop());
+    Copilot.kickerFwdSlow().onTrue(runSlow()).onFalse(stop());
+    Copilot.kickerFwdFast().onTrue(run()).onFalse(stop());
+    Copilot.kickerRevSlow().onTrue(reverseSlow()).onFalse(stop());
+    Copilot.kickerRevFast().onTrue(reverse()).onFalse(stop());
+    
   }
 }

@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
+import frc.robot.Copilot;
 import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.field.AllianceFlipUtil;
@@ -551,5 +552,17 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     // DCMotorSim returns mechanism position/velocity (after gear ratio)
     talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
     talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
+  }
+
+  public void buttonMappings() {
+    Copilot.turret0Degrees().onTrue(setAngle(Degrees.of(0)));
+    Copilot.turret45Degrees().onTrue(setAngle(Degrees.of(45)));
+    Copilot.turret90Degrees().onTrue(setAngle(Degrees.of(90)));
+    Copilot.turret135Degrees().onTrue(setAngle(Degrees.of(135)));
+    Copilot.turret180Degrees().onTrue(setAngle(Degrees.of(180)));
+    Copilot.turret225Degrees().onTrue(setAngle(Degrees.of(225)));
+    Copilot.turret270Degrees().onTrue(setAngle(Degrees.of(270)));
+    Copilot.turret315Degrees().onTrue(setAngle(Degrees.of(315)));
+    Copilot.turretIdle().onTrue(setAngle(Degrees.of(360)));
   }
 }

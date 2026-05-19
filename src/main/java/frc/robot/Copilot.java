@@ -31,6 +31,7 @@ public class Copilot {
     FLYWHEEL_1200RPM(22),
     FLYWHEEL_3700RPM(23),
     HOOD_IDLE(25),
+    //0_25 = .25
     HOOD_0_25(26),
     HOOD_0_5(27),
     HOOD_0_75(28),
@@ -111,4 +112,121 @@ public class Copilot {
   public static Trigger rollerIdle() {
     return copilot.button(Buttons.getValue(Buttons.ROLLER_IDLE));
   }
+
+  public static Trigger rollerFwdSlow() {
+    return copilot.button(Buttons.getValue(Buttons.ROLLER_FWDSLOW));
+  }
+
+  public static Trigger rollerFwdFast() {
+    return copilot.button(Buttons.getValue(Buttons.ROLLER_FWDFAST));
+  }
+
+  public static Trigger rollerRevSlow() {
+    return copilot.button(Buttons.getValue(Buttons.ROLLER_REVSLOW));
+  }
+
+  public static Trigger rollerRevFast() {
+    return copilot.button(Buttons.getValue(Buttons.ROLLER_REVFAST));
+  }
+
+  public static Trigger sliderIdle() {
+    return copilot.button(Buttons.getValue(Buttons.SLIDER_IDLE));
+  }
+
+  public static Trigger sliderIn() {
+    return copilot.button(Buttons.getValue(Buttons.SLIDER_IN));
+  }
+
+  public static Trigger sliderMiddle() {
+    return copilot.button(Buttons.getValue(Buttons.SLIDER_MIDDLE));
+  }
+
+  public static Trigger sliderOut() {
+    return copilot.button(Buttons.getValue(Buttons.SLIDER_OUT));
+  }
+
+  public static Trigger sliderCalibrate() {
+    return copilot.button(Buttons.getValue(Buttons.SLIDER_CALIBRATE));
+  }
+
+    public static Trigger spindexerIdle() {
+    return copilot.button(Buttons.getValue(Buttons.SPINDEXER_IDLE));
+  }
+
+  public static Trigger spindexerFwdSlow() {
+    return copilot.button(Buttons.getValue(Buttons.SPINDEXER_FWDSLOW));
+  }
+  
+  public static Trigger spindexerFwdFast() {
+    return copilot.button(Buttons.getValue(Buttons.SPINDEXER_FWDFAST));
+  }
+
+  public static Trigger spindexerRevSlow() {
+    return copilot.button(Buttons.getValue(Buttons.SPINDEXER_REVSLOW));
+  }
+
+  public static Trigger spindexerRevFast() {
+    return copilot.button(Buttons.getValue(Buttons.SPINDEXER_REVFAST));
+  }
+
+  public static Trigger kickerIdle() {
+    return copilot.button(Buttons.getValue(Buttons.KICKER_IDLE));
+  }
+
+  public static Trigger kickerFwdSlow() {
+    return copilot.button(Buttons.getValue(Buttons.KICKER_FWDSLOW));
+  }
+
+  public static Trigger kickerFwdFast() {
+    return copilot.button(Buttons.getValue(Buttons.KICKER_FWDFAST));
+  }
+
+  public static Trigger kickerRevSlow() {
+    return copilot.button(Buttons.getValue(Buttons.KICKER_REVSLOW));
+  }
+
+  public static Trigger kickerRevFast() {
+    return copilot.button(Buttons.getValue(Buttons.KICKER_REVFAST));
+  }
+
+   public static Trigger flywheelIdle() {
+    return copilot.button(Buttons.getValue(Buttons.FLYWHEEL_IDLE));
+  }
+
+  public static Trigger flywheel500() {
+    return copilot.button(Buttons.getValue(Buttons.FLYWHEEL_500RPM));
+  }
+
+  public static Trigger flywheel1200() {
+    return copilot.button(Buttons.getValue(Buttons.FLYWHEEL_1200RPM));
+  }
+
+  public static Trigger flywheel3700() {
+    return copilot.button(Buttons.getValue(Buttons.FLYWHEEL_3700RPM));
+  }
+
+  public static Trigger hoodIdle() {
+    return copilot.button(Buttons.getValue(Buttons.HOOD_IDLE));
+  }
+
+  public static Trigger hood0_25() {
+    return copilot.button(Buttons.getValue(Buttons.HOOD_0_25));
+  }
+
+  public static Trigger hood0_5() {
+    return copilot.button(Buttons.getValue(Buttons.HOOD_0_25));
+  }
+
+  public static Trigger hood0_75() {
+    return copilot.button(Buttons.getValue(Buttons.HOOD_0_75));
+  }
+
+  public static Trigger hood1() {
+    return copilot.button(Buttons.getValue(Buttons.HOOD_1));
+  }
+
+  public static Trigger brakeMode() {
+    return copilot.button(Buttons.getValue(Buttons.BRAKE_MODE));
+  }
+
 }

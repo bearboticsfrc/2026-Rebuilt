@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
+import frc.robot.Copilot;
 import frc.robot.Robot;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -361,5 +362,10 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
     // DCMotorSim returns mechanism position/velocity (after gear ratio)
     talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
     talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
+  }
+
+  public void buttonMappings(){
+    Copilot.hoodIdle().onTrue(stopCommand());
+    Copilot.hood0_25().onTrue()
   }
 }

@@ -36,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
+import frc.robot.Copilot;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.function.Supplier;
@@ -426,5 +427,13 @@ public class Slider extends SubsystemBase implements SelfTestable {
     // DCMotorSim returns mechanism position/velocity (after gear ratio)
     talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
     talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
+  }
+
+  public void buttonMappings() {
+    Copilot.sliderIdle().onTrue(stop());
+    Copilot.sliderIn().onTrue(retract());
+    Copilot.sliderMiddle().onTrue(mid());
+    Copilot.sliderOut().onTrue(extend());
+    Copilot.sliderCalibrate().onTrue(calibrateZero());
   }
 }
