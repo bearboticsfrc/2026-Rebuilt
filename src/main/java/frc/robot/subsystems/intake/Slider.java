@@ -124,7 +124,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
     if (Robot.isSimulation()) {
       simulationInit();
     }
-
+    buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
   }
 

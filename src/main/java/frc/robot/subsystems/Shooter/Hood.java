@@ -133,7 +133,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
     if (Robot.isSimulation()) {
       simulationInit();
     }
-
+    buttonMappings();
     System.out.println("Hood Subsystem Initialized");
   }
 
@@ -364,7 +364,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
     talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
   }
 
-  public void buttonMappings(){
+  public void buttonMappings() {
     Copilot.hoodIdle().onTrue(stopCommand());
     Copilot.hood0_25().onTrue(goToSetpointRotationsDouble(() -> 0.25));
     Copilot.hood0_5().onTrue(goToSetpointRotationsDouble(() -> 0.5));

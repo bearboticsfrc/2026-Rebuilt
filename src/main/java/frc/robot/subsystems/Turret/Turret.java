@@ -80,8 +80,8 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   private final StatusSignal<Double> setpoint = motor.getClosedLoopReference(false);
 
   // set these small to start
-  @Getter public Angle minRotations = Rotations.of(-.62);
-  @Getter public Angle maxRotations = Rotations.of(.62);
+  @Getter public Angle minRotations = Rotations.of(-.25);
+  @Getter public Angle maxRotations = Rotations.of(.25);
 
   @Getter public boolean attached = true;
 

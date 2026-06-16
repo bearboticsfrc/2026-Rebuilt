@@ -6,37 +6,37 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class Copilot {
 
   public enum Buttons {
-    ROLLER_IDLE(0),
-    ROLLER_FWDSLOW(1),
-    ROLLER_FWDFAST(2),
-    ROLLER_REVSLOW(3),
-    ROLLER_REVFAST(4),
-    SLIDER_IDLE(5),
-    SLIDER_IN(6),
-    SLIDER_MIDDLE(7),
-    SLIDER_OUT(8),
-    SLIDER_CALIBRATE(9),
-    SPINDEXER_IDLE(10),
-    SPINDEXER_FWDSLOW(11),
-    SPINDEXER_FWDFAST(12),
-    SPINDEXER_REVSLOW(13),
-    SPINDEXER_REVFAST(14),
-    KICKER_IDLE(15),
-    KICKER_FWDSLOW(16),
-    KICKER_FWDFAST(17),
-    KICKER_REVSLOW(18),
-    KICKER_REVFAST(19),
-    FLYWHEEL_IDLE(20),
-    FLYWHEEL_500RPM(21),
-    FLYWHEEL_1200RPM(22),
-    FLYWHEEL_3700RPM(23),
-    HOOD_IDLE(25),
-    //0_25 = .25
-    HOOD_0_25(26),
-    HOOD_0_5(27),
-    HOOD_0_75(28),
-    HOOD_1(29),
-    BRAKE_MODE(30);
+    ROLLER_IDLE(1),
+    ROLLER_FWDSLOW(2),
+    ROLLER_FWDFAST(3),
+    ROLLER_REVSLOW(4),
+    ROLLER_REVFAST(5),
+    SLIDER_IDLE(6),
+    SLIDER_IN(7),
+    SLIDER_MIDDLE(8),
+    SLIDER_OUT(9),
+    SLIDER_CALIBRATE(10),
+    SPINDEXER_IDLE(11),
+    SPINDEXER_FWDSLOW(12),
+    SPINDEXER_FWDFAST(13),
+    SPINDEXER_REVSLOW(14),
+    SPINDEXER_REVFAST(15),
+    KICKER_IDLE(16),
+    KICKER_FWDSLOW(17),
+    KICKER_FWDFAST(18),
+    KICKER_REVSLOW(19),
+    KICKER_REVFAST(20),
+    FLYWHEEL_IDLE(21),
+    FLYWHEEL_500RPM(22),
+    FLYWHEEL_1200RPM(23),
+    FLYWHEEL_3700RPM(24),
+    HOOD_IDLE(26),
+    // 0_25 = .25
+    HOOD_0_25(27),
+    HOOD_0_5(28),
+    HOOD_0_75(29),
+    HOOD_1(30),
+    BRAKE_MODE(31);
 
     public final int value;
 
@@ -71,7 +71,7 @@ public class Copilot {
     }
   }
 
-  private static CommandGenericHID copilot = new CommandGenericHID(0);
+  private static CommandGenericHID copilot = new CommandGenericHID(2);
 
   public static Trigger turret0Degrees() {
     return copilot.pov(POV.getAngle(POV.TURRET_0));
@@ -149,14 +149,14 @@ public class Copilot {
     return copilot.button(Buttons.getValue(Buttons.SLIDER_CALIBRATE));
   }
 
-    public static Trigger spindexerIdle() {
+  public static Trigger spindexerIdle() {
     return copilot.button(Buttons.getValue(Buttons.SPINDEXER_IDLE));
   }
 
   public static Trigger spindexerFwdSlow() {
     return copilot.button(Buttons.getValue(Buttons.SPINDEXER_FWDSLOW));
   }
-  
+
   public static Trigger spindexerFwdFast() {
     return copilot.button(Buttons.getValue(Buttons.SPINDEXER_FWDFAST));
   }
@@ -189,7 +189,7 @@ public class Copilot {
     return copilot.button(Buttons.getValue(Buttons.KICKER_REVFAST));
   }
 
-   public static Trigger flywheelIdle() {
+  public static Trigger flywheelIdle() {
     return copilot.button(Buttons.getValue(Buttons.FLYWHEEL_IDLE));
   }
 
@@ -228,5 +228,4 @@ public class Copilot {
   public static Trigger brakeMode() {
     return copilot.button(Buttons.getValue(Buttons.BRAKE_MODE));
   }
-
 }

@@ -54,7 +54,6 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
   private final AngularVelocity REVERSE_SPEED_SLOW = RPM.of(-60);
 
-
   private final StatusSignal<Current> supplyCurrent = motor.getSupplyCurrent(false);
   private final StatusSignal<Current> statorCurrent = motor.getStatorCurrent(false);
   private final StatusSignal<AngularVelocity> velocity = motor.getVelocity(false);
@@ -98,6 +97,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
     }
 
     optimizeCAN();
+    buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
   }
 
@@ -275,7 +275,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
     sim.setRotorVelocity(simModel.getAngularVelocity().times(kGearRatio));
   }
 
-  public void buttonMappings(){
+  public void buttonMappings() {
     Copilot.spindexerIdle().onTrue(stop());
     Copilot.spindexerFwdSlow().onTrue(runSlow()).onFalse(stop());
     Copilot.spindexerFwdFast().onTrue(run()).onFalse(stop());

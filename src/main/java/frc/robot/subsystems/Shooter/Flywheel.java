@@ -108,7 +108,7 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     }
 
     System.out.println(getName() + " Subsystem Initialized");
-
+    buttonMappings();
     optimizeCAN();
   }
 
@@ -327,7 +327,7 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(SIM_GEAR_RATIO));
   }
 
-  public void buttonMappings(){
+  public void buttonMappings() {
     Copilot.flywheelIdle().onTrue(stopCommand());
     Copilot.flywheel500().onTrue(runAtSpeed(500.0));
     Copilot.flywheel1200().onTrue(runAtSpeed(1200.0));

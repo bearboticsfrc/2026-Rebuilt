@@ -42,7 +42,6 @@ public class Kicker extends Mechanism implements SelfTestable {
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
   private final AngularVelocity REVERSE_SPEED_SLOW = RPM.of(-20);
 
-
   private final StatusSignal<Current> supplyCurrent = motor.getSupplyCurrent(false);
   private final StatusSignal<Current> statorCurrent = motor.getStatorCurrent(false);
   private final StatusSignal<AngularVelocity> velocity = motor.getVelocity(false);
@@ -87,6 +86,7 @@ public class Kicker extends Mechanism implements SelfTestable {
     }
 
     optimizeCAN();
+    buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
   }
 
@@ -223,12 +223,12 @@ public class Kicker extends Mechanism implements SelfTestable {
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, kGearRatio, simModel);
   }
-  public void buttonMappings(){
+
+  public void buttonMappings() {
     Copilot.kickerIdle().onTrue(stop());
     Copilot.kickerFwdSlow().onTrue(runSlow()).onFalse(stop());
     Copilot.kickerFwdFast().onTrue(run()).onFalse(stop());
     Copilot.kickerRevSlow().onTrue(reverseSlow()).onFalse(stop());
     Copilot.kickerRevFast().onTrue(reverse()).onFalse(stop());
-    
   }
 }

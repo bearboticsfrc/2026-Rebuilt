@@ -69,10 +69,7 @@ public class StateMachine extends SubsystemBase {
   private final Slider slider;
 
   public StateMachine(
-      CommandXboxController pilot,
-      CommandPS5Controller copilot,
-      Flywheel flywheel,
-      Slider slider) {
+      CommandXboxController pilot, CommandPS5Controller copilot, Flywheel flywheel, Slider slider) {
 
     this.pilot = pilot;
     this.copilot = copilot;
@@ -105,8 +102,7 @@ public class StateMachine extends SubsystemBase {
             States.DRIVE,
             States.SHOOTING,
             robotState.isInAllianceZone() && pilot.getRightTriggerAxis() > 0.1);
-        transition(
-            States.DRIVE, States.DRIVE, copilot.povUp().getAsBoolean());
+        transition(States.DRIVE, States.DRIVE, copilot.povUp().getAsBoolean());
         break;
       case SHOOTING:
         transition(
@@ -171,7 +167,6 @@ public class StateMachine extends SubsystemBase {
         break;
     }
   }
-
 
   @Override
   public void periodic() {
