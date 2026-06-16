@@ -6,7 +6,6 @@ import edu.wpi.first.networktables.StringEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.intake.Rollers;
 import frc.robot.subsystems.intake.Slider;
@@ -32,7 +31,6 @@ public class SelfTest {
   private final Kicker kicker;
   private final Turret turret;
   private final Slider slider;
-  private final Climber climber;
   private final CommandSwerveDrivetrain drivetrain;
 
   public SelfTest(
@@ -43,7 +41,6 @@ public class SelfTest {
       Kicker kicker,
       Turret turret,
       Slider slider,
-      Climber climber,
       CommandSwerveDrivetrain drivetrain) {
     this.rollers = rollers;
     this.flywheel = flywheel;
@@ -52,7 +49,6 @@ public class SelfTest {
     this.kicker = kicker;
     this.turret = turret;
     this.slider = slider;
-    this.climber = climber;
     this.drivetrain = drivetrain;
 
     registry.put("rollers", rollers);
@@ -63,7 +59,6 @@ public class SelfTest {
 
     registry.put("turret", turret);
     registry.put("slider", slider);
-    registry.put("climber", climber);
 
     // Groups
 
@@ -76,7 +71,7 @@ public class SelfTest {
     TestGroup intake = new TestGroup("intake group", slider, rollers);
     registry.put("intake group", intake);
 
-    TestGroup all = new TestGroup("all", indexer, intake, shooter, climber);
+    TestGroup all = new TestGroup("all", indexer, intake, shooter);
     registry.put("all", all);
   }
 

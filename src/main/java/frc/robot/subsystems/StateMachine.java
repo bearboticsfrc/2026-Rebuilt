@@ -67,20 +67,17 @@ public class StateMachine extends SubsystemBase {
   private final CommandPS5Controller copilot;
   private final Flywheel flywheel;
   private final Slider slider;
-  private final Climber climber;
 
   public StateMachine(
       CommandXboxController pilot,
       CommandPS5Controller copilot,
       Flywheel flywheel,
-      Slider slider,
-      Climber climber) {
+      Slider slider) {
 
     this.pilot = pilot;
     this.copilot = copilot;
     this.flywheel = flywheel;
     this.slider = slider;
-    this.climber = climber;
 
     this.state = States.DRIVE;
     this.previousState = States.DRIVE;
@@ -109,7 +106,7 @@ public class StateMachine extends SubsystemBase {
             States.SHOOTING,
             robotState.isInAllianceZone() && pilot.getRightTriggerAxis() > 0.1);
         transition(
-            States.DRIVE, States.CLIMB, climber.isAtBottom() && copilot.povUp().getAsBoolean());
+            States.DRIVE, States.DRIVE, copilot.povUp().getAsBoolean());
         break;
       case SHOOTING:
         transition(
@@ -119,14 +116,6 @@ public class StateMachine extends SubsystemBase {
         break;
       case INTAKE:
         transition(States.INTAKE, States.DRIVE, pilot.getLeftTriggerAxis() < 0.1);
-        break;
-      case CLIMB:
-        transition(
-            States.CLIMB,
-            States.DRIVE,
-            !copilot.povUp().getAsBoolean()
-                && !copilot.povDown().getAsBoolean()
-                && climber.isAtBottom());
         break;
       default:
         transition(States.DRIVE, States.DRIVE, true);
@@ -183,23 +172,6 @@ public class StateMachine extends SubsystemBase {
     }
   }
 
-  public void updateClimbState() {
-    switch (climbState) {
-      case IDLE:
-        break;
-      case EXTENDING:
-        transition(ClimbStates.EXTENDING, ClimbStates.EXTENDED, climber.isAtTop());
-        break;
-      case EXTENDED:
-        transition(ClimbStates.EXTENDED, ClimbStates.RETRACTING, copilot.povDown().getAsBoolean());
-        break;
-      case RETRACTING:
-        transition(ClimbStates.RETRACTING, ClimbStates.RETRACTED, climber.isAtBottom());
-        break;
-      case RETRACTED:
-        break;
-    }
-  }
 
   @Override
   public void periodic() {
@@ -207,7 +179,6 @@ public class StateMachine extends SubsystemBase {
     updateShootState();
     updateIntakeState();
     updateTurretState();
-    updateClimbState();
   }
 
   public void transition(States current, States goal, boolean condition) {

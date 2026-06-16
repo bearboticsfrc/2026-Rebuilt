@@ -366,6 +366,9 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
 
   public void buttonMappings(){
     Copilot.hoodIdle().onTrue(stopCommand());
-    Copilot.hood0_25().onTrue()
+    Copilot.hood0_25().onTrue(goToSetpointRotationsDouble(() -> 0.25));
+    Copilot.hood0_5().onTrue(goToSetpointRotationsDouble(() -> 0.5));
+    Copilot.hood0_75().onTrue(goToSetpointRotationsDouble(() -> 0.75));
+    Copilot.hood1().onTrue(goToSetpointRotationsDouble(() -> 1));
   }
 }
