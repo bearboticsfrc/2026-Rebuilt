@@ -45,13 +45,11 @@ import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.AutoClimbCommand;
 import frc.robot.commands.DynamicShootingCommand;
 import frc.robot.commands.InterpolatedShootCommand;
 import frc.robot.commands.StaticShootCommand;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.subsystems.intake.Rollers;
@@ -111,8 +109,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final Hood hood;
 
-  @Logged private final Climber climber;
-
   @Logged private DynamicShootingCalculator calculator;
 
   @Logged private RobotState robotState = RobotState.getInstance();
@@ -161,8 +157,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final DriveTelemetry driveTelemetry = new DriveTelemetry();
 
-  private final AutoClimbCommand autoClimbCommand;
-
   private final SelfTest selfTest;
 
   private final GenericEntry spin =
@@ -185,7 +179,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     flywheel = new Flywheel();
     hood = new Hood();
-    climber = new Climber();
+  
 
     calculator = DynamicShootingCalculator.getInstance();
 
@@ -220,11 +214,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     staticShootCommand = new StaticShootCommand(hood, flywheel, spindexer, kicker, rpm, angle);
 
-    autoClimbCommand = new AutoClimbCommand(drivetrain, climber);
+  
 
     selfTest =
         new SelfTest(
-            rollers, flywheel, hood, spindexer, kicker, turret, slider, climber, drivetrain);
+            rollers, flywheel, hood, spindexer, kicker, turret, slider, drivetrain);
 
     registerPathplannerCommands();
 
@@ -358,9 +352,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         new ScheduleCommand(dynamicShootingCommand.stop().withName("StopShoot"))
             .withName("ScheduleStopShoot"));
 
-    NamedCommands.registerCommand("RaiseClimb", new ScheduleCommand(climber.raise()));
-
-    NamedCommands.registerCommand("LowerClimb", new ScheduleCommand(climber.lower()));
 
     NamedCommands.registerCommand("OscillateIntake", new ScheduleCommand(slider.lowOscillate()));
 
@@ -395,7 +386,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     CommandScheduler.getInstance()
         .schedule(
-            slider.calibrateZero().andThen(slider.retract()).alongWith(climber.calibrateZero()));
+            slider.calibrateZero().andThen(slider.retract()));
 
     m_autonomousCommand = getAutonomousCommand();
 
@@ -530,19 +521,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     //                     .withTargetDirection(robotState.getAngleToHub())));
 
     // copilot controlls
-    /* climber */
-    copilot.povUp().onTrue(climber.raise());
-
-    copilot.povDown().onTrue(climber.lower());
-
-    copilot.povRight().onTrue(climber.calibrateZero());
 
     // copilot
     //     .povLeft()
     //     .onTrue(
     //         Commands.runOnce(
     //             () -> {
-    //               if (climber.getCurrentCommand() != null) climber.getCurrentCommand().cancel();
+
     //             }));
 
     /* turret */

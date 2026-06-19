@@ -17,7 +17,6 @@ public class StateMachine extends SubsystemBase {
     DRIVE,
     INTAKE,
     SHOOTING,
-    CLIMB,
   }
 
   public enum ShootStates {
@@ -38,13 +37,6 @@ public class StateMachine extends SubsystemBase {
     IDLE,
   }
 
-  public enum ClimbStates {
-    IDLE,
-    EXTENDING,
-    EXTENDED,
-    RETRACTING,
-    RETRACTED,
-  }
 
   @Logged @Getter public States state;
   @Logged public States previousState;
@@ -58,29 +50,23 @@ public class StateMachine extends SubsystemBase {
   @Logged @Getter public TurretStates turretState;
   public TurretStates previousTurretState;
 
-  @Logged @Getter public ClimbStates climbState;
-  public ClimbStates previousClimbState;
-
   private final RobotState robotState = RobotState.getInstance();
 
   private final CommandXboxController pilot;
   private final CommandPS5Controller copilot;
   private final Flywheel flywheel;
   private final Slider slider;
-  private final Climber climber;
 
   public StateMachine(
       CommandXboxController pilot,
       CommandPS5Controller copilot,
       Flywheel flywheel,
-      Slider slider,
-      Climber climber) {
+      Slider slider) {
 
     this.pilot = pilot;
     this.copilot = copilot;
     this.flywheel = flywheel;
     this.slider = slider;
-    this.climber = climber;
 
     this.state = States.DRIVE;
     this.previousState = States.DRIVE;
@@ -94,9 +80,6 @@ public class StateMachine extends SubsystemBase {
     this.turretState = TurretStates.IDLE;
     this.previousTurretState = TurretStates.TRACK;
 
-    this.climbState = ClimbStates.IDLE;
-    this.previousClimbState = ClimbStates.IDLE;
-
     populateTriggers();
   }
 
@@ -108,8 +91,6 @@ public class StateMachine extends SubsystemBase {
             States.DRIVE,
             States.SHOOTING,
             robotState.isInAllianceZone() && pilot.getRightTriggerAxis() > 0.1);
-        transition(
-            States.DRIVE, States.CLIMB, climber.isAtBottom() && copilot.povUp().getAsBoolean());
         break;
       case SHOOTING:
         transition(
@@ -119,14 +100,6 @@ public class StateMachine extends SubsystemBase {
         break;
       case INTAKE:
         transition(States.INTAKE, States.DRIVE, pilot.getLeftTriggerAxis() < 0.1);
-        break;
-      case CLIMB:
-        transition(
-            States.CLIMB,
-            States.DRIVE,
-            !copilot.povUp().getAsBoolean()
-                && !copilot.povDown().getAsBoolean()
-                && climber.isAtBottom());
         break;
       default:
         transition(States.DRIVE, States.DRIVE, true);
@@ -182,22 +155,6 @@ public class StateMachine extends SubsystemBase {
         break;
     }
   }
-
-  public void updateClimbState() {
-    switch (climbState) {
-      case IDLE:
-        break;
-      case EXTENDING:
-        transition(ClimbStates.EXTENDING, ClimbStates.EXTENDED, climber.isAtTop());
-        break;
-      case EXTENDED:
-        transition(ClimbStates.EXTENDED, ClimbStates.RETRACTING, copilot.povDown().getAsBoolean());
-        break;
-      case RETRACTING:
-        transition(ClimbStates.RETRACTING, ClimbStates.RETRACTED, climber.isAtBottom());
-        break;
-      case RETRACTED:
-        break;
     }
   }
 
@@ -207,7 +164,6 @@ public class StateMachine extends SubsystemBase {
     updateShootState();
     updateIntakeState();
     updateTurretState();
-    updateClimbState();
   }
 
   public void transition(States current, States goal, boolean condition) {
@@ -221,25 +177,16 @@ public class StateMachine extends SubsystemBase {
           shootState = ShootStates.IDLE;
           intakeState = IntakeStates.RETRACT;
           turretState = TurretStates.TRACK;
-          climbState = ClimbStates.IDLE;
           break;
         case INTAKE:
           shootState = ShootStates.IDLE;
           intakeState = IntakeStates.EXTENDING;
           turretState = TurretStates.TRACK;
-          climbState = ClimbStates.IDLE;
           break;
         case SHOOTING:
           shootState = ShootStates.RAMP;
           intakeState = IntakeStates.EXTENDING;
           turretState = TurretStates.TRACK;
-          climbState = ClimbStates.IDLE;
-          break;
-        case CLIMB:
-          shootState = ShootStates.IDLE;
-          intakeState = IntakeStates.RETRACT;
-          turretState = TurretStates.TRACK;
-          climbState = ClimbStates.EXTENDING;
           break;
       }
     }
@@ -269,24 +216,14 @@ public class StateMachine extends SubsystemBase {
     }
   }
 
-  public void transition(ClimbStates current, ClimbStates goal, boolean condition) {
-    if (climbState == current && condition) {
-      logStateTransition(climbState, goal);
-      previousClimbState = climbState;
-      climbState = goal;
-    }
-  }
-
   private HashMap<States, Trigger> onExitStates = new HashMap<States, Trigger>();
   private HashMap<ShootStates, Trigger> onExitShootStates = new HashMap<ShootStates, Trigger>();
   private HashMap<IntakeStates, Trigger> onExitIntakeStates = new HashMap<IntakeStates, Trigger>();
   private HashMap<TurretStates, Trigger> onExitTurretStates = new HashMap<TurretStates, Trigger>();
-  private HashMap<ClimbStates, Trigger> onExitClimbStates = new HashMap<ClimbStates, Trigger>();
   private HashMap<States, Trigger> onEnterStates = new HashMap<States, Trigger>();
   private HashMap<ShootStates, Trigger> onEnterShootStates = new HashMap<ShootStates, Trigger>();
   private HashMap<IntakeStates, Trigger> onEnterIntakeStates = new HashMap<IntakeStates, Trigger>();
   private HashMap<TurretStates, Trigger> onEnterTurretStates = new HashMap<TurretStates, Trigger>();
-  private HashMap<ClimbStates, Trigger> onEnterClimbStates = new HashMap<ClimbStates, Trigger>();
 
   public void populateTriggers() {
     for (States states : States.values()) {
@@ -309,12 +246,6 @@ public class StateMachine extends SubsystemBase {
       onEnterTurretStates.put(turretStates, new Trigger(() -> turretState == turretStates));
     }
 
-    for (ClimbStates climbStates : ClimbStates.values()) {
-      onExitClimbStates.put(climbStates, new Trigger(() -> previousClimbState == climbStates));
-      onEnterClimbStates.put(climbStates, new Trigger(() -> climbState == climbStates));
-    }
-  }
-
   public Trigger onExit(States exit) {
     return onExitStates.get(exit);
   }
@@ -329,10 +260,6 @@ public class StateMachine extends SubsystemBase {
 
   public Trigger onExit(TurretStates exit) {
     return onExitTurretStates.get(exit);
-  }
-
-  public Trigger onExit(ClimbStates exit) {
-    return onExitClimbStates.get(exit);
   }
 
   public Trigger onEnter(States enter) {
@@ -351,10 +278,6 @@ public class StateMachine extends SubsystemBase {
     return onEnterTurretStates.get(enter);
   }
 
-  public Trigger onEnter(ClimbStates enter) {
-    return onEnterClimbStates.get(enter);
-  }
-
   private void logStateTransition(States from, States to) {
     //  DogLog.log("StateMachine/States ", from + " -> " + to);
   }
@@ -371,7 +294,4 @@ public class StateMachine extends SubsystemBase {
     //  DogLog.log("StateMachine/TurretStates ", from + " -> " + to);
   }
 
-  private void logStateTransition(ClimbStates from, ClimbStates to) {
-    //  DogLog.log("StateMachine/ClimbStates ", from + " -> " + to);
-  }
 }
