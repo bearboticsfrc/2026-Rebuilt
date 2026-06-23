@@ -3,6 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
+import bearlib.util.GeomUtil;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -135,5 +136,15 @@ public class RobotState {
                 .getLookaheadPose()
                 // .transformBy(turretToRobot)
                 .getTranslation()));
+  }
+
+  @Logged
+  public boolean inHubZone() {
+    return GeomUtil.inZone(Field.getMyHubZone(), robotPose);
+  }
+
+  @Logged
+  public double getDistanceFromHubZone() {
+    return GeomUtil.getDistanceFromZone(Field.getMyHubZone(), robotPose);
   }
 }
