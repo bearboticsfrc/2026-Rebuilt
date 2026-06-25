@@ -283,6 +283,7 @@ public class DynamicShootingCalculator {
 
   private Translation2d selectTarget() {
     RobotState state = RobotState.getInstance();
+    if (state.isDemoMode() && state.inMotion()) return Field.getMyBackHub();
     if (state.isDemoMode()) return Field.getDemo();
     if (state.isInAllianceZone()) return Field.getMyHub();
     if (state.isLeftNeutralZone()) return Field.getMyLeft();

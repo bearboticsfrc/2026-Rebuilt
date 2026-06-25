@@ -155,4 +155,8 @@ public class RobotState {
                 // .transformBy(turretToRobot)
                 .getTranslation()));
   }
+
+  public boolean inMotion() {
+    return true;
+  }
 }
