@@ -179,7 +179,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     flywheel = new Flywheel();
     hood = new Hood();
-  
 
     calculator = DynamicShootingCalculator.getInstance();
 
@@ -214,11 +213,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     staticShootCommand = new StaticShootCommand(hood, flywheel, spindexer, kicker, rpm, angle);
 
-  
-
-    selfTest =
-        new SelfTest(
-            rollers, flywheel, hood, spindexer, kicker, turret, slider, drivetrain);
+    selfTest = new SelfTest(rollers, flywheel, hood, spindexer, kicker, turret, slider, drivetrain);
 
     registerPathplannerCommands();
 
@@ -352,7 +347,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         new ScheduleCommand(dynamicShootingCommand.stop().withName("StopShoot"))
             .withName("ScheduleStopShoot"));
 
-
     NamedCommands.registerCommand("OscillateIntake", new ScheduleCommand(slider.lowOscillate()));
 
     NamedCommands.registerCommand("WarmUpFlywheel", new ScheduleCommand(flywheel.warmUp()));
@@ -384,9 +378,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     vision.updateCameraSettings();
     turretVisionHelper.updateLimelightSettings();
 
-    CommandScheduler.getInstance()
-        .schedule(
-            slider.calibrateZero().andThen(slider.retract()));
+    CommandScheduler.getInstance().schedule(slider.calibrateZero().andThen(slider.retract()));
 
     m_autonomousCommand = getAutonomousCommand();
 

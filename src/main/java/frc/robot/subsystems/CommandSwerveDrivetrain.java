@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -71,6 +72,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
       new SwerveRequest.SysIdSwerveRotation();
 
+  private final Timer motionTimer = new Timer();
+
   @Logged(name = "PigeonPitch")
   public double getPigeonPitch() {
     return getPigeon2().getPitch().getValueAsDouble();
@@ -109,6 +112,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
   public Pose2d getPoseAtTimestamp(double timestamp) {
     return poseHistory.getSample(timestamp).orElse(this.getState().Pose);
+  }
+
+  public boolean inMotion() {
+    boolean spike =
+      Math.abs(getPigeon2().getAccelerationX().getValueAsDouble()) > 0.05
+            || (Math.abs(getPigeon2().getAngularVelocityZWorld().getValueAsDouble()) > 0.05);
+
+    if (spike) motionTimer.reset();
+    
+    return !motionTimer.hasElapsed(1);
   }
 
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
@@ -186,6 +199,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
     configureAutoBuilder();
     setStateStdDevs(STD_DEVS);
+    motionTimer.start();
   }
 
   /**

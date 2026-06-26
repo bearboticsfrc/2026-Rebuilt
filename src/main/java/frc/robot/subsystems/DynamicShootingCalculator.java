@@ -214,12 +214,12 @@ public class DynamicShootingCalculator {
 
       double finalAngle = robotAngle; // + fieldVel.omegaRadiansPerSecond * timeOfFlight;
 
-      lookaheadPose =
-          new Pose2d(
-              turretPose
-                  .getTranslation()
-                  .plus(new Translation2d(velX * timeOfFlight, velY * timeOfFlight)),
-              new Rotation2d(finalAngle));
+      // lookaheadPose =
+      //     new Pose2d(
+      //         turretPose
+      //             .getTranslation()
+      //             .plus(new Translation2d(velX * timeOfFlight, velY * timeOfFlight)),
+      //         new Rotation2d(finalAngle));
 
       double newDistance = target.getDistance(lookaheadPose.getTranslation());
 
@@ -283,7 +283,7 @@ public class DynamicShootingCalculator {
 
   private Translation2d selectTarget() {
     RobotState state = RobotState.getInstance();
-    if (state.isDemoMode() && state.inMotion()) return Field.getMyBackHub();
+    if (state.isDemoMode() && state.isMoving()) return Field.getMyBackHub();
     if (state.isDemoMode()) return Field.getDemo();
     if (state.isInAllianceZone()) return Field.getMyHub();
     if (state.isLeftNeutralZone()) return Field.getMyLeft();

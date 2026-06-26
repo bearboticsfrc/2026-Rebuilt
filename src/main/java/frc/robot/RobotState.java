@@ -156,7 +156,8 @@ public class RobotState {
                 .getTranslation()));
   }
 
-  public boolean inMotion() {
-    return true;
+  @Logged
+  public boolean isMoving() {
+    return Robot.get().getSwerve().inMotion();
   }
 }
