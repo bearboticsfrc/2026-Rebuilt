@@ -84,7 +84,7 @@ public class RobotState {
   }
 
   public boolean isDemoMode() {
-    return demoMode.getAsBoolean();
+    return true;
   }
 
   @Logged

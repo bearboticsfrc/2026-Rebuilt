@@ -115,13 +115,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
   }
 
   public boolean inMotion() {
-    boolean spike =
-      Math.abs(getPigeon2().getAccelerationX().getValueAsDouble()) > 0.05
-            || (Math.abs(getPigeon2().getAngularVelocityZWorld().getValueAsDouble()) > 0.05);
+    boolean spike = Math.abs(getPigeon2().getAccelerationX().getValueAsDouble()) > 0.05;
 
     if (spike) motionTimer.reset();
-    
-    return !motionTimer.hasElapsed(1);
+
+    return !motionTimer.hasElapsed(1.75);
   }
 
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */

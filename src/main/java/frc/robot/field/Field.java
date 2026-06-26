@@ -53,7 +53,7 @@ public class Field {
   }
 
   public static Translation2d getDemo() {
-    return AllianceFlipUtil.apply(new Translation2d(8.2709, 4.00685));
+    return AllianceFlipUtil.apply(BLUE_HUB);
   }
 
   public static boolean poseOutOfField(Pose2d pose2D) {

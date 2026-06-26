@@ -499,7 +499,20 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                     () -> drive.withVelocityX(0.0).withVelocityY(0.0).withRotationalRate(0.5))
                 .alongWith(Commands.idle(turret)));
 
-    pilot.y().whileTrue(turret.setAngle(Degrees.of(0))).alongWith(flywheel.runAtSpeed()-> 500).alongwith(hood.setAngle(Rotations.of(1.0)).alongWith(spindexer.run()).alongWith(kicker.run()));
+    pilot
+        .y()
+        .whileTrue(
+            turret
+                .setAngle(Degrees.of(-45))
+                .andThen(Commands.waitSeconds(0.5))
+                .andThen(
+                    turret
+                        .setAngle(Degrees.of(0))
+                        .alongWith(flywheel.runAtSpeed(() -> 500))
+                        .alongWith(
+                            hood.goToSetpointAngle(() -> Rotations.of(1.0))
+                                .alongWith(spindexer.run())
+                                .alongWith(kicker.run()))));
 
     // pilot
     //     .x()

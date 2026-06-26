@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -20,7 +21,7 @@ public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
 
   public static final Transform2d turretToRobot =
-      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d());
+      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d(Degrees.of(180)));
 
   private Translation2d lastTarget = Field.getMyHub();
 
@@ -214,12 +215,12 @@ public class DynamicShootingCalculator {
 
       double finalAngle = robotAngle; // + fieldVel.omegaRadiansPerSecond * timeOfFlight;
 
-      // lookaheadPose =
-      //     new Pose2d(
-      //         turretPose
-      //             .getTranslation()
-      //             .plus(new Translation2d(velX * timeOfFlight, velY * timeOfFlight)),
-      //         new Rotation2d(finalAngle));
+      lookaheadPose =
+          new Pose2d(
+              turretPose
+                  .getTranslation()
+                  .plus(new Translation2d(velX * timeOfFlight, velY * timeOfFlight)),
+              new Rotation2d(finalAngle));
 
       double newDistance = target.getDistance(lookaheadPose.getTranslation());
 
@@ -281,14 +282,15 @@ public class DynamicShootingCalculator {
     return latestParameters;
   }
 
-  private Translation2d selectTarget() {
-    RobotState state = RobotState.getInstance();
-    if (state.isDemoMode() && state.isMoving()) return Field.getMyBackHub();
-    if (state.isDemoMode()) return Field.getDemo();
-    if (state.isInAllianceZone()) return Field.getMyHub();
-    if (state.isLeftNeutralZone()) return Field.getMyLeft();
-    if (state.isRightNeutralZone()) return Field.getMyRight();
-    return Field.getMyHub();
+  @Logged
+  public Translation2d selectTarget() {
+    // RobotState state = RobotState.getInstance();
+    // if (state.isDemoMode() && state.isMoving()) return Field.getMyBackHub();
+    // if (state.isDemoMode()) return Field.getMyBackHub();
+    // if (state.isInAllianceZone()) return Field.getMyHub();
+    // if (state.isLeftNeutralZone()) return Field.getMyLeft();
+    // if (state.isRightNeutralZone()) return Field.getMyRight();
+    return Field.getMyBackHub();
   }
 
   private InterpolatingDoubleTreeMap getFlywheelMap() {
