@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -497,6 +498,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                 .applyRequest(
                     () -> drive.withVelocityX(0.0).withVelocityY(0.0).withRotationalRate(0.5))
                 .alongWith(Commands.idle(turret)));
+
+    pilot.y().whileTrue(turret.setAngle(Degrees.of(0))).alongWith(flywheel.runAtSpeed()-> 500).alongwith(hood.setAngle(Rotations.of(1.0)).alongWith(spindexer.run()).alongWith(kicker.run()));
 
     // pilot
     //     .x()
