@@ -18,7 +18,7 @@ public class GeomUtil {
   }
 
   /**
-   * Calculates the distance of a pose from a {@link Zone2d}.
+   * Calculates the distance of a {@link Pose2d} from a {@link Zone2d}.
    *
    * @param zone the specified {@link Zone2d} on the field
    * @param pose a pose on the field
@@ -52,7 +52,7 @@ public class GeomUtil {
   }
 
   /**
-   * Checks if a pose is w/in a {@link Zone2d}.
+   * Checks if a {@link Pose2d} is w/in a {@link Zone2d}.
    *
    * @param zone the specified {@link Zone2d} on the field
    * @param pose a pose on the field
@@ -64,13 +64,13 @@ public class GeomUtil {
 
     for (int n = zone.coords.length, i = 0; i < n; i++) {
 
-      double y1 = zone.coords[i].getY();
-      double x1 = zone.coords[i].getX();
-      double y2 = zone.coords[(i + 1) % n].getY();
-      double x2 = zone.coords[(i + 1) % n].getX();
-
-      if ((pose.getY() < y1) != (pose.getY() < y2)) {
-        double px = (x2 - x1) * (pose.getY() - y1) / (y2 - y1) + x1;
+      if ((pose.getY() < zone.coords[i].getY())
+          != (pose.getY() < zone.coords[(i + 1) % n].getY())) {
+        double px =
+            (zone.coords[(i + 1) % n].getX() - zone.coords[i].getX())
+                    * (pose.getY() - zone.coords[i].getY())
+                    / (zone.coords[(i + 1) % n].getY() - zone.coords[i].getY())
+                + zone.coords[i].getX();
         intersect = (pose.getX() < px) ? intersect + 1 : intersect;
       }
     }
@@ -87,5 +87,18 @@ public class GeomUtil {
    */
   public static boolean withinZone(Zone2d zone, Pose2d pose, double distance) {
     return inZone(zone, pose) ? true : getDistanceFromZone(zone, pose) <= distance;
+  }
+
+  /**
+   * Log and call this method in order to visualize a {@link Zone2d} in Advantage Scope
+   * 
+   * @param zone the zone you want to visualize
+   */
+  public static Translation2d[] getZone(Zone2d zone) {
+
+    Translation2d[] border = new Translation2d[zone.coords.length + 1];
+    System.arraycopy(zone.coords, 0, border, 0, zone.coords.length);
+    border[border.length - 1] = border[0];
+    return border;
   }
 }

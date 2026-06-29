@@ -140,11 +140,16 @@ public class RobotState {
 
   @Logged
   public boolean inHubZone() {
-    return GeomUtil.inZone(Field.getMyHubZone(), robotPose);
+    return GeomUtil.inZone(Field.getMyTestZone(), robotPose);
   }
 
   @Logged
   public double getDistanceFromHubZone() {
-    return GeomUtil.getDistanceFromZone(Field.getMyHubZone(), robotPose);
+    return GeomUtil.getDistanceFromZone(Field.getMyTestZone(), robotPose);
+  }
+
+  @Logged
+  public Translation2d[] getZones() {
+    return GeomUtil.getZone(Field.getMyTestZone());
   }
 }

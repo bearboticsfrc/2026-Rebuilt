@@ -23,12 +23,12 @@ public class Field {
   public static final Translation2d BLUE_RIGHT = new Translation2d(1.2, 1);
   public static final Translation2d BLUE_ALLIANCE_LINE = new Translation2d(4, 4);
 
-  public static Zone2d hub =
+  public static Zone2d test =
       new Zone2d(
-          new Translation2d(3.987, 4.611),
-          new Translation2d(5.229, 4.611),
-          new Translation2d(3.987, 3.498),
-          new Translation2d(5.229, 3.498));
+          new Translation2d(6, 2),
+          new Translation2d(6, 5),
+          new Translation2d(10, 5),
+          new Translation2d(10, 2));
 
   public static Pose2d getMyOutputPose() {
     return AllianceFlipUtil.apply(BLUE_OUTPOST_POSE);
@@ -55,8 +55,8 @@ public class Field {
     return AllianceFlipUtil.apply(BLUE_ALLIANCE_LINE);
   }
 
-  public static Zone2d getMyHubZone() {
-    return hub;
+  public static Zone2d getMyTestZone() {
+    return test;
   }
 
   public static boolean poseOutOfField(Pose2d pose2D) {
