@@ -93,14 +93,14 @@ public class DynamicShootingCalculator {
     flywheelSpeedMap.put(4.67, 3250.0);
     flywheelSpeedMap.put(5.5, 3750.0);
 
-    hoodAngleMap.put(1.17, 0.0);
-    hoodAngleMap.put(2.0, 0.0);
-    hoodAngleMap.put(2.67, 0.0);
-    hoodAngleMap.put(3.0, 0.0);
-    hoodAngleMap.put(3.57, 0.0);
-    hoodAngleMap.put(4.0, 0.0);
-    hoodAngleMap.put(4.67, 0.0);
-    hoodAngleMap.put(5.5, 0.0);
+    hoodAngleMap.put(1.17, 0.2);
+    hoodAngleMap.put(2.0, 0.2);
+    hoodAngleMap.put(2.67, 0.2);
+    hoodAngleMap.put(3.0, 0.2);
+    hoodAngleMap.put(3.57, 0.2);
+    hoodAngleMap.put(4.0, 0.2);
+    hoodAngleMap.put(4.67, 0.2);
+    hoodAngleMap.put(5.5, 0.2);
 
     timeOfFlightMap.put(1.17, 0.94);
     timeOfFlightMap.put(2.0, 1.03);
@@ -283,13 +283,13 @@ public class DynamicShootingCalculator {
 
   @Logged
   public Translation2d selectTarget() {
-    // RobotState state = RobotState.getInstance();
-    // if (state.isDemoMode() && state.isMoving()) return Field.getMyBackHub();
-    // if (state.isDemoMode()) return Field.getMyBackHub();
+    RobotState state = RobotState.getInstance();
+    if (state.isDemoMode() && state.isMoving()) return Field.getMyBackHub();
+    if (state.isDemoMode()) return Field.getMyBackHub();
     // if (state.isInAllianceZone()) return Field.getMyHub();
     // if (state.isLeftNeutralZone()) return Field.getMyLeft();
     // if (state.isRightNeutralZone()) return Field.getMyRight();
-    return Field.getMyBackHub();
+    return Field.getMyHub();
   }
 
   private InterpolatingDoubleTreeMap getFlywheelMap() {

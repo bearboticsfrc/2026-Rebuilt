@@ -158,6 +158,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final DriveTelemetry driveTelemetry = new DriveTelemetry();
 
+  private final Pose2d posePose = new Pose2d(4.97, 4.034536, new Rotation2d());
+
+  private int counter = 0;
+
   private final SelfTest selfTest;
 
   private final GenericEntry spin =
@@ -309,6 +313,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     getTargetTurretAngleRads();
     CommandScheduler.getInstance().run();
     DynamicShootingCalculator.getInstance().clearLaunchingParameters();
+
+    if (counter++ > 15) {
+      drivetrain.resetPose(autoStartPose);
+      counter = 0;
+    }
   }
 
   @Override
@@ -425,8 +434,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     if (introspectedAutoCommand != selectedAutoCommand
         && selectedAutoCommand instanceof PathPlannerAuto) {
-      autoStartPose =
-          AllianceFlipUtil.apply(((PathPlannerAuto) selectedAutoCommand).getStartingPose());
+      autoStartPose = new Pose2d(4.97, 4.034536, new Rotation2d());
       introspectedAutoCommand = selectedAutoCommand;
       drivetrain.resetPose(autoStartPose);
       vision.resetPose();
@@ -646,8 +654,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
       Command firstAuto = autoChooser.getSelected();
       if (firstAuto instanceof PathPlannerAuto) {
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FirstAuto: " + firstAuto.getName());
-        drivetrain.resetPose(
-            AllianceFlipUtil.apply(((PathPlannerAuto) firstAuto).getStartingPose()));
+        autoStartPose = new Pose2d(8.08, 4.034536, new Rotation2d());
+        drivetrain.resetPose(autoStartPose);
         vision.resetPose();
         initialPoseSet = true;
       } else {
