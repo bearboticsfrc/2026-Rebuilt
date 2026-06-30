@@ -491,7 +491,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
         .leftBumper()
         .whileTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
         .onFalse(slider.retract().alongWith(rollers.stop()));
-
     new Trigger(() -> spin.get().getBoolean() == true)
         .whileTrue(
             drivetrain

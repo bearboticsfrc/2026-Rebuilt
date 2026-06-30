@@ -213,7 +213,11 @@ public class DynamicShootingCalculator {
       double velX = fieldVel.vxMetersPerSecond - fieldVel.omegaRadiansPerSecond * ry_avg;
       double velY = fieldVel.vyMetersPerSecond + fieldVel.omegaRadiansPerSecond * rx_avg;
 
-      double finalAngle = robotAngle; // + fieldVel.omegaRadiansPerSecond * timeOfFlight;
+      double finalAngle =
+          robotAngle
+              + turretToRobot
+                  .getRotation()
+                  .getRadians(); // + fieldVel.omegaRadiansPerSecond * timeOfFlight;
 
       lookaheadPose =
           new Pose2d(
@@ -264,12 +268,7 @@ public class DynamicShootingCalculator {
     // --- Turret angle in robot frame at predicted pose ---
 
     turretAngle =
-        target
-            .minus(lookaheadPose.getTranslation())
-            .getAngle()
-            .minus(lookaheadPose.getRotation())
-            .minus(turretToRobot.getRotation());
-
+        target.minus(lookaheadPose.getTranslation()).getAngle().minus(lookaheadPose.getRotation());
     lastTarget = target;
 
     // --- Lookup shot parameters ---
@@ -295,22 +294,22 @@ public class DynamicShootingCalculator {
 
   private InterpolatingDoubleTreeMap getFlywheelMap() {
     RobotState state = RobotState.getInstance();
-    if (state.isDemoMode()) return demoFlywheelSpeedMap;
-    if (!state.isInAllianceZone()) return passFlywheelSpeedMap;
+    // if (state.isDemoMode()) return demoFlywheelSpeedMap;
+    // if (!state.isInAllianceZone()) return passFlywheelSpeedMap;
     return flywheelSpeedMap;
   }
 
   private InterpolatingDoubleTreeMap getHoodMap() {
     RobotState state = RobotState.getInstance();
-    if (state.isDemoMode()) return demoHoodAngleMap;
-    if (!state.isInAllianceZone()) return passHoodAngleMap;
+    // if (state.isDemoMode()) return demoHoodAngleMap;
+    // if (!state.isInAllianceZone()) return passHoodAngleMap;
     return hoodAngleMap;
   }
 
   private InterpolatingDoubleTreeMap getTOFMap() {
-    RobotState state = RobotState.getInstance();
-    if (state.isDemoMode()) return demoTimeOfFlightMap;
-    if (!state.isInAllianceZone()) return passTimeOfFlightMap;
+    // RobotState state = RobotState.getInstance();
+    // if (state.isDemoMode()) return demoTimeOfFlightMap;
+    // if (!state.isInAllianceZone()) return passTimeOfFlightMap;
     return timeOfFlightMap;
   }
 }
