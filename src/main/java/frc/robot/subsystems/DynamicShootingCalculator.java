@@ -9,7 +9,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -175,12 +174,7 @@ public class DynamicShootingCalculator {
     ChassisSpeeds fieldVel = filteredVel;
 
     final double PHASE_DELAY_S = 0.03;
-    Pose2d estimatedPose =
-        currentPose.exp(
-            new Twist2d(
-                robotRelVel.vxMetersPerSecond * PHASE_DELAY_S,
-                robotRelVel.vyMetersPerSecond * PHASE_DELAY_S,
-                robotRelVel.omegaRadiansPerSecond * PHASE_DELAY_S));
+    Pose2d estimatedPose = new Pose2d(8.08, 4.034536, new Rotation2d());
 
     // --- Turret pose in field frame ---
     Pose2d turretPose = estimatedPose.transformBy(turretToRobot);

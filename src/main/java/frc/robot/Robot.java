@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
@@ -314,10 +313,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     CommandScheduler.getInstance().run();
     DynamicShootingCalculator.getInstance().clearLaunchingParameters();
 
-    if (counter++ > 15) {
-      drivetrain.resetPose(autoStartPose);
-      counter = 0;
-    }
+    // if (counter++ > 15) {
+    //   drivetrain.resetPose(autoStartPose);
+    //   counter = 0;
+    // }
   }
 
   @Override
@@ -455,24 +454,24 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void configureDefaultCommands() {
 
     // default drive request
-    drivetrain.setDefaultCommand(
-        drivetrain.applyRequest(
-            () ->
-                drive
-                    .withVelocityX(
-                        -pilot.getLeftY()
-                            * getMaxLinearVelocity()
-                                .get()) // Drive forward with negative Y (forward)
-                    .withVelocityY(
-                        -pilot.getLeftX()
-                            * getMaxLinearVelocity().get()) // Drive left with negative X (left)
-                    .withRotationalRate(
-                        -pilot.getRightX()
-                            * getMaxAngularVelocity()
-                                .get()) // Drive counterclockwise with negative X (left)
-            ));
+    // drivetrain.setDefaultCommand(
+    //     drivetrain.applyRequest(
+    //         () ->
+    //             drive
+    //                 .withVelocityX(
+    //                     -pilot.getLeftY()
+    //                         * getMaxLinearVelocity()
+    //                             .get()) // Drive forward with negative Y (forward)
+    //                 .withVelocityY(
+    //                     -pilot.getLeftX()
+    //                         * getMaxLinearVelocity().get()) // Drive left with negative X (left)
+    //                 .withRotationalRate(
+    //                     -pilot.getRightX()
+    //                         * getMaxAngularVelocity()
+    //                             .get()) // Drive counterclockwise with negative X (left)
+    //         ));
 
-    drivetrain.registerTelemetry(driveTelemetry::telemeterize);
+    // drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
     turret.setDefaultCommand(getTurretCommand());
   }
@@ -506,20 +505,27 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
                     () -> drive.withVelocityX(0.0).withVelocityY(0.0).withRotationalRate(0.5))
                 .alongWith(Commands.idle(turret)));
 
-    pilot
-        .y()
-        .whileTrue(
-            turret
-                .setAngle(Degrees.of(-45))
-                .andThen(Commands.waitSeconds(0.5))
-                .andThen(
-                    turret
-                        .setAngle(Degrees.of(0))
-                        .alongWith(flywheel.runAtSpeed(() -> 500))
-                        .alongWith(
-                            hood.goToSetpointAngle(() -> Rotations.of(1.0))
-                                .alongWith(spindexer.run())
-                                .alongWith(kicker.run()))));
+    // pilot
+    //     .y()
+    //     .whileTrue(
+    //         turret
+    //             .setAngle(Degrees.of(45))
+    //             .withTimeout(0.5)
+    //             .andThen(
+    //                 turret
+    //                     .setAngle(Degrees.of(180)).alongWith(null)
+    //                     .alongWith(flywheel.runAtSpeed(() -> 800))
+    //                     .alongWith(
+    //                         hood.goToSetpointAngle(() -> Rotations.of(1.0))
+    //                             .alongWith(spindexer.run())
+    //                             .alongWith(kicker.run()))))
+    //     .onFalse(
+    //         flywheel
+    //             .stopCommand()
+    //             .alongWith(
+    //                 hood.goToSetpointAngle(() -> Rotations.of(0))
+    //                     .alongWith(spindexer.stop())
+    //                     .alongWith(kicker.stop())));
 
     // pilot
     //     .x()

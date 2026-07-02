@@ -80,7 +80,7 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
 
   // set these small to start
   @Getter public Angle minRotations = Rotations.of(-.62);
-  @Getter public Angle maxRotations = Rotations.of(.62);
+  @Getter public Angle maxRotations = Degrees.of(190);
 
   @Getter public boolean attached = true;
 
