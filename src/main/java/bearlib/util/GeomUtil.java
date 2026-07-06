@@ -1,5 +1,6 @@
 package bearlib.util;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -11,9 +12,19 @@ public class GeomUtil {
    *
    * @param coords connecting zone verticies
    */
+  @Logged
   public static record Zone2d(Translation2d... coords) {
+
     public Zone2d(Translation2d... coords) {
       this.coords = coords;
+    }
+
+    public Translation2d[] get() {
+
+      Translation2d[] border = new Translation2d[coords.length + 1];
+      System.arraycopy(coords, 0, border, 0, coords.length);
+      border[border.length - 1] = border[0];
+      return border;
     }
   }
 
@@ -87,18 +98,5 @@ public class GeomUtil {
    */
   public static boolean withinZone(Zone2d zone, Pose2d pose, double distance) {
     return inZone(zone, pose) ? true : getDistanceFromZone(zone, pose) <= distance;
-  }
-
-  /**
-   * Log and call this method in order to visualize a {@link Zone2d} in Advantage Scope
-   * 
-   * @param zone the zone you want to visualize
-   */
-  public static Translation2d[] getZone(Zone2d zone) {
-
-    Translation2d[] border = new Translation2d[zone.coords.length + 1];
-    System.arraycopy(zone.coords, 0, border, 0, zone.coords.length);
-    border[border.length - 1] = border[0];
-    return border;
   }
 }
