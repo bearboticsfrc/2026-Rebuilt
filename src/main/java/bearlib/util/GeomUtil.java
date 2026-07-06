@@ -1,6 +1,5 @@
 package bearlib.util;
 
-import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -12,7 +11,6 @@ public class GeomUtil {
    *
    * @param coords connecting zone verticies
    */
-  @Logged
   public static record Zone2d(Translation2d... coords) {
 
     public Zone2d(Translation2d... coords) {
