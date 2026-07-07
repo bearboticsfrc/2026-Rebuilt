@@ -2,12 +2,17 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -18,6 +23,14 @@ public class Mechanism extends SubsystemBase {
   private int periodicCount = 0; // used for periodic fault logging
 
   private boolean lastHasFault = false;
+
+  protected TalonFX motor;
+
+  protected StatusSignal<Current> motorSupplyCurrent;
+  protected StatusSignal<Current> motorStatorCurrent;
+  protected StatusSignal<AngularVelocity> motorVelocity;
+  protected StatusSignal<Temperature> motorTemperature;
+  protected StatusSignal<Double> motorClosedLoopError;
 
   private final String UNDERVOLTAGE_STICKY_KEY;
   private final String BOOT_DURING_ENABLE_STICKY_KEY;
@@ -35,10 +48,18 @@ public class Mechanism extends SubsystemBase {
 
   private final String FAULT_SUMMARY_KEY;
 
-  public Mechanism(String name) {
+  public Mechanism(String name, int ID, CANBus canivore) {
     super(name);
 
     String lowerCaseName = name.toLowerCase();
+
+    motor = new TalonFX(ID, canivore);
+
+    motorSupplyCurrent = motor.getSupplyCurrent(false);
+    motorStatorCurrent = motor.getStatorCurrent(false);
+    motorVelocity = motor.getVelocity(false);
+    motorTemperature = motor.getDeviceTemp(false);
+    motorClosedLoopError = motor.getClosedLoopError(false);
 
     UNDERVOLTAGE_STICKY_KEY = lowerCaseName + "/faults/sticky/undervoltage";
     BOOT_DURING_ENABLE_STICKY_KEY = lowerCaseName + "/faults/sticky/bootDuringEnable";
@@ -75,26 +96,9 @@ public class Mechanism extends SubsystemBase {
     boolean liveStatorCurrLimit = motor.getFault_StatorCurrLimit().getValue();
     boolean liveBridgeBrownout = motor.getFault_BridgeBrownout().getValue();
 
-    // Log sticky
-    // DogLog.log(UNDERVOLTAGE_STICKY_KEY, stickyUndervoltage);
-    // DogLog.log(BOOT_DURING_ENABLE_STICKY_KEY, stickyBootDuring);
-    // DogLog.log(DEVICE_TEMP_STICKY_KEY, stickyDeviceTemp);
-    // DogLog.log(HARDWARE_STICKY_KEY, stickyHardware);
-    // DogLog.log(STATOR_CURR_LIMIT_STICKY_KEY, stickyStatorCurrLimit);
-    // DogLog.log(BRIDGE_BROWNOUT_STICKY_KEY, stickyBridgeBrownout);
-
-    // // Log live
-    // DogLog.log(UNDERVOLTAGE_LIVE_KEY, liveUndervoltage);
-    // DogLog.log(BOOT_DURING_ENABLE_LIVE_KEY, liveBootDuring);
-    // DogLog.log(DEVICE_TEMP_LIVE_KEY, liveDeviceTemp);
-    // DogLog.log(HARDWARE_LIVE_KEY, liveHardware);
-    // DogLog.log(STATOR_CURR_LIMIT_LIVE_KEY, liveStatorCurrLimit);
-    // DogLog.log(BRIDGE_BROWNOUT_LIVE_KEY, liveBridgeBrownout);
-
     // Summary
     boolean hasFault =
         liveUndervoltage || liveHardware || liveDeviceTemp || liveBootDuring || liveBridgeBrownout;
-    //  DogLog.log(FAULT_SUMMARY_KEY, hasFault);
 
     // Report once on transition to faulted
     if (hasFault && !lastHasFault) {
@@ -103,9 +107,8 @@ public class Mechanism extends SubsystemBase {
     lastHasFault = hasFault;
   }
 
-  //
-  // Simulation
-  //
+
+  /* Simulation */
   public DCMotorSim simulationInitKrakenX60(
       TalonFX motor, double gearRatio, double inertia, ChassisReference orientation) {
     TalonFXSimState talonFXSim = motor.getSimState();

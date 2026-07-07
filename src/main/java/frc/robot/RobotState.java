@@ -148,7 +148,7 @@ public class RobotState {
     return GeomUtil.getDistanceFromZone(Field.getMyTestZone(), robotPose);
   }
 
-  @Logged
+  @Logged(name = "Zones")
   public Translation2d[] getZones() {
     return Field.getMyTestZone().get();
   }

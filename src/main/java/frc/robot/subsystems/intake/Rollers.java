@@ -6,10 +6,8 @@ import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
@@ -17,7 +15,6 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -31,10 +28,6 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   private static final String NAME = "Rollers";
 
-  private final CANBus canivore = new CANBus(CAN.NAME);
-
-  private final TalonFX motor = new TalonFX(CAN.ROLLERS, canivore);
-
   private final VelocityTorqueCurrentFOC velocityTorqueCurrent = new VelocityTorqueCurrentFOC(0.0);
 
   // Theoretical max == 5400
@@ -46,12 +39,6 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   private final double gearRatio = 1.11;
 
-  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
-  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
-  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
-  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
-  private final StatusSignal<Double> motorClosedLoopError = motor.getClosedLoopError(false);
-
   private static final AngularVelocity VELOCITY_TOLERANCE = RPM.of(200);
 
   @Logged private boolean selfTestPassed = false;
@@ -59,7 +46,7 @@ public class Rollers extends Mechanism implements SelfTestable {
   private DCMotorSim motorSimModel;
 
   public Rollers() {
-    super(NAME);
+    super(NAME, CAN.ROLLERS, new CANBus(CAN.NAME));
     TalonFXConfiguration config = new TalonFXConfiguration();
 
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
