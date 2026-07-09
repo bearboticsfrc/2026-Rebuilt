@@ -21,8 +21,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
- * A base subsystem class representing a generic motorized mechanism utilizing a TalonFX motor
- * controller. Handles telemetry keys, fault logging, and physics-based simulation setup.
+ * Base class for single-motor mechanism. For CTRE hardware, handles telemetry, logging, and sim.
  */
 public class Mechanism extends SubsystemBase {
 
@@ -55,11 +54,11 @@ public class Mechanism extends SubsystemBase {
   private final String FAULT_SUMMARY_KEY;
 
   /**
-   * Constructs a new Mechanism subsystem.
+   * Constructor.
    *
-   * @param name The user-friendly name of the mechanism (used for telemetry logging paths).
-   * @param ID The CAN ID of the TalonFX motor controller.
-   * @param canivore The CANBus network where the motor controller resides.
+   * @param name name of the mechanism.
+   * @param ID The CAN ID.
+   * @param canivore The CANBus.
    */
   public Mechanism(String name, int ID, CANBus canivore) {
     super(name);
@@ -91,9 +90,7 @@ public class Mechanism extends SubsystemBase {
   }
 
   /**
-   * Periodically checks and logs live and sticky hardware faults. Throttled internally to run once
-   * every 240ms (at a 50Hz loop rate). Reports an error to the DriverStation upon a new fault
-   * transition.
+   * Logs sticky and hardware faults,
    *
    * @param motor The TalonFX motor controller instance to check for faults.
    */
@@ -124,35 +121,6 @@ public class Mechanism extends SubsystemBase {
       DriverStation.reportError(getName() + " has a fault! Check logs.", false);
     }
     lastHasFault = hasFault;
-  }
-
-  /**
-   * Initializes simulation model for a Kraken X60.
-   *
-   * @param motor The TalonFX motor controller being simulated.
-   * @param gearRatio The gear ratio of the mechanism (motor rotations per mechanism rotation).
-   * @param inertia The moment of inertia of the mechanism load (kg*m^2).
-   * @param orientation The mechanical orientation of the motor relative to the chassis.
-   * @return A {@link DCMotorSim} model representing the physical system.
-   */
-  public DCMotorSim simulationInitKrakenX60(
-      TalonFX motor, double gearRatio, double inertia, ChassisReference orientation) {
-    TalonFXSimState talonFXSim = motor.getSimState();
-
-    talonFXSim.Orientation = orientation;
-    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX60);
-
-    DCMotorSim motorSimModel =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), inertia, gearRatio),
-            DCMotor.getKrakenX60Foc(1));
-
-    var simConfig = new TalonFXConfiguration();
-    motor.getConfigurator().refresh(simConfig);
-    simConfig.Slot0.kS = 0.0;
-    motor.getConfigurator().apply(simConfig);
-
-    return motorSimModel;
   }
 
   /**
@@ -225,6 +193,35 @@ public class Mechanism extends SubsystemBase {
         new DCMotorSim(
             LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), inertia, gearRatio),
             DCMotor.getKrakenX44Foc(1));
+
+    var simConfig = new TalonFXConfiguration();
+    motor.getConfigurator().refresh(simConfig);
+    simConfig.Slot0.kS = 0.0;
+    motor.getConfigurator().apply(simConfig);
+
+    return motorSimModel;
+  }
+
+  /**
+   * Initializes simulation model for a Kraken X60.
+   *
+   * @param motor The TalonFX motor controller being simulated.
+   * @param gearRatio The gear ratio of the mechanism (motor rotations per mechanism rotation).
+   * @param inertia The moment of inertia of the mechanism load (kg*m^2).
+   * @param orientation The mechanical orientation of the motor relative to the chassis.
+   * @return A {@link DCMotorSim} model representing the physical system.
+   */
+  public DCMotorSim simulationInitKrakenX60(
+      TalonFX motor, double gearRatio, double inertia, ChassisReference orientation) {
+    TalonFXSimState talonFXSim = motor.getSimState();
+
+    talonFXSim.Orientation = orientation;
+    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX60);
+
+    DCMotorSim motorSimModel =
+        new DCMotorSim(
+            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), inertia, gearRatio),
+            DCMotor.getKrakenX60Foc(1));
 
     var simConfig = new TalonFXConfiguration();
     motor.getConfigurator().refresh(simConfig);
