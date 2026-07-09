@@ -188,7 +188,11 @@ public class DynamicShootingCalculator {
       double velX = fieldVel.vxMetersPerSecond - fieldVel.omegaRadiansPerSecond * ry_avg;
       double velY = fieldVel.vyMetersPerSecond + fieldVel.omegaRadiansPerSecond * rx_avg;
 
-      double finalAngle = robotAngle; // + fieldVel.omegaRadiansPerSecond * timeOfFlight;
+      double finalAngle =
+          robotAngle
+              + turretToRobot
+                  .getRotation()
+                  .getRadians(); // + fieldVel.omegaRadiansPerSecond * timeOfFlight;
 
       lookaheadPose =
           new Pose2d(
@@ -239,11 +243,7 @@ public class DynamicShootingCalculator {
     // --- Turret angle in robot frame at predicted pose ---
 
     turretAngle =
-        target
-            .minus(lookaheadPose.getTranslation())
-            .getAngle()
-            .minus(lookaheadPose.getRotation())
-            .minus(turretToRobot.getRotation());
+        target.minus(lookaheadPose.getTranslation()).getAngle().minus(lookaheadPose.getRotation());
 
     lastTarget = target;
 

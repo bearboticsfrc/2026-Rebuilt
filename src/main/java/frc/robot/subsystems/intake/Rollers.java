@@ -1,6 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
@@ -14,7 +13,6 @@ import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -46,7 +44,9 @@ public class Rollers extends Mechanism implements SelfTestable {
   private DCMotorSim motorSimModel;
 
   public Rollers() {
+
     super(NAME, CAN.ROLLERS, new CANBus(CAN.NAME));
+
     TalonFXConfiguration config = new TalonFXConfiguration();
 
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -74,6 +74,7 @@ public class Rollers extends Mechanism implements SelfTestable {
           simulationInitKrakenX60(
               motor, gearRatio, 0.001, ChassisReference.CounterClockwise_Positive);
     }
+
     buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
   }
@@ -100,6 +101,13 @@ public class Rollers extends Mechanism implements SelfTestable {
     super.logFaults(motor);
   }
 
+  @Override
+  public void simulationPeriodic() {
+    super.simulationPeriodic(motor, gearRatio, motorSimModel);
+  }
+
+  /* Commands */
+
   private void setOutput(AngularVelocity velocity) {
     motor.setControl(velocityTorqueCurrent.withVelocity(velocity));
   }
@@ -123,6 +131,8 @@ public class Rollers extends Mechanism implements SelfTestable {
   public Command stop() {
     return runOnce(() -> motor.stopMotor()).withName(NAME + ".Stop");
   }
+
+  /* Self Test */
 
   private boolean isNearTarget(AngularVelocity target) {
     return motorVelocity.getValue().isNear(target, VELOCITY_TOLERANCE);
@@ -169,6 +179,8 @@ public class Rollers extends Mechanism implements SelfTestable {
         .withName(getName() + ".SelfTestFast");
   }
 
+  /* Logged Values */
+
   @Logged(name = "setpointRPM")
   public double getSetpoint() {
     return velocityTorqueCurrent.Velocity * 60.0;
@@ -179,35 +191,7 @@ public class Rollers extends Mechanism implements SelfTestable {
     return motorVelocity.getValue().in(RPM);
   }
 
-  @Logged(name = "closedLoopError")
-  public double getClosedLoopError() {
-    return motorClosedLoopError.getValue();
-  }
-
-  @Logged(name = "velocity")
-  public AngularVelocity getVelocity() {
-    return motorVelocity.getValue();
-  }
-
-  @Logged(name = "supplyCurrent")
-  public Current getSupplyCurrent() {
-    return motorSupplyCurrent.getValue();
-  }
-
-  @Logged(name = "statorCurrent")
-  public Current getStatorCurrent() {
-    return motorStatorCurrent.getValue();
-  }
-
-  @Logged(name = "temperature")
-  public double getTemperature() {
-    return motorTemperature.getValue().in(Celsius);
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    super.simulationPeriodic(motor, gearRatio, motorSimModel);
-  }
+  /* Button Mappings for Copilot */
 
   public void buttonMappings() {
     Copilot.rollerIdle().onTrue(stop());

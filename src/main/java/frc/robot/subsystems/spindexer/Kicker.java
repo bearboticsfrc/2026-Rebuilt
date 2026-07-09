@@ -1,6 +1,5 @@
 package frc.robot.subsystems.spindexer;
 
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
@@ -14,7 +13,6 @@ import com.ctre.phoenix6.sim.ChassisReference;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -33,8 +31,13 @@ public class Kicker extends Mechanism implements SelfTestable {
   // theoretical max == 2400 RPM
   private final AngularVelocity NORMAL_SPEED = RPM.of(2200);
   private final AngularVelocity SLOW_SPEED = RPM.of(200);
+
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
   private final AngularVelocity REVERSE_SPEED_SLOW = RPM.of(-20);
+
+  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(200);
+
+  @Logged private boolean selfTestPassed = false;
 
   private DCMotorSim simModel;
 
@@ -88,6 +91,24 @@ public class Kicker extends Mechanism implements SelfTestable {
     motor.optimizeBusUtilization();
   }
 
+  @Override
+  public void periodic() {
+    BaseStatusSignal.refreshAll(
+        motorVelocity,
+        motorSupplyCurrent,
+        motorStatorCurrent,
+        motorTemperature,
+        motorClosedLoopError);
+    super.logFaults(motor);
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    super.simulationPeriodic(motor, kGearRatio, simModel);
+  }
+
+  /* Commands */
+
   public Command run() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(NORMAL_SPEED)))
         .withName(getName() + ".Run");
@@ -116,8 +137,7 @@ public class Kicker extends Mechanism implements SelfTestable {
     motor.stopMotor();
   }
 
-  @Logged private boolean selfTestPassed = false;
-  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(200);
+  /* Self Test */
 
   private boolean isNearTarget(AngularVelocity target) {
     return motorVelocity.getValue().isNear(target, SELF_TEST_VELOCITY_THRESHOLD_RPM);
@@ -164,6 +184,8 @@ public class Kicker extends Mechanism implements SelfTestable {
         .withName(getName() + ".SelfTestFast");
   }
 
+  /* Logged Values*/
+
   @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
     return motorVelocity.getValue().in(RPM);
@@ -174,43 +196,7 @@ public class Kicker extends Mechanism implements SelfTestable {
     return velocityReq.Velocity * 60.0;
   }
 
-  @Logged(name = "velocity")
-  public AngularVelocity getVelocity() {
-    return motorVelocity.getValue();
-  }
-
-  @Logged(name = "closedLoopError")
-  public double getClosedLoopError() {
-    return motorClosedLoopError.getValue();
-  }
-
-  @Logged(name = "supplyCurrent")
-  public Current getSupplyCurrent() {
-    return motorSupplyCurrent.getValue();
-  }
-
-  @Logged(name = "statorCurrent")
-  public Current getStatorCurrent() {
-    return motorStatorCurrent.getValue();
-  }
-
-  @Logged(name = "temperature")
-  public double getTemperature() {
-    return motorTemperature.getValue().in(Celsius);
-  }
-
-  @Override
-  public void periodic() {
-    BaseStatusSignal.refreshAll(
-        motorVelocity, motorSupplyCurrent, motorStatorCurrent, motorTemperature, motorClosedLoopError);
-    super.logFaults(motor);
-  }
-
-  // Simulation
-  @Override
-  public void simulationPeriodic() {
-    super.simulationPeriodic(motor, kGearRatio, simModel);
-  }
+  /* Button Mappings for Copilot */
 
   public void buttonMappings() {
     Copilot.kickerIdle().onTrue(stop());

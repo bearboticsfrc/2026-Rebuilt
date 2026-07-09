@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.CANBus;
@@ -8,6 +9,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -19,8 +21,8 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
- * A base subsystem class representing a generic motorized mechanism utilizing a TalonFX motor controller.
- * Handles telemetry keys, fault logging, and physics-based simulation setup.
+ * A base subsystem class representing a generic motorized mechanism utilizing a TalonFX motor
+ * controller. Handles telemetry keys, fault logging, and physics-based simulation setup.
  */
 public class Mechanism extends SubsystemBase {
 
@@ -55,8 +57,8 @@ public class Mechanism extends SubsystemBase {
   /**
    * Constructs a new Mechanism subsystem.
    *
-   * @param name     The user-friendly name of the mechanism (used for telemetry logging paths).
-   * @param ID       The CAN ID of the TalonFX motor controller.
+   * @param name The user-friendly name of the mechanism (used for telemetry logging paths).
+   * @param ID The CAN ID of the TalonFX motor controller.
    * @param canivore The CANBus network where the motor controller resides.
    */
   public Mechanism(String name, int ID, CANBus canivore) {
@@ -89,9 +91,9 @@ public class Mechanism extends SubsystemBase {
   }
 
   /**
-   * Periodically checks and logs live and sticky hardware faults.
-   * Throttled internally to run once every 240ms (at a 50Hz loop rate).
-   * Reports an error to the DriverStation upon a new fault transition.
+   * Periodically checks and logs live and sticky hardware faults. Throttled internally to run once
+   * every 240ms (at a 50Hz loop rate). Reports an error to the DriverStation upon a new fault
+   * transition.
    *
    * @param motor The TalonFX motor controller instance to check for faults.
    */
@@ -99,7 +101,7 @@ public class Mechanism extends SubsystemBase {
     if (periodicCount++ % 12 != 0) { // every 240ms at 50Hz loop
       return;
     }
-    
+
     boolean stickyUndervoltage = motor.getStickyFault_Undervoltage().getValue();
     boolean stickyBootDuring = motor.getStickyFault_BootDuringEnable().getValue();
     boolean stickyDeviceTemp = motor.getStickyFault_DeviceTemp().getValue();
@@ -113,7 +115,7 @@ public class Mechanism extends SubsystemBase {
     boolean liveHardware = motor.getFault_Hardware().getValue();
     boolean liveStatorCurrLimit = motor.getFault_StatorCurrLimit().getValue();
     boolean liveBridgeBrownout = motor.getFault_BridgeBrownout().getValue();
-    
+
     boolean hasFault =
         liveUndervoltage || liveHardware || liveDeviceTemp || liveBootDuring || liveBridgeBrownout;
 
@@ -125,11 +127,11 @@ public class Mechanism extends SubsystemBase {
   }
 
   /**
-   * Initializes a physics simulation model for a Kraken X60 motor with FOC enabled.
+   * Initializes simulation model for a Kraken X60.
    *
-   * @param motor       The TalonFX motor controller being simulated.
-   * @param gearRatio   The gear ratio of the mechanism (motor rotations per mechanism rotation).
-   * @param inertia     The moment of inertia of the mechanism load (kg*m^2).
+   * @param motor The TalonFX motor controller being simulated.
+   * @param gearRatio The gear ratio of the mechanism (motor rotations per mechanism rotation).
+   * @param inertia The moment of inertia of the mechanism load (kg*m^2).
    * @param orientation The mechanical orientation of the motor relative to the chassis.
    * @return A {@link DCMotorSim} model representing the physical system.
    */
@@ -154,11 +156,61 @@ public class Mechanism extends SubsystemBase {
   }
 
   /**
-   * Initializes a physics simulation model for a Kraken X44 motor with FOC enabled.
+   * Logs closed loop error for mechanism
    *
-   * @param motor       The TalonFX motor controller being simulated.
-   * @param gearRatio   The gear ratio of the mechanism (motor rotations per mechanism rotation).
-   * @param inertia     The moment of inertia of the mechanism load (kg*m^2).
+   * @return double, closedLoopError
+   */
+  @Logged(name = "closedLoopError")
+  public double getClosedLoopError() {
+    return motorClosedLoopError.getValue();
+  }
+
+  /**
+   * Logs motor velocity for mechansim
+   *
+   * @return AngularVelocity, motorVelocity
+   */
+  @Logged(name = "velocity")
+  public AngularVelocity getVelocity() {
+    return motorVelocity.getValue();
+  }
+
+  /**
+   * Logs motor supplu current for mechanism
+   *
+   * @return Current, motorSupplyCurrent
+   */
+  @Logged(name = "supplyCurrent")
+  public Current getSupplyCurrent() {
+    return motorSupplyCurrent.getValue();
+  }
+
+  /**
+   * Logs motor stator current for mechanism
+   *
+   * @return Current, motorStatorCurrent
+   */
+  @Logged(name = "statorCurrent")
+  public Current getStatorCurrent() {
+    return motorStatorCurrent.getValue();
+  }
+
+  /**
+   * Logs motor temperature for mechanism
+   *
+   * @return double, mototTemperature
+   */
+  @Logged(name = "temperature")
+  public double getTemperature() {
+    return motorTemperature.getValue().in(Celsius);
+  }
+
+  /**
+   * Initializes simulation for Kraken X44 motor.
+   *
+   * @param motor The TalonFX motor controller being simulated.
+   * @param gearRatio The gear ratio of the mechanism (motor rotations per mechanism rotation).
+   * @param inertia The moment of inertia of the mechanism load (kg*m^2).
    * @param orientation The mechanical orientation of the motor relative to the chassis.
    * @return A {@link DCMotorSim} model representing the physical system.
    */
@@ -185,8 +237,8 @@ public class Mechanism extends SubsystemBase {
   /**
    * Updates the simulation for the mechanism.
    *
-   * @param motor         The TalonFX motor controller being simulated.
-   * @param gearRatio     The gear ratio of the mechanism.
+   * @param motor The TalonFX motor controller being simulated.
+   * @param gearRatio The gear ratio of the mechanism.
    * @param motorSimModel The physics simulation model associated with this mechanism.
    */
   public void simulationPeriodic(TalonFX motor, double gearRatio, DCMotorSim motorSimModel) {
