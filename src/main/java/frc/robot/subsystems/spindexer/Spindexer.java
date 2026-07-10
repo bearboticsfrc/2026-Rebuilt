@@ -2,7 +2,6 @@ package frc.robot.subsystems.spindexer;
 
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -19,7 +18,6 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
