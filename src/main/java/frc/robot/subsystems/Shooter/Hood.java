@@ -14,24 +14,20 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Copilot;
+import frc.robot.Mechanism;
 import frc.robot.Robot;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
+public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   /** Position setpoints for the hood. */
   public enum Setpoint {
     Ground(Rotations.of(0)),
@@ -62,17 +58,13 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
 
   private DCMotorSim motorSimModel;
 
+  @Logged private boolean selfTestPassed = false;
+
   /* leader and follower motors */
   private final CANBus kCANBus = new CANBus(CAN.NAME);
   private final TalonFX motor = new TalonFX(CAN.HOOD, kCANBus);
 
   /* device status signals */
-  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
-  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
-  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
-  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
-  private final StatusSignal<Double> motorClosedLoopError = motor.getClosedLoopError(false);
-
   private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
   private final StatusSignal<Double> motorProfileVelocity =
       motor.getClosedLoopReferenceSlope(false);
@@ -124,14 +116,16 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
                   .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(40)));
 
   public Hood() {
-    super("Hood");
+    super("Hood", CAN.HOOD, new CANBus(CAN.NAME));
 
     applyConfig(() -> motor.getConfigurator().apply(motorConfigs), getName());
 
     motor.setPosition(Rotations.of(0.0));
     optimizeCAN();
     if (Robot.isSimulation()) {
-      simulationInit();
+      motorSimModel =
+          simulationInitKrakenX60(
+              motor, gearRatio, 0.001, ChassisReference.CounterClockwise_Positive);
     }
     buttonMappings();
     System.out.println("Hood Subsystem Initialized");
@@ -148,6 +142,26 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
 
     motor.optimizeBusUtilization();
   }
+
+  @Override
+  public void periodic() {
+    /* refresh all status signals */
+    BaseStatusSignal.refreshAll(
+        motorStatorCurrent,
+        motorSupplyCurrent,
+        motorVelocity,
+        motorTemperature,
+        motorClosedLoopError,
+        motorPosition,
+        motorProfileVelocity);
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    super.simulationPeriodic(motor, gearRatio, motorSimModel);
+  }
+
+  /* Logged Values */
 
   /**
    * @return The Position of the hood
@@ -183,30 +197,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
     return motorProfileVelocity.getValue();
   }
 
-  @Logged(name = "closedLoopError")
-  public double getClosedLoopError() {
-    return motorClosedLoopError.getValue();
-  }
-
-  @Logged(name = "velocity")
-  public AngularVelocity getVelocity() {
-    return motorVelocity.getValue();
-  }
-
-  @Logged(name = "supplyCurrent")
-  public Current getSupplyCurrent() {
-    return motorSupplyCurrent.getValue();
-  }
-
-  @Logged(name = "statorCurrent")
-  public Current getStatorCurrent() {
-    return motorStatorCurrent.getValue();
-  }
-
-  @Logged(name = "temperature")
-  public double getTemperature() {
-    return motorTemperature.getValue().in(Celsius);
-  }
+  /* Commands */
 
   private void controlMotor(Angle angle) {
     motor.setControl(setpointRequest.withPosition(angle).withEnableFOC(true));
@@ -241,7 +232,26 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
     motor.stopMotor();
   }
 
-  @Logged private boolean selfTestPassed = false;
+  /**
+   * Drives the hood to the provided position setpoint.
+   *
+   * @param setpoint Function returning the setpoint to apply
+   * @return Command to run
+   */
+  public Command goToSetpoint(Supplier<Setpoint> setpoint) {
+    return run(() -> controlMotor(setpoint.get().target)).withName(getName() + ".goToSetpoint");
+  }
+
+  public Command goToSetpointAngle(Supplier<Angle> value) {
+    return run(() -> controlMotor(value.get())).withName(getName() + ".goToSetpointAngle");
+  }
+
+  public Command goToSetpointRotationsDouble(DoubleSupplier value) {
+    return run(() -> controlMotor(Rotations.of(value.getAsDouble())))
+        .withName(getName() + ".goToSetpointRotationsDouble");
+  }
+
+  /* Self Test */
 
   // TODO: safeguard the position of the hood, should start at 0
   private Command selfTestAt(Setpoint target, String ntKey) {
@@ -285,84 +295,7 @@ public class Hood extends SubsystemBase implements frc.robot.test.SelfTestable {
     return selfTestAt(Setpoint.Top, "Robot/Tests/hood/fast").withName(getName() + ".SelfTestFast");
   }
 
-  /**
-   * Drives the hood to the provided position setpoint.
-   *
-   * @param setpoint Function returning the setpoint to apply
-   * @return Command to run
-   */
-  public Command goToSetpoint(Supplier<Setpoint> setpoint) {
-    return run(() -> controlMotor(setpoint.get().target)).withName(getName() + ".goToSetpoint");
-  }
-
-  public Command goToSetpointAngle(Supplier<Angle> value) {
-    return run(() -> controlMotor(value.get())).withName(getName() + ".goToSetpointAngle");
-  }
-
-  public Command goToSetpointRotationsDouble(DoubleSupplier value) {
-    return run(() -> controlMotor(Rotations.of(value.getAsDouble())))
-        .withName(getName() + ".goToSetpointRotationsDouble");
-  }
-
-  @Override
-  public void periodic() {
-    /* refresh all status signals */
-    BaseStatusSignal.refreshAll(
-        motorStatorCurrent,
-        motorSupplyCurrent,
-        motorVelocity,
-        motorTemperature,
-        motorClosedLoopError,
-        motorPosition,
-        motorProfileVelocity);
-  }
-
-  //
-  // Simulation
-  //
-  public void simulationInit() {
-    var talonFXSim = motor.getSimState();
-
-    // Match your InvertedValue.Clockwise_Positive config
-    talonFXSim.Orientation = ChassisReference.CounterClockwise_Positive;
-    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX44);
-
-    motorSimModel =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.001, gearRatio),
-            DCMotor.getKrakenX44Foc(1));
-
-    var simConfig = new TalonFXConfiguration();
-    motor.getConfigurator().refresh(simConfig);
-    simConfig.Slot0.kS = 0.0;
-    simConfig.Slot0.kG = 0.0;
-    simConfig.Slot0.kP = 0.5;
-    simConfig.Slot0.kD = 1.0; // 0.35;
-
-    motor.getConfigurator().apply(simConfig);
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    var talonFXSim = motor.getSimState();
-
-    // set the supply voltage of the TalonFX
-    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
-
-    // use the motor voltage to calculate new position and velocity
-    // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-    motorSimModel.update(0.020); // assume 20 ms loop time
-
-    // apply the new rotor position and velocity to the TalonFX;
-    // note that this is rotor position/velocity (before gear ratio), but
-    // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
-    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
-  }
+  /* Button Mappings for Copilot */
 
   public void buttonMappings() {
     Copilot.hoodIdle().onTrue(stopCommand());

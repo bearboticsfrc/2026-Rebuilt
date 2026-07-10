@@ -1,9 +1,7 @@
 package frc.robot.subsystems.spindexer;
 
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -16,27 +14,21 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Temperature;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Copilot;
+import frc.robot.Mechanism;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.Set;
 
-public class Spindexer extends SubsystemBase implements SelfTestable {
+public class Spindexer extends Mechanism implements SelfTestable {
 
   private static final double kGearRatio = 7.2;
 
@@ -54,17 +46,16 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
   private final AngularVelocity REVERSE_SPEED_SLOW = RPM.of(-60);
 
-  private final StatusSignal<Current> supplyCurrent = motor.getSupplyCurrent(false);
-  private final StatusSignal<Current> statorCurrent = motor.getStatorCurrent(false);
-  private final StatusSignal<AngularVelocity> velocity = motor.getVelocity(false);
   private final StatusSignal<Angle> position = motor.getPosition(false);
-  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
-  private final StatusSignal<Double> motorClosedLoopError = motor.getClosedLoopError(false);
 
   private DCMotorSim simModel;
 
+  @Logged private boolean selfTestPassed = false;
+
+  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(25);
+
   public Spindexer() {
-    super("Spindexer");
+    super("Spindexer", CAN.SPINDEXER, new CANBus(CAN.NAME));
 
     TalonFXConfiguration config = new TalonFXConfiguration();
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -93,7 +84,9 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
     applyConfig(() -> motor.getConfigurator().apply(config), getName());
 
     if (Robot.isSimulation()) {
-      simulationInit();
+      simModel =
+          simulationInitKrakenX60(
+              motor, kGearRatio, 0.01, ChassisReference.CounterClockwise_Positive);
     }
 
     optimizeCAN();
@@ -102,15 +95,33 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
   }
 
   private void optimizeCAN() {
-    supplyCurrent.setUpdateFrequency(50);
-    statorCurrent.setUpdateFrequency(50);
-    velocity.setUpdateFrequency(250);
+    motorSupplyCurrent.setUpdateFrequency(50);
+    motorStatorCurrent.setUpdateFrequency(50);
+    motorVelocity.setUpdateFrequency(250);
     position.setUpdateFrequency(250);
     motorTemperature.setUpdateFrequency(10);
     motorClosedLoopError.setUpdateFrequency(50);
 
     motor.optimizeBusUtilization();
   }
+
+  @Override
+  public void periodic() {
+    BaseStatusSignal.refreshAll(
+        motorVelocity,
+        position,
+        motorSupplyCurrent,
+        motorStatorCurrent,
+        motorTemperature,
+        motorClosedLoopError);
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    super.simulationPeriodic(motor, kGearRatio, simModel);
+  }
+
+  /* Commands */
 
   public Command run() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(NORMAL_SPEED)))
@@ -162,11 +173,10 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
         .withName(getName() + ".oscillate");
   }
 
-  @Logged private boolean selfTestPassed = false;
-  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(25);
+  /* Self Test */
 
   private boolean isNearTarget(AngularVelocity target) {
-    return velocity.getValue().isNear(target, SELF_TEST_VELOCITY_THRESHOLD_RPM);
+    return motorVelocity.getValue().isNear(target, SELF_TEST_VELOCITY_THRESHOLD_RPM);
   }
 
   private Command selfTestAt(AngularVelocity target, String ntKey) {
@@ -211,14 +221,9 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
         .withName(getName() + ".SelfTestFast");
   }
 
-  @Logged(name = "velocity")
-  public AngularVelocity getVelocity() {
-    return velocity.getValue();
-  }
-
   @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
-    return velocity.getValue().in(RPM);
+    return motorVelocity.getValue().in(RPM);
   }
 
   @Logged(name = "setpointRPM")
@@ -226,54 +231,7 @@ public class Spindexer extends SubsystemBase implements SelfTestable {
     return velocityReq.Velocity * 60.0;
   }
 
-  @Logged(name = "supplyCurrent")
-  public Current getSupplyCurrent() {
-    return supplyCurrent.getValue();
-  }
-
-  @Logged(name = "statorCurrent")
-  public Current getStatorCurrent() {
-    return statorCurrent.getValue();
-  }
-
-  @Logged(name = "temperature")
-  public double getTemperature() {
-    return motorTemperature.getValue().in(Celsius);
-  }
-
-  @Logged(name = "closedLoopError")
-  public double getClosedLoopError() {
-    return motorClosedLoopError.getValue();
-  }
-
-  @Override
-  public void periodic() {
-    BaseStatusSignal.refreshAll(
-        velocity, position, supplyCurrent, statorCurrent, motorTemperature, motorClosedLoopError);
-  }
-
-  // Simulation
-  public void simulationInit() {
-    var sim = motor.getSimState();
-    sim.Orientation = ChassisReference.Clockwise_Positive;
-    sim.setMotorType(TalonFXSimState.MotorType.KrakenX44);
-
-    simModel =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.01, kGearRatio),
-            DCMotor.getKrakenX44Foc(1));
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    var sim = motor.getSimState();
-    sim.setSupplyVoltage(RobotController.getBatteryVoltage());
-    var motorVoltage = sim.getMotorVoltageMeasure();
-    simModel.setInputVoltage(motorVoltage.in(Volts));
-    simModel.update(0.020);
-    sim.setRawRotorPosition(simModel.getAngularPosition().times(kGearRatio));
-    sim.setRotorVelocity(simModel.getAngularVelocity().times(kGearRatio));
-  }
+  /* Button Mappings for Copilot */
 
   public void buttonMappings() {
     Copilot.spindexerIdle().onTrue(stop());
