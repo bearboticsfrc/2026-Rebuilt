@@ -47,8 +47,12 @@ public class Spindexer extends Mechanism implements SelfTestable {
   private final AngularVelocity REVERSE_SPEED_SLOW = RPM.of(-60);
 
   private final StatusSignal<Angle> position = motor.getPosition(false);
-  
+
   private DCMotorSim simModel;
+
+  @Logged private boolean selfTestPassed = false;
+
+  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(25);
 
   public Spindexer() {
     super("Spindexer", CAN.SPINDEXER, new CANBus(CAN.NAME));
@@ -80,7 +84,9 @@ public class Spindexer extends Mechanism implements SelfTestable {
     applyConfig(() -> motor.getConfigurator().apply(config), getName());
 
     if (Robot.isSimulation()) {
-      simModel = simulationInitKrakenX60(motor, kGearRatio, 0.01, ChassisReference.CounterClockwise_Positive);
+      simModel =
+          simulationInitKrakenX60(
+              motor, kGearRatio, 0.01, ChassisReference.CounterClockwise_Positive);
     }
 
     optimizeCAN();
@@ -99,16 +105,24 @@ public class Spindexer extends Mechanism implements SelfTestable {
     motor.optimizeBusUtilization();
   }
 
- @Override
+  @Override
   public void periodic() {
     BaseStatusSignal.refreshAll(
-        motorVelocity, position, motorSupplyCurrent, motorStatorCurrent, motorTemperature, motorClosedLoopError);
+        motorVelocity,
+        position,
+        motorSupplyCurrent,
+        motorStatorCurrent,
+        motorTemperature,
+        motorClosedLoopError);
   }
 
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, kGearRatio, simModel);
   }
+
+  /* Commands */
+
   public Command run() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(NORMAL_SPEED)))
         .withName(getName() + ".Run");
@@ -159,8 +173,7 @@ public class Spindexer extends Mechanism implements SelfTestable {
         .withName(getName() + ".oscillate");
   }
 
-  @Logged private boolean selfTestPassed = false;
-  private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(25);
+  /* Self Test */
 
   private boolean isNearTarget(AngularVelocity target) {
     return motorVelocity.getValue().isNear(target, SELF_TEST_VELOCITY_THRESHOLD_RPM);
@@ -217,6 +230,8 @@ public class Spindexer extends Mechanism implements SelfTestable {
   public double getSetpointInRPM() {
     return velocityReq.Velocity * 60.0;
   }
+
+  /* Button Mappings for Copilot */
 
   public void buttonMappings() {
     Copilot.spindexerIdle().onTrue(stop());

@@ -4,6 +4,7 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
@@ -56,6 +57,8 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   private final Angle MAX_ANGLE = Degrees.of(69.5);
 
   private DCMotorSim motorSimModel;
+
+  @Logged private boolean selfTestPassed = false;
 
   /* leader and follower motors */
   private final CANBus kCANBus = new CANBus(CAN.NAME);
@@ -141,9 +144,24 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   }
 
   @Override
+  public void periodic() {
+    /* refresh all status signals */
+    BaseStatusSignal.refreshAll(
+        motorStatorCurrent,
+        motorSupplyCurrent,
+        motorVelocity,
+        motorTemperature,
+        motorClosedLoopError,
+        motorPosition,
+        motorProfileVelocity);
+  }
+
+  @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, gearRatio, motorSimModel);
   }
+
+  /* Logged Values */
 
   /**
    * @return The Position of the hood
@@ -179,6 +197,8 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
     return motorProfileVelocity.getValue();
   }
 
+  /* Commands */
+
   private void controlMotor(Angle angle) {
     motor.setControl(setpointRequest.withPosition(angle).withEnableFOC(true));
   }
@@ -212,7 +232,26 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
     motor.stopMotor();
   }
 
-  @Logged private boolean selfTestPassed = false;
+  /**
+   * Drives the hood to the provided position setpoint.
+   *
+   * @param setpoint Function returning the setpoint to apply
+   * @return Command to run
+   */
+  public Command goToSetpoint(Supplier<Setpoint> setpoint) {
+    return run(() -> controlMotor(setpoint.get().target)).withName(getName() + ".goToSetpoint");
+  }
+
+  public Command goToSetpointAngle(Supplier<Angle> value) {
+    return run(() -> controlMotor(value.get())).withName(getName() + ".goToSetpointAngle");
+  }
+
+  public Command goToSetpointRotationsDouble(DoubleSupplier value) {
+    return run(() -> controlMotor(Rotations.of(value.getAsDouble())))
+        .withName(getName() + ".goToSetpointRotationsDouble");
+  }
+
+  /* Self Test */
 
   // TODO: safeguard the position of the hood, should start at 0
   private Command selfTestAt(Setpoint target, String ntKey) {
@@ -256,28 +295,7 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
     return selfTestAt(Setpoint.Top, "Robot/Tests/hood/fast").withName(getName() + ".SelfTestFast");
   }
 
-  /**
-   * Drives the hood to the provided position setpoint.
-   *
-   * @param setpoint Function returning the setpoint to apply
-   * @return Command to run
-   */
-  public Command goToSetpoint(Supplier<Setpoint> setpoint) {
-    return run(() -> controlMotor(setpoint.get().target)).withName(getName() + ".goToSetpoint");
-  }
-
-  public Command goToSetpointAngle(Supplier<Angle> value) {
-    return run(() -> controlMotor(value.get())).withName(getName() + ".goToSetpointAngle");
-  }
-
-  public Command goToSetpointRotationsDouble(DoubleSupplier value) {
-    return run(() -> controlMotor(Rotations.of(value.getAsDouble())))
-        .withName(getName() + ".goToSetpointRotationsDouble");
-  }
-
-  //
-  //
-  //
+  /* Button Mappings for Copilot */
 
   public void buttonMappings() {
     Copilot.hoodIdle().onTrue(stopCommand());
