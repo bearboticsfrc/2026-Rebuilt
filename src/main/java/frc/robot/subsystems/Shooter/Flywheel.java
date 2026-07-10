@@ -5,7 +5,6 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.applyConfig;
@@ -13,43 +12,30 @@ import static frc.robot.util.PhoenixUtil.applyConfig;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.CAN;
 import frc.robot.Copilot;
+import frc.robot.Mechanism;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
 
-public class Flywheel extends SubsystemBase implements SelfTestable {
-  /** Creates a new Flywheel. */
-  // Create a new CANBus with name canivore
-  private final CANBus canivore = new CANBus(CAN.NAME);
-
-  private final TalonFX motor = new TalonFX(CAN.FLYWHEEL, canivore);
+public class Flywheel extends Mechanism implements SelfTestable {
 
   // Velocity output control for the flywheel
-
   private final MotionMagicVelocityVoltage velocityOut = new MotionMagicVelocityVoltage(0);
 
   // Tolerance for the flywheel velocity
@@ -57,11 +43,7 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
 
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
-  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
-  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
-  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
-  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
-  private final StatusSignal<Double> motorClosedLoopError = motor.getClosedLoopError(false);
+  @Logged private boolean selfTestPassed = false;
 
   private final SysIdRoutine m_sysIdRoutine =
       new SysIdRoutine(
@@ -75,10 +57,12 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
               (volts) -> motor.setControl(m_voltReq.withOutput(volts.in(Volts))), null, this));
 
   private DCMotorSim motorSimModel;
+
   private static final double SIM_GEAR_RATIO = 1.0;
+  private static final double inertia = 0.004;
 
   public Flywheel() {
-    super("Flywheel");
+    super("FLYWHEEL", CAN.FLYWHEEL, new CANBus(CAN.NAME));
 
     TalonFXConfiguration config = new TalonFXConfiguration();
     // Put's the motor in Coast mode to make it easier to move by hand
@@ -104,7 +88,9 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     applyConfig(() -> motor.getConfigurator().apply(config), getName());
 
     if (Robot.isSimulation()) {
-      simulationInit();
+      motorSimModel =
+          simulationInitKrakenX60(
+              motor, SIM_GEAR_RATIO, inertia, ChassisReference.CounterClockwise_Positive);
     }
 
     System.out.println(getName() + " Subsystem Initialized");
@@ -131,6 +117,30 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
         motorTemperature,
         motorClosedLoopError);
   }
+
+  @Override
+  public void simulationPeriodic() {
+    var talonFXSim = motor.getSimState();
+
+    // set the supply voltage of the TalonFX
+    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+    // get the motor voltage of the TalonFX
+    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
+
+    // use the motor voltage to calculate new position and velocity
+    // using WPILib's DCMotorSim class for physics simulation
+    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
+    motorSimModel.update(0.020); // assume 20 ms loop time
+
+    // apply the new rotor position and velocity to the TalonFX;
+    // note that this is rotor position/velocity (before gear ratio), but
+    // DCMotorSim returns mechanism position/velocity (after gear ratio)
+    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(SIM_GEAR_RATIO));
+    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(SIM_GEAR_RATIO));
+  }
+
+  /* Commands */
 
   public void setVelocity(AngularVelocity velocity) {
     // motor.setControl(new VelocityDutyCycle(velocity));
@@ -172,6 +182,26 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
   }
 
   /**
+   * Returns a command that will execute a quasistatic test in the given direction.
+   *
+   * @param direction The direction (forward or reverse) to run the test in
+   */
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.quasistatic(direction);
+  }
+
+  /**
+   * Returns a command that will execute a dynamic test in the given direction.
+   *
+   * @param direction The direction (forward or reverse) to run the test in
+   */
+  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    return m_sysIdRoutine.dynamic(direction);
+  }
+
+  /* Self Test */
+
+  /**
    * Checks if the flywheel is at its target speed.
    *
    * @return true if at target speed, false otherwise
@@ -183,32 +213,10 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
             < tolerance; // Check if the current velocity is near the target velocity
   }
 
-  @Logged(name = "closedLoopError")
-  public double getClosedLoopError() {
-    return motorClosedLoopError.getValue();
-  }
-
-  @Logged(name = "supplyCurrent")
-  public Current getSupplyCurrent() {
-    return motorSupplyCurrent.getValue();
-  }
-
-  @Logged(name = "statorCurrent")
-  public Current getStatorCurrent() {
-    return motorStatorCurrent.getValue();
-  }
-
-  @Logged(name = "temperature")
-  public double getTemperature() {
-    return motorTemperature.getValue().in(Celsius);
-  }
-
   // Stop the flywheel motors
   public void stop() {
     motor.stopMotor();
   }
-
-  @Logged private boolean selfTestPassed = false;
 
   private Command selfTestAt(AngularVelocity target, String ntKey) {
     return Commands.runOnce(
@@ -251,28 +259,7 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
         .withName(getName() + ".SelfTestFast");
   }
 
-  /**
-   * Returns a command that will execute a quasistatic test in the given direction.
-   *
-   * @param direction The direction (forward or reverse) to run the test in
-   */
-  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    return m_sysIdRoutine.quasistatic(direction);
-  }
-
-  /**
-   * Returns a command that will execute a dynamic test in the given direction.
-   *
-   * @param direction The direction (forward or reverse) to run the test in
-   */
-  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    return m_sysIdRoutine.dynamic(direction);
-  }
-
-  @Logged(name = "velocity")
-  public AngularVelocity getVelocity() {
-    return motorVelocity.getValue();
-  }
+  /* Logged Values */
 
   @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
@@ -284,48 +271,7 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     return velocityOut.getVelocityMeasure().in(RPM);
   }
 
-  //
-  // Simulation
-  //
-  public void simulationInit() {
-    var talonFXSim = motor.getSimState();
-
-    // Match your InvertedValue.Clockwise_Positive config
-    talonFXSim.Orientation = ChassisReference.CounterClockwise_Positive;
-    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX60);
-
-    motorSimModel =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.004, SIM_GEAR_RATIO),
-            DCMotor.getKrakenX60Foc(1));
-
-    var simConfig = new TalonFXConfiguration();
-    motor.getConfigurator().refresh(simConfig);
-    simConfig.Slot0.kS = 0.2;
-    motor.getConfigurator().apply(simConfig);
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    var talonFXSim = motor.getSimState();
-
-    // set the supply voltage of the TalonFX
-    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
-
-    // use the motor voltage to calculate new position and velocity
-    // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-    motorSimModel.update(0.020); // assume 20 ms loop time
-
-    // apply the new rotor position and velocity to the TalonFX;
-    // note that this is rotor position/velocity (before gear ratio), but
-    // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(SIM_GEAR_RATIO));
-    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(SIM_GEAR_RATIO));
-  }
+  /* Simulation */
 
   public void buttonMappings() {
     Copilot.flywheelIdle().onTrue(stopCommand());
