@@ -13,19 +13,15 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.Mechanism;
 import frc.robot.CAN;
 import frc.robot.Copilot;
+import frc.robot.Mechanism;
 import frc.robot.Robot;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -124,7 +120,9 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
     motor.setPosition(Rotations.of(0.0));
     optimizeCAN();
     if (Robot.isSimulation()) {
-      simulationInit();
+      motorSimModel =
+          simulationInitKrakenX60(
+              motor, gearRatio, 0.001, ChassisReference.CounterClockwise_Positive);
     }
     buttonMappings();
     System.out.println("Hood Subsystem Initialized");
@@ -142,26 +140,9 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
     motor.optimizeBusUtilization();
   }
 
- @Override
+  @Override
   public void simulationPeriodic() {
-    var talonFXSim = motor.getSimState();
-
-    // set the supply voltage of the TalonFX
-    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
-
-    // use the motor voltage to calculate new position and velocity
-    // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-    motorSimModel.update(0.020); // assume 20 ms loop time
-
-    // apply the new rotor position and velocity to the TalonFX;
-    // note that this is rotor position/velocity (before gear ratio), but
-    // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
-    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
+    super.simulationPeriodic(motor, gearRatio, motorSimModel);
   }
 
   /**
@@ -295,29 +276,8 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   }
 
   //
-  // Simulation
   //
-  public void simulationInit() {
-    var talonFXSim = motor.getSimState();
-
-    // Match your InvertedValue.Clockwise_Positive config
-    talonFXSim.Orientation = ChassisReference.CounterClockwise_Positive;
-    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX44);
-
-    motorSimModel =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.001, gearRatio),
-            DCMotor.getKrakenX44Foc(1));
-
-    var simConfig = new TalonFXConfiguration();
-    motor.getConfigurator().refresh(simConfig);
-    simConfig.Slot0.kS = 0.0;
-    simConfig.Slot0.kG = 0.0;
-    simConfig.Slot0.kP = 0.5;
-    simConfig.Slot0.kD = 1.0; // 0.35;
-
-    motor.getConfigurator().apply(simConfig);
-  }
+  //
 
   public void buttonMappings() {
     Copilot.hoodIdle().onTrue(stopCommand());

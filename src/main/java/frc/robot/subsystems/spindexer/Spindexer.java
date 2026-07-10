@@ -82,7 +82,7 @@ public class Spindexer extends Mechanism implements SelfTestable {
     applyConfig(() -> motor.getConfigurator().apply(config), getName());
 
     if (Robot.isSimulation()) {
-      simModel = simulationInitKrakenX60(motor, kGearRatio, 0.01, ChassisReference.Clockwise_Positive);
+      simModel = simulationInitKrakenX60(motor, kGearRatio, 0.01, ChassisReference.CounterClockwise_Positive);
     }
 
     optimizeCAN();
@@ -109,15 +109,8 @@ public class Spindexer extends Mechanism implements SelfTestable {
 
   @Override
   public void simulationPeriodic() {
-    var sim = motor.getSimState();
-    sim.setSupplyVoltage(RobotController.getBatteryVoltage());
-    var motorVoltage = sim.getMotorVoltageMeasure();
-    simModel.setInputVoltage(motorVoltage.in(Volts));
-    simModel.update(0.020);
-    sim.setRawRotorPosition(simModel.getAngularPosition().times(kGearRatio));
-    sim.setRotorVelocity(simModel.getAngularVelocity().times(kGearRatio));
+    super.simulationPeriodic(motor, kGearRatio, simModel);
   }
-
   public Command run() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(NORMAL_SPEED)))
         .withName(getName() + ".Run");
