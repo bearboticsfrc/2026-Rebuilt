@@ -1,6 +1,5 @@
 package frc.robot.subsystems.turret;
 
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
@@ -14,11 +13,9 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -28,24 +25,19 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NTSendable;
 import edu.wpi.first.networktables.NTSendableBuilder;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Copilot;
+import frc.robot.Mechanism;
 import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.field.AllianceFlipUtil;
@@ -55,10 +47,7 @@ import java.util.function.Supplier;
 import limelight.Limelight;
 import lombok.Getter;
 
-public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
-  private final CANBus canivore = new CANBus(CAN.NAME);
-
-  private final TalonFX motor = new TalonFX(CAN.TURRET, canivore);
+public class Turret extends Mechanism implements NTSendable, SelfTestable {
 
   private MotionMagicVoltage motionMagicVoltage = new MotionMagicVoltage(0);
   private PositionVoltage positionVoltage = new PositionVoltage(0);
@@ -70,13 +59,8 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
 
   @Getter private double gearRatio = 10.44;
 
-  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
-  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
   private final StatusSignal<Voltage> motorVoltage = motor.getMotorVoltage(false);
-  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
   private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
-  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
-
   private final StatusSignal<Double> setpoint = motor.getClosedLoopReference(false);
 
   // set these small to start
@@ -85,6 +69,11 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
 
   @Getter public boolean attached = true;
 
+  @Logged private boolean selfTestPassed = false;
+
+  // percent error tolerance for self test
+  private static final double SELF_TEST_VARIANCE_THRESHOLD = 0.01;
+
   //  private final TurretVisionHelper limelight;
 
   private DCMotorSim motorSimModel;
@@ -92,7 +81,7 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   private Voltage kV;
 
   public Turret() {
-    super("Turret");
+    super("Turret", CAN.TURRET, new CANBus(CAN.NAME));
 
     TalonFXConfiguration config = new TalonFXConfiguration();
 
@@ -141,8 +130,6 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
     config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.62;
 
-    // motionMagicVoltage.withFeedForward(Volts.of(1));
-
     applyConfig(() -> motor.getConfigurator().apply(config), getName());
 
     motor.setPosition(0);
@@ -150,10 +137,9 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     optimizeCAN();
 
     if (Robot.isSimulation()) {
-      simulationInit();
+      motorSimModel =
+          simulationInitKrakenX44(motor, gearRatio, 0.025, ChassisReference.Clockwise_Positive);
     }
-
-    // limelight = new TurretVisionHelper();
 
     System.out.println(getName() + " Subsystem Initialized");
   }
@@ -209,10 +195,11 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
         motorSupplyCurrent,
         motorVoltage,
         motorTemperature);
-    // Optional<TurretAimResult> aim = limelight.getHubAimOffset();
-    // if (aim.isPresent()) {
-    //   DogLog.log("turretOffset", Units.radiansToDegrees(aim.get().yawOffset()));
-    // }
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    super.simulationPeriodic(motor, gearRatio, motorSimModel);
   }
 
   @Override
@@ -232,6 +219,8 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     return motorVoltage.getValue();
   }
 
+  /* Logged values */
+
   /**
    * Updates the position of the motor
    *
@@ -250,26 +239,6 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
   @Logged(name = "angle")
   public Angle getAngle() {
     return motorPosition.getValue();
-  }
-
-  @Logged(name = "velocity")
-  public AngularVelocity getVelocity() {
-    return motorVelocity.getValue();
-  }
-
-  @Logged(name = "statorCurrent")
-  public Current getStatorCurrent() {
-    return motorStatorCurrent.getValue();
-  }
-
-  @Logged(name = "supplyCurrent")
-  public Current getSupplyCurrent() {
-    return motorSupplyCurrent.getValue();
-  }
-
-  @Logged(name = "temperature")
-  public double getTemperature() {
-    return motorTemperature.getValue().in(Celsius);
   }
 
   @Logged(name = "setpointDegrees")
@@ -297,59 +266,10 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     return positionHold.Position;
   }
 
+  /* Commands */
+
   public Command stop() {
     return runOnce(() -> motor.stopMotor()).withName(this.getName() + ".Stop");
-  }
-
-  @Logged private boolean selfTestPassed = false;
-
-  // percent error tolerance for self test
-  private static final double SELF_TEST_VARIANCE_THRESHOLD = 0.01;
-
-  private boolean isNearTarget(Angle target) {
-    return getAngle().isNear(target, SELF_TEST_VARIANCE_THRESHOLD);
-  }
-
-  // TODO: safeguard the position of the turret, should start at 0
-  private Command selfTestAt(Angle target, String ntKey) {
-    return Commands.runOnce(
-            () -> {
-              var nt = NetworkTableInstance.getDefault();
-              nt.getEntry(ntKey + "/message").setString("Running...");
-              nt.getEntry(ntKey + "/passed").unpublish();
-              ;
-            })
-        .andThen(setAngle(() -> target, () -> RadiansPerSecond.of(0.1)))
-        .withTimeout(2.0)
-        .andThen(
-            runOnce(
-                () -> {
-                  selfTestPassed = isNearTarget(target);
-                  String result =
-                      (selfTestPassed ? "PASS" : "FAIL")
-                          + ": "
-                          + String.format("%.2f", getAngle().in(Degrees))
-                          + " Deg (target "
-                          + String.format("%.2f", target.in(Degrees))
-                          + " Deg)";
-                  var nt = NetworkTableInstance.getDefault();
-                  nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
-                  nt.getEntry(ntKey + "/message").setString(result);
-                }))
-        .andThen(setAngle(() -> Rotations.of(0)).withTimeout(1.0))
-        .finallyDo(() -> motor.stopMotor());
-  }
-
-  @Override
-  public Command selfTestSlow() {
-    return selfTestAt(Rotations.of(0.1), "Robot/Tests/turret/slow")
-        .withName(getName() + ".SelfTestSlow");
-  }
-
-  @Override
-  public Command selfTestFast() {
-    return selfTestAt(Rotations.of(.25), "Robot/Tests/turret/fast")
-        .withName(getName() + ".SelfTestFast");
   }
 
   private void controlMotor(Angle angle) {
@@ -405,7 +325,6 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     Pose2d turretPose =
         DynamicShootingCalculator.getInstance()
             .getLookaheadPose()
-            // .transformBy(RobotState.turretToRobot)
             .transformBy(new Transform2d(0, 0, new Rotation2d(getAngle())));
 
     Translation2d targetPos = turretPose.transformBy(targetTransform).getTranslation();
@@ -461,98 +380,55 @@ public class Turret extends SubsystemBase implements NTSendable, SelfTestable {
     //  limelight.getSettings().withCameraOffset(cameraPoseRobotSpace);
   }
 
-  // What the calculator is commanding (calc error only)
-  // @Logged
-  // public Translation2d getCommandedAimPoint() {
-  //   Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
-  //   double commanded =
-  //       DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
-  //           + RobotState.getInstance().getRobotPose().getRotation().getRadians()
-  //           + Math.PI; // back to field frame
-  //   double dist = RobotState.getInstance().getLookaheadDistanceToHub();
-  //   return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
-  // }
+  /* Self Test */
 
-  // Where the turret is actually pointing (calc + tracking error)
-  // @Logged
-  // public Translation2d getActualAimPoint() {
-  //   Translation2d turretPos = RobotState.getInstance().getTurretPose().getTranslation();
-  //   double actual =
-  //       getAngle().in(Radians)
-  //           + RobotState.getInstance().getRobotPose().getRotation().getRadians()
-  //           + Math.PI;
-  //   double dist = RobotState.getInstance().getLookaheadDistanceToHub();
-  //   return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
-  // }
+  private boolean isNearTarget(Angle target) {
+    return getAngle().isNear(target, SELF_TEST_VARIANCE_THRESHOLD);
+  }
 
-  // What the calculator is commanding (calc error only)
-  // @Logged
-  // public Translation2d getCommandedAimPointFromLookahead() {
-  //   Translation2d turretPos =
-  //       DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
-  //   double commanded =
-  //       DynamicShootingCalculator.getInstance().getParameters().turretAngle().getRadians()
-  //           + RobotState.getInstance().getRobotPose().getRotation().getRadians()
-  //           + Math.PI; // back to field frame
-  //   double dist = RobotState.getInstance().getLookaheadDistanceToHub();
-  //   return turretPos.plus(new Translation2d(dist, new Rotation2d(commanded)));
-  // }
-
-  // Where the turret is actually pointing (calc + tracking error)
-  // @Logged
-  // public Translation2d getActualAimPointFromLookahead() {
-  //   Translation2d turretPos =
-  //       DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation();
-  //   double actual =
-  //       getAngle().in(Radians)
-  //           + RobotState.getInstance().getRobotPose().getRotation().getRadians()
-  //           + Math.PI;
-  //   double dist = RobotState.getInstance().getLookaheadDistanceToHub();
-  //   return turretPos.plus(new Translation2d(dist, new Rotation2d(actual)));
-  // }
-
-  //
-  // Simulation
-  //
-  public void simulationInit() {
-    var talonFXSim = motor.getSimState();
-
-    // Match your InvertedValue.Clockwise_Positive config
-    talonFXSim.Orientation = ChassisReference.Clockwise_Positive;
-    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX44);
-
-    motorSimModel =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.025, gearRatio),
-            DCMotor.getKrakenX44Foc(1));
-
-    var simConfig = new TalonFXConfiguration();
-    motor.getConfigurator().refresh(simConfig);
-    simConfig.Slot0.kS = 0.0;
-    motor.getConfigurator().apply(simConfig);
+  // TODO: safeguard the position of the turret, should start at 0
+  private Command selfTestAt(Angle target, String ntKey) {
+    return Commands.runOnce(
+            () -> {
+              var nt = NetworkTableInstance.getDefault();
+              nt.getEntry(ntKey + "/message").setString("Running...");
+              nt.getEntry(ntKey + "/passed").unpublish();
+              ;
+            })
+        .andThen(setAngle(() -> target, () -> RadiansPerSecond.of(0.1)))
+        .withTimeout(2.0)
+        .andThen(
+            runOnce(
+                () -> {
+                  selfTestPassed = isNearTarget(target);
+                  String result =
+                      (selfTestPassed ? "PASS" : "FAIL")
+                          + ": "
+                          + String.format("%.2f", getAngle().in(Degrees))
+                          + " Deg (target "
+                          + String.format("%.2f", target.in(Degrees))
+                          + " Deg)";
+                  var nt = NetworkTableInstance.getDefault();
+                  nt.getEntry(ntKey + "/passed").setBoolean(selfTestPassed);
+                  nt.getEntry(ntKey + "/message").setString(result);
+                }))
+        .andThen(setAngle(() -> Rotations.of(0)).withTimeout(1.0))
+        .finallyDo(() -> motor.stopMotor());
   }
 
   @Override
-  public void simulationPeriodic() {
-    var talonFXSim = motor.getSimState();
-
-    // set the supply voltage of the TalonFX
-    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
-
-    // use the motor voltage to calculate new position and velocity
-    // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-    motorSimModel.update(0.020); // assume 20 ms loop time
-
-    // apply the new rotor position and velocity to the TalonFX;
-    // note that this is rotor position/velocity (before gear ratio), but
-    // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
-    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
+  public Command selfTestSlow() {
+    return selfTestAt(Rotations.of(0.1), "Robot/Tests/turret/slow")
+        .withName(getName() + ".SelfTestSlow");
   }
+
+  @Override
+  public Command selfTestFast() {
+    return selfTestAt(Rotations.of(.25), "Robot/Tests/turret/fast")
+        .withName(getName() + ".SelfTestFast");
+  }
+
+  /* Button Mappings for Copilot */
 
   public void buttonMappings() {
     Copilot.turret0Degrees().onTrue(setAngle(Degrees.of(0)));
