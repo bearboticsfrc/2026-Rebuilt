@@ -5,7 +5,6 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.applyConfig;
@@ -13,11 +12,9 @@ import static frc.robot.util.PhoenixUtil.applyConfig;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
@@ -27,41 +24,28 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.CAN;
 import frc.robot.Copilot;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
 
-public class Flywheel extends SubsystemBase implements SelfTestable {
+public class Flywheel extends Mechanism implements SelfTestable {
   /** Creates a new Flywheel. */
-  // Create a new CANBus with name canivore
-  private final CANBus canivore = new CANBus(CAN.NAME);
-
-  private final TalonFX motor = new TalonFX(CAN.FLYWHEEL, canivore);
 
   // Velocity output control for the flywheel
-
   private final MotionMagicVelocityVoltage velocityOut = new MotionMagicVelocityVoltage(0);
 
   // Tolerance for the flywheel velocity
   private final double tolerance = 750; // RPM
 
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
-
-  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
-  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
-  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
-  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
-  private final StatusSignal<Double> motorClosedLoopError = motor.getClosedLoopError(false);
 
   private final SysIdRoutine m_sysIdRoutine =
       new SysIdRoutine(
@@ -78,6 +62,8 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
   private static final double SIM_GEAR_RATIO = 1.0;
 
   public Flywheel() {
+
+    super(CAN.FLYWHEEL, new CANBus(CAN.NAME));
     super("Flywheel");
 
     TalonFXConfiguration config = new TalonFXConfiguration();
@@ -132,6 +118,28 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
         motorClosedLoopError);
   }
 
+  @Override
+  public void simulationPeriodic() {
+    var talonFXSim = motor.getSimState();
+
+    // set the supply voltage of the TalonFX
+    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+    // get the motor voltage of the TalonFX
+    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
+
+    // use the motor voltage to calculate new position and velocity
+    // using WPILib's DCMotorSim class for physics simulation
+    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
+    motorSimModel.update(0.020); // assume 20 ms loop time
+
+    // apply the new rotor position and velocity to the TalonFX;
+    // note that this is rotor position/velocity (before gear ratio), but
+    // DCMotorSim returns mechanism position/velocity (after gear ratio)
+    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(SIM_GEAR_RATIO));
+    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(SIM_GEAR_RATIO));
+  }
+
   public void setVelocity(AngularVelocity velocity) {
     // motor.setControl(new VelocityDutyCycle(velocity));
     motor.setControl(velocityOut.withVelocity(velocity));
@@ -181,26 +189,6 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     return getTargetVelocityInRPM() > 0
         && Math.abs(getVelocityInRPM() - getTargetVelocityInRPM())
             < tolerance; // Check if the current velocity is near the target velocity
-  }
-
-  @Logged(name = "closedLoopError")
-  public double getClosedLoopError() {
-    return motorClosedLoopError.getValue();
-  }
-
-  @Logged(name = "supplyCurrent")
-  public Current getSupplyCurrent() {
-    return motorSupplyCurrent.getValue();
-  }
-
-  @Logged(name = "statorCurrent")
-  public Current getStatorCurrent() {
-    return motorStatorCurrent.getValue();
-  }
-
-  @Logged(name = "temperature")
-  public double getTemperature() {
-    return motorTemperature.getValue().in(Celsius);
   }
 
   // Stop the flywheel motors
@@ -269,11 +257,6 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     return m_sysIdRoutine.dynamic(direction);
   }
 
-  @Logged(name = "velocity")
-  public AngularVelocity getVelocity() {
-    return motorVelocity.getValue();
-  }
-
   @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
     return motorVelocity.getValue().in(RPM);
@@ -303,28 +286,6 @@ public class Flywheel extends SubsystemBase implements SelfTestable {
     motor.getConfigurator().refresh(simConfig);
     simConfig.Slot0.kS = 0.2;
     motor.getConfigurator().apply(simConfig);
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    var talonFXSim = motor.getSimState();
-
-    // set the supply voltage of the TalonFX
-    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
-
-    // use the motor voltage to calculate new position and velocity
-    // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-    motorSimModel.update(0.020); // assume 20 ms loop time
-
-    // apply the new rotor position and velocity to the TalonFX;
-    // note that this is rotor position/velocity (before gear ratio), but
-    // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(SIM_GEAR_RATIO));
-    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(SIM_GEAR_RATIO));
   }
 
   public void buttonMappings() {
