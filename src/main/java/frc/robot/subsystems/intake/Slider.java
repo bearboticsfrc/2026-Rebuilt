@@ -74,6 +74,7 @@ public class Slider extends Mechanism implements SelfTestable {
   private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0);
   private final DutyCycleOut calibrateRequest = new DutyCycleOut(0).withIgnoreSoftwareLimits(true);
 
+  private final StatusSignal <Angle> motorPosition = motor.getPosition(false);
 
   private final StatusSignal<Double> sliderProfileVelocity =
       motor.getClosedLoopReferenceSlope(false);
@@ -116,8 +117,10 @@ public class Slider extends Mechanism implements SelfTestable {
     optimizeCAN();
 
     if (Robot.isSimulation()) {
-      simulationInitKrakenX44(motor, gearRatio, SELF_TEST_TOLERANCE_INCHES, null)
+      
+      motorSimModel = simulationInitKrakenX44(motor, gearRatio, SELF_TEST_TOLERANCE_INCHES, null);
     }
+
     buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
   }
