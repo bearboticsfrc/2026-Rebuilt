@@ -116,7 +116,7 @@ public class Slider extends Mechanism implements SelfTestable {
     optimizeCAN();
 
     if (Robot.isSimulation()) {
-      simulationInit();
+      simulationInitKrakenX44(motor, gearRatio, SELF_TEST_TOLERANCE_INCHES, null)
     }
     buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
@@ -357,46 +357,10 @@ public class Slider extends Mechanism implements SelfTestable {
         motorClosedLoopError);
   }
 
-  //
-  // Simulation
-  //
-  public void simulationInit() {
-    var talonFXSim = motor.getSimState();
-
-    talonFXSim.Orientation = ChassisReference.CounterClockwise_Positive;
-    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX44);
-
-    motorSimModel =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.0012, gearRatio),
-            DCMotor.getKrakenX44Foc(1));
-
-    var simConfig = new TalonFXConfiguration();
-    motor.getConfigurator().refresh(simConfig);
-    simConfig.Slot0.kS = 0.0;
-    motor.getConfigurator().apply(simConfig);
-  }
 
   @Override
   public void simulationPeriodic() {
-    var talonFXSim = motor.getSimState();
-
-    // set the supply voltage of the TalonFX
-    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
-
-    // use the motor voltage to calculate new position and velocity
-    // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-    motorSimModel.update(0.020); // assume 20 ms loop time
-
-    // apply the new rotor position and velocity to the TalonFX;
-    // note that this is rotor position/velocity (before gear ratio), but
-    // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
-    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
+    super.simulationPeriodic(motor, gearRatio, motorSimModel);
   }
 
   public void buttonMappings() {
