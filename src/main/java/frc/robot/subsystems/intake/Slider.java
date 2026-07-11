@@ -40,8 +40,9 @@ import frc.robot.Copilot;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.function.Supplier;
+import frc.robot.Mechanism;
 
-public class Slider extends SubsystemBase implements SelfTestable {
+public class Slider extends Mechanism implements SelfTestable {
 
   /** Position setpoints for the Slider. */
   public enum Setpoint {
@@ -73,13 +74,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
   private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0);
   private final DutyCycleOut calibrateRequest = new DutyCycleOut(0).withIgnoreSoftwareLimits(true);
 
-  /* device status signals */
-  private final StatusSignal<Current> motorSupplyCurrent = motor.getSupplyCurrent(false);
-  private final StatusSignal<Current> motorStatorCurrent = motor.getStatorCurrent(false);
-  private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
-  private final StatusSignal<AngularVelocity> motorVelocity = motor.getVelocity(false);
-  private final StatusSignal<Temperature> motorTemperature = motor.getDeviceTemp(false);
-  private final StatusSignal<Double> motorClosedLoopError = motor.getClosedLoopError(false);
+  private final StatusSignal <Angle> motorPosition = motor.getPosition(false);
 
   private final StatusSignal<Double> sliderProfileVelocity =
       motor.getClosedLoopReferenceSlope(false);
@@ -87,7 +82,7 @@ public class Slider extends SubsystemBase implements SelfTestable {
   private DCMotorSim motorSimModel;
 
   public Slider() {
-    super("Slider");
+    super("Slider", CAN.SLIDER, new CANBus(CAN.NAME));
 
     TalonFXConfiguration config = new TalonFXConfiguration();
 
@@ -122,11 +117,14 @@ public class Slider extends SubsystemBase implements SelfTestable {
     optimizeCAN();
 
     if (Robot.isSimulation()) {
-      simulationInit();
+      
+      motorSimModel = simulationInitKrakenX44(motor, gearRatio, SELF_TEST_TOLERANCE_INCHES, null);
     }
+
     buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
   }
+
 
   private void optimizeCAN() {
     motorPosition.setUpdateFrequency(250);
@@ -336,31 +334,6 @@ public class Slider extends SubsystemBase implements SelfTestable {
     return motionMagicRequest.getPositionMeasure().in(Rotations) * kPinionCircumference.in(Inches);
   }
 
-  @Logged(name = "velocity")
-  public AngularVelocity getVelocity() {
-    return motorVelocity.getValue();
-  }
-
-  @Logged(name = "supplyCurrent")
-  public Current getSupplyCurrent() {
-    return motorSupplyCurrent.getValue();
-  }
-
-  @Logged(name = "statorCurrent")
-  public Current getStatorCurrent() {
-    return motorStatorCurrent.getValue();
-  }
-
-  @Logged(name = "temperature")
-  public double getTemperature() {
-    return motorTemperature.getValue().in(Celsius);
-  }
-
-  @Logged(name = "closedLoopError")
-  public double getClosedLoopError() {
-    return motorClosedLoopError.getValue();
-  }
-
   /**
    * @return true if the slider is at or past the extended setpoint.
    */
@@ -387,46 +360,10 @@ public class Slider extends SubsystemBase implements SelfTestable {
         motorClosedLoopError);
   }
 
-  //
-  // Simulation
-  //
-  public void simulationInit() {
-    var talonFXSim = motor.getSimState();
-
-    talonFXSim.Orientation = ChassisReference.CounterClockwise_Positive;
-    talonFXSim.setMotorType(TalonFXSimState.MotorType.KrakenX44);
-
-    motorSimModel =
-        new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX44Foc(1), 0.0012, gearRatio),
-            DCMotor.getKrakenX44Foc(1));
-
-    var simConfig = new TalonFXConfiguration();
-    motor.getConfigurator().refresh(simConfig);
-    simConfig.Slot0.kS = 0.0;
-    motor.getConfigurator().apply(simConfig);
-  }
 
   @Override
   public void simulationPeriodic() {
-    var talonFXSim = motor.getSimState();
-
-    // set the supply voltage of the TalonFX
-    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
-
-    // use the motor voltage to calculate new position and velocity
-    // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-    motorSimModel.update(0.020); // assume 20 ms loop time
-
-    // apply the new rotor position and velocity to the TalonFX;
-    // note that this is rotor position/velocity (before gear ratio), but
-    // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
-    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
+    super.simulationPeriodic(motor, gearRatio, motorSimModel);
   }
 
   public void buttonMappings() {
