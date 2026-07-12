@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-public abstract class StateMachine extends SubsystemBase {
+public class StateMachineBase extends SubsystemBase {
 
   private List<State> states = new ArrayList<>();
   private ArrayList<Transition> transitions = new ArrayList<>();
@@ -26,7 +26,7 @@ public abstract class StateMachine extends SubsystemBase {
    *
    * @param states The robot {@link State}(s)
    */
-  public StateMachine(State... states) {
+  public StateMachineBase(State... states) {
     Collections.addAll(this.states, states);
 
     this.current = this.states.get(0);
@@ -39,6 +39,8 @@ public abstract class StateMachine extends SubsystemBase {
       final State s = state;
       this.stateTriggers.put(state, new Trigger(() -> s == current));
     }
+
+    execute();
   }
 
   @Override
@@ -71,5 +73,9 @@ public abstract class StateMachine extends SubsystemBase {
   @Logged(name = "Current State")
   public String currentState() {
     return current.name;
+  }
+
+  private void execute() {
+    this.on(current).onTrue(current.action);
   }
 }

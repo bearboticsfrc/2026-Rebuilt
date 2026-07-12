@@ -1,11 +1,14 @@
 package frc.robot.statemachine;
 
-public class StateMachineTest extends StateMachine {
+import frc.robot.Robot;
+import frc.robot.RobotState;
 
-  public static State A = new State("A");
-  public static State B = new State("B");
-  private int counter = 0;
-  private static boolean secondsPassed = false;
+public class StateMachineTest extends StateMachineBase {
+
+  private static RobotState robotState = RobotState.getInstance();
+
+  public static State A = new State("A", Robot.get().getFlywheel().runAtSpeed(0));
+  public static State B = new State("B", Robot.get().getFlywheel().runAtSpeed(500));
 
   private static StateMachineTest instance;
 
@@ -15,7 +18,8 @@ public class StateMachineTest extends StateMachine {
   }
 
   static {
-    A.to(B).condition(() -> secondsPassed);
+    A.to(B).condition(() -> robotState.isInNeutralZone());
+    B.to(A).condition(() -> robotState.isInAllianceZone());
   }
 
   public StateMachineTest() {
@@ -25,9 +29,5 @@ public class StateMachineTest extends StateMachine {
   @Override
   public void periodic() {
     super.periodic();
-
-    if (counter++ > 500) {
-      secondsPassed = true;
-    }
   }
 }

@@ -443,8 +443,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   public void configureBindings() {
 
-    // pilot controlls
-
     pilot
         .leftTrigger()
         .onTrue(rollers.run().alongWith(slider.extend()).withName("ParallelIntake"))
