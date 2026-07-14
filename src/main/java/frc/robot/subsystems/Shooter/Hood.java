@@ -131,44 +131,15 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
     System.out.println("Hood Subsystem Initialized");
   }
 
-  private void optimizeCAN() {
-    motorSupplyCurrent.setUpdateFrequency(50);
-    motorStatorCurrent.setUpdateFrequency(50);
-    motorVelocity.setUpdateFrequency(250);
-    motorTemperature.setUpdateFrequency(10);
-    motorClosedLoopError.setUpdateFrequency(50);
-    motorPosition.setUpdateFrequency(250);
-    motorProfileVelocity.setUpdateFrequency(50);
-
-    motor.optimizeBusUtilization();
-  }
-
   @Override
   public void periodic() {
     /* refresh all status signals */
-    BaseStatusSignal.refreshAll(
-        motorStatorCurrent,
-        motorSupplyCurrent,
-        motorVelocity,
-        motorTemperature,
-        motorClosedLoopError,
-        motorPosition,
-        motorProfileVelocity);
+    BaseStatusSignal.refreshAll(motorProfileVelocity);
   }
 
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, gearRatio, motorSimModel);
-  }
-
-  /* Logged Values */
-
-  /**
-   * @return The Position of the hood
-   */
-  @Logged(name = "position")
-  public Angle getPosition() {
-    return motorPosition.getValue();
   }
 
   @Logged(name = "positionRotations")
@@ -189,12 +160,7 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   @Logged(name = "atSetpoint")
   public boolean isAtSetpoint() {
     // checks to see if the position is within 0.05 percent of the setpoint
-    return getPosition().isNear(getSetpoint(), 0.05);
-  }
-
-  @Logged(name = "profileVelocityRPS")
-  public double getProfileVelocityRPS() {
-    return motorProfileVelocity.getValue();
+    return getAngle().isNear(getSetpoint(), 0.05);
   }
 
   /* Commands */

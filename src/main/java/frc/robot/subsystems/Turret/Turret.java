@@ -7,7 +7,6 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -144,7 +143,7 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
     System.out.println(getName() + " Subsystem Initialized");
   }
 
-  private void optimizeCAN() {
+  protected void optimizeCAN() {
     if (Robot.isSimulation()) {
       motorVelocity.setUpdateFrequency(1000);
       motorPosition.setUpdateFrequency(1000);
@@ -185,19 +184,6 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
   }
 
   @Override
-  public void periodic() {
-    /* refresh all status signals */
-    BaseStatusSignal.refreshAll(
-        motorPosition,
-        motorVelocity,
-        setpoint,
-        motorStatorCurrent,
-        motorSupplyCurrent,
-        motorVoltage,
-        motorTemperature);
-  }
-
-  @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, gearRatio, motorSimModel);
   }
@@ -214,11 +200,6 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
     return "none";
   }
 
-  @Logged(name = "voltage")
-  public Voltage getVoltage() {
-    return motorVoltage.getValue();
-  }
-
   /* Logged values */
 
   /**
@@ -229,21 +210,6 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
   @Logged
   public double getPositionDegrees() {
     return motorPosition.getValue().in(Degrees);
-  }
-
-  @Logged(name = "position")
-  public double getPosition() {
-    return motorPosition.getValueAsDouble();
-  }
-
-  @Logged(name = "angle")
-  public Angle getAngle() {
-    return motorPosition.getValue();
-  }
-
-  @Logged(name = "setpointDegrees")
-  public double getSetpointDegrees() {
-    return setpoint.getValueAsDouble() * 360.0;
   }
 
   @Logged(name = "setpointRotations")

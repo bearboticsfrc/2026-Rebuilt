@@ -3,7 +3,6 @@ package frc.robot.subsystems.spindexer;
 import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -81,24 +80,8 @@ public class Kicker extends Mechanism implements SelfTestable {
     System.out.println(getName() + " Subsystem Initialized");
   }
 
-  private void optimizeCAN() {
-    motorSupplyCurrent.setUpdateFrequency(50);
-    motorStatorCurrent.setUpdateFrequency(50);
-    motorVelocity.setUpdateFrequency(250);
-    motorTemperature.setUpdateFrequency(10);
-    motorClosedLoopError.setUpdateFrequency(50);
-
-    motor.optimizeBusUtilization();
-  }
-
   @Override
   public void periodic() {
-    BaseStatusSignal.refreshAll(
-        motorVelocity,
-        motorSupplyCurrent,
-        motorStatorCurrent,
-        motorTemperature,
-        motorClosedLoopError);
     super.logFaults(motor);
   }
 
