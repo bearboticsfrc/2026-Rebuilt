@@ -105,9 +105,6 @@ public class Slider extends Mechanism implements SelfTestable {
     optimizeCAN();
 
     if (Robot.isSimulation()) {
-<<<<<<< HEAD
-      simulationInitKrakenX44(motor, gearRatio, SELF_TEST_TOLERANCE_INCHES, null);
-=======
       motorSimModel = simulationInitKrakenX44(motor, gearRatio, SELF_TEST_TOLERANCE_INCHES, null);
     }
 
