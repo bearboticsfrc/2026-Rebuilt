@@ -62,7 +62,7 @@ public class Slider extends Mechanism implements SelfTestable {
   private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0);
   private final DutyCycleOut calibrateRequest = new DutyCycleOut(0).withIgnoreSoftwareLimits(true);
 
-  private final StatusSignal <Angle> motorPosition = motor.getPosition(false);
+  private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
 
   private final StatusSignal<Double> sliderProfileVelocity =
       motor.getClosedLoopReferenceSlope(false);
