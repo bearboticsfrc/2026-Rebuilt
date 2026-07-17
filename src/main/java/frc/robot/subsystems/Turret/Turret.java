@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
@@ -57,9 +56,6 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
   @Getter private double torqueCurrentLimit = 400;
 
   @Getter private double gearRatio = 10.44;
-
-  private final StatusSignal<Voltage> motorVoltage = motor.getMotorVoltage(false);
-  private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
   // set these small to start
   @Getter public Angle minRotations = Rotations.of(-.25);
   @Getter public Angle maxRotations = Rotations.of(.25);

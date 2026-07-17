@@ -8,11 +8,9 @@ import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -55,15 +53,8 @@ public class Slider extends Mechanism implements SelfTestable {
 
   private static final double gearRatio = 1.8; // 1.58; // 6.04; // motor-to-pinion gear reduction
 
-  private final CANBus canivore = new CANBus(CAN.NAME);
-
-  private final TalonFX motor = new TalonFX(CAN.SLIDER, canivore);
-
   private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0);
   private final DutyCycleOut calibrateRequest = new DutyCycleOut(0).withIgnoreSoftwareLimits(true);
-
-  private final StatusSignal<Double> sliderProfileVelocity =
-      motor.getClosedLoopReferenceSlope(false);
 
   private DCMotorSim motorSimModel;
 
@@ -283,11 +274,6 @@ public class Slider extends Mechanism implements SelfTestable {
   @Logged(name = "positionInches")
   public double getPositionInches() {
     return motorPosition.getValue().in(Rotations) * kPinionCircumference.in(Inches);
-  }
-
-  @Logged
-  public double getProfileVelocityRPS() {
-    return sliderProfileVelocity.getValue();
   }
 
   /**

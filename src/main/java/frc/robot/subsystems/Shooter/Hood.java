@@ -6,11 +6,9 @@ import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
@@ -59,13 +57,6 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   private DCMotorSim motorSimModel;
 
   @Logged private boolean selfTestPassed = false;
-
-  /* leader and follower motors */
-  private final CANBus kCANBus = new CANBus(CAN.NAME);
-  private final TalonFX motor = new TalonFX(CAN.HOOD, kCANBus);
-
-  /* device status signals */
-  private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
 
   /* controls used by the leader motors */
   private final MotionMagicVoltage setpointRequest = new MotionMagicVoltage(0);
