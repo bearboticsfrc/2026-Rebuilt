@@ -9,7 +9,6 @@ import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -96,26 +95,6 @@ public class Flywheel extends Mechanism implements SelfTestable {
     System.out.println(getName() + " Subsystem Initialized");
     buttonMappings();
     optimizeCAN();
-  }
-
-  private void optimizeCAN() {
-    motorVelocity.setUpdateFrequency(250);
-    motorSupplyCurrent.setUpdateFrequency(50);
-    motorStatorCurrent.setUpdateFrequency(50);
-    motorClosedLoopError.setUpdateFrequency(50);
-    motorTemperature.setUpdateFrequency(10);
-
-    motor.optimizeBusUtilization();
-  }
-
-  @Override
-  public void periodic() {
-    BaseStatusSignal.refreshAll(
-        motorSupplyCurrent,
-        motorStatorCurrent,
-        motorVelocity,
-        motorTemperature,
-        motorClosedLoopError);
   }
 
   @Override

@@ -1,15 +1,12 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.Amps;
-import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -19,28 +16,19 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.Temperature;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.CAN;
 import frc.robot.Copilot;
+import frc.robot.Mechanism;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.function.Supplier;
-import frc.robot.Mechanism;
 
 public class Slider extends Mechanism implements SelfTestable {
 
@@ -74,7 +62,7 @@ public class Slider extends Mechanism implements SelfTestable {
   private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0);
   private final DutyCycleOut calibrateRequest = new DutyCycleOut(0).withIgnoreSoftwareLimits(true);
 
-  private final StatusSignal <Angle> motorPosition = motor.getPosition(false);
+  private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
 
   private final StatusSignal<Double> sliderProfileVelocity =
       motor.getClosedLoopReferenceSlope(false);
@@ -117,24 +105,10 @@ public class Slider extends Mechanism implements SelfTestable {
     optimizeCAN();
 
     if (Robot.isSimulation()) {
-      
       motorSimModel = simulationInitKrakenX44(motor, gearRatio, SELF_TEST_TOLERANCE_INCHES, null);
     }
 
-    buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
-  }
-
-
-  private void optimizeCAN() {
-    motorPosition.setUpdateFrequency(250);
-    motorVelocity.setUpdateFrequency(250);
-    motorSupplyCurrent.setUpdateFrequency(50);
-    motorStatorCurrent.setUpdateFrequency(50);
-    motorClosedLoopError.setUpdateFrequency(50);
-    motorTemperature.setUpdateFrequency(4);
-
-    motor.optimizeBusUtilization();
   }
 
   public Command extend() {
@@ -292,14 +266,6 @@ public class Slider extends Mechanism implements SelfTestable {
         .withName(getName() + ".SelfTestFast");
   }
 
-  /**
-   * @return Current position in mechanism rotations (pinion rotations).
-   */
-  @Logged(name = "position")
-  public double getPosition() {
-    return motorPosition.getValue().in(Rotations);
-  }
-
   @Logged(name = "setpoint")
   public double getSetpoint() {
     return motionMagicRequest.Position;
@@ -348,18 +314,6 @@ public class Slider extends Mechanism implements SelfTestable {
     return getPositionInches()
         <= Setpoint.Retracted.targetDist.in(Inches) + SELF_TEST_TOLERANCE_INCHES;
   }
-
-  @Override
-  public void periodic() {
-    BaseStatusSignal.refreshAll(
-        motorSupplyCurrent,
-        motorStatorCurrent,
-        motorPosition,
-        motorVelocity,
-        motorTemperature,
-        motorClosedLoopError);
-  }
-
 
   @Override
   public void simulationPeriodic() {
