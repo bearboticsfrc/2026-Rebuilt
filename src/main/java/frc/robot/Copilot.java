@@ -214,7 +214,7 @@ public class Copilot {
   }
 
   public static Trigger hood0_5() {
-    return copilot.button(Buttons.getValue(Buttons.HOOD_0_25));
+    return copilot.button(Buttons.getValue(Buttons.HOOD_0_5));
   }
 
   public static Trigger hood0_75() {

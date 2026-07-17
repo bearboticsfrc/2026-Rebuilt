@@ -88,7 +88,7 @@ public class HubTracker {
 
   public void redWonAuto() {
     if (redWonAuto.getBoolean(true) && autoWinner == null) {
-      autoWinner = Optional.of(Alliance.Blue);
+      autoWinner = Optional.of(Alliance.Red);
     }
     autoWinner = getAutoWinner();
   }

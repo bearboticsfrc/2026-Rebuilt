@@ -60,8 +60,6 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
 
   private final StatusSignal<Voltage> motorVoltage = motor.getMotorVoltage(false);
   private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
-  private final StatusSignal<Double> setpoint = motor.getClosedLoopReference(false);
-
   // set these small to start
   @Getter public Angle minRotations = Rotations.of(-.25);
   @Getter public Angle maxRotations = Rotations.of(.25);

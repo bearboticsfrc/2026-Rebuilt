@@ -66,8 +66,6 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
 
   /* device status signals */
   private final StatusSignal<Angle> motorPosition = motor.getPosition(false);
-  private final StatusSignal<Double> motorProfileVelocity =
-      motor.getClosedLoopReferenceSlope(false);
 
   /* controls used by the leader motors */
   private final MotionMagicVoltage setpointRequest = new MotionMagicVoltage(0);

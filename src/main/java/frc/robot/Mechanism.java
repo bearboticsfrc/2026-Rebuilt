@@ -34,15 +34,15 @@ public class Mechanism extends SubsystemBase {
 
   protected TalonFX motor;
 
-  protected StatusSignal<Current> motorSupplyCurrent;
-  protected StatusSignal<Current> motorStatorCurrent;
-  protected StatusSignal<AngularVelocity> motorVelocity;
-  protected StatusSignal<Temperature> motorTemperature;
-  protected StatusSignal<Double> motorClosedLoopError;
-  protected StatusSignal<Voltage> motorVoltage;
-  protected StatusSignal<Angle> motorPosition;
-  protected StatusSignal<Double> setpoint;
-  protected StatusSignal<Double> motorProfileVelocity;
+  protected final StatusSignal<Current> motorSupplyCurrent;
+  protected final StatusSignal<Current> motorStatorCurrent;
+  protected final StatusSignal<AngularVelocity> motorVelocity;
+  protected final StatusSignal<Temperature> motorTemperature;
+  protected final StatusSignal<Double> motorClosedLoopError;
+  protected final StatusSignal<Voltage> motorVoltage;
+  protected final StatusSignal<Angle> motorPosition;
+  protected final StatusSignal<Double> setpoint;
+  protected final StatusSignal<Double> motorProfileVelocity;
 
   private final String UNDERVOLTAGE_STICKY_KEY;
   private final String BOOT_DURING_ENABLE_STICKY_KEY;
@@ -79,6 +79,10 @@ public class Mechanism extends SubsystemBase {
     motorVelocity = motor.getVelocity(false);
     motorTemperature = motor.getDeviceTemp(false);
     motorClosedLoopError = motor.getClosedLoopError(false);
+    motorPosition = motor.getPosition(false);
+    motorProfileVelocity = motor.getClosedLoopReferenceSlope(false);
+    motorVoltage = motor.getMotorVoltage(false);
+    setpoint = motor.getClosedLoopReference(false);
 
     UNDERVOLTAGE_STICKY_KEY = lowerCaseName + "/faults/sticky/undervoltage";
     BOOT_DURING_ENABLE_STICKY_KEY = lowerCaseName + "/faults/sticky/bootDuringEnable";
