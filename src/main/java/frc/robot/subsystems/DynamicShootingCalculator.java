@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -20,7 +21,7 @@ public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
 
   public static final Transform2d turretToRobot =
-      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d());
+      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d(Degrees.of(180)));
 
   private Translation2d lastTarget = Field.getMyHub();
 

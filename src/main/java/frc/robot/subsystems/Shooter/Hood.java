@@ -4,7 +4,6 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -118,12 +117,6 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
     }
     buttonMappings();
     System.out.println("Hood Subsystem Initialized");
-  }
-
-  @Override
-  public void periodic() {
-    /* refresh all status signals */
-    BaseStatusSignal.refreshAll(motorProfileVelocity);
   }
 
   @Override

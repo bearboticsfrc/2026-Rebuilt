@@ -81,11 +81,6 @@ public class Kicker extends Mechanism implements SelfTestable {
   }
 
   @Override
-  public void periodic() {
-    super.logFaults(motor);
-  }
-
-  @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, kGearRatio, simModel);
   }
