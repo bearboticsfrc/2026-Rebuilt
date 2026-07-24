@@ -23,6 +23,7 @@ import com.pathplanner.lib.events.EventTrigger;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -48,6 +49,8 @@ import frc.robot.commands.InterpolatedShootCommand;
 import frc.robot.commands.StaticShootCommand;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.generated.TunerConstants;
+import frc.robot.lib.BLine.FollowPath;
+import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.subsystems.intake.Rollers;
@@ -350,10 +353,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     resetCorrection();
     vision.updateCameraSettings();
     turretVisionHelper.updateLimelightSettings();
+    configureAutoBuilder();
 
     CommandScheduler.getInstance().schedule(slider.calibrateZero().andThen(slider.retract()));
-
-    m_autonomousCommand = getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
       CommandScheduler.getInstance().schedule(m_autonomousCommand);
@@ -414,6 +416,27 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged
   public double getMatchTime() {
     return DriverStation.getMatchTime();
+  }
+
+  /* B-line setup */
+  private void configureAutoBuilder() {
+
+    FollowPath.Builder autoBuilder =
+        new FollowPath.Builder(
+                drivetrain,
+                () -> drivetrain.getState().Pose,
+                () -> drivetrain.getState().Speeds,
+                (speeds) ->
+                    drivetrain.setControl(drivetrain.m_pathApplyRobotSpeeds.withSpeeds(speeds)),
+                new PIDController(10.0, 0.0, 0.0), // translation
+                new PIDController(7.0, 0.0, 0.0), // rotation
+                new PIDController(0.0, 0.0, 0.0) // cross-track (tune)
+                )
+            .withDefaultShouldFlip()
+            .withPoseReset((pose) -> getPoseToResetTo());
+
+    Path test = new Path("test");
+    m_autonomousCommand = autoBuilder.build(test);
   }
 
   public void configureDefaultCommands() {
