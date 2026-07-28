@@ -18,6 +18,7 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -144,11 +145,21 @@ public class Slider extends Mechanism implements SelfTestable {
    * @return Command to run
    */
   private Command goToSetpoint(Supplier<Setpoint> setpoint) {
-    return run(
+    return Commands.runEnd(
         () -> {
-          motionMagicRequest.withPosition(setpoint.get().target);
+          if (isStalled || hasStalled) {
+            System.out.println(getName() + " is stalled, holding position.");
+            motionMagicRequest.withPosition(motorPosition.getValue());
+            hasStalled = true;
+          } else {
+            motionMagicRequest.withPosition(setpoint.get().target);
+          }
           motor.setControl(motionMagicRequest);
-        });
+        },
+        () -> {
+          hasStalled = false;
+        },
+        this);
   }
 
   /**
@@ -175,6 +186,44 @@ public class Slider extends Mechanism implements SelfTestable {
     return runOnce(() -> motionMagicRequest.withPosition(motorPosition.getValue()))
         .andThen(run(() -> motor.setControl(motionMagicRequest)))
         .withName(getName() + ".HoldPosition");
+  }
+
+  // Stall thresholds
+  private final double STALL_VELOCITY_RPS = 0.05; // Near zero movement
+  private final double STALL_CURRENT_AMPS = 50.0; // High load threshold for Kraken X60
+  private final double STALL_TIME_SECONDS = 0.15; // Continuous duration to confirm stall
+
+  private final Timer stallTimer = new Timer();
+  private boolean isStalled = false;
+  private boolean hasStalled = false;
+
+  public void periodic() {
+    super.periodic();
+    checkIfStalled();
+  }
+
+  public boolean checkIfStalled() {
+    // Check if conditions meet stall criteria
+    if (Math.abs(getVelocity().in(RotationsPerSecond)) < STALL_VELOCITY_RPS
+        && getStatorCurrent().in(Amps) > STALL_CURRENT_AMPS) {
+      if (stallTimer.get() == 0) {
+        stallTimer.start();
+      }
+
+      if (stallTimer.hasElapsed(STALL_TIME_SECONDS)) {
+        isStalled = true;
+      }
+    } else {
+      stallTimer.stop();
+      stallTimer.reset();
+      isStalled = false;
+    }
+
+    return isStalled;
+  }
+
+  public boolean isElevatorStalled() {
+    return isStalled;
   }
 
   private static final double kCalibrateOutput = -.12;
