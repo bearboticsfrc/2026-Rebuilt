@@ -1,14 +1,13 @@
 package frc.robot.statemachine;
 
-import frc.robot.Robot;
 import frc.robot.RobotState;
 
 public class StateMachineTest extends StateMachineBase {
 
   private static RobotState robotState = RobotState.getInstance();
 
-  public static State A = new State("A", Robot.get().getFlywheel().runAtSpeed(0));
-  public static State B = new State("B", Robot.get().getFlywheel().runAtSpeed(500));
+  public static State A = new State("A", null);
+  public static State B = new State("B", null);
 
   private static StateMachineTest instance;
 

@@ -1,6 +1,5 @@
 package frc.robot.statemachine;
 
-import edu.wpi.first.wpilibj2.command.Command;
 import java.util.ArrayList;
 import lombok.Getter;
 
@@ -8,11 +7,11 @@ import lombok.Getter;
 public class State {
 
   protected String name;
-  protected Command action;
+  protected Runnable action;
 
-  public State(String name, Command action) {
+  public State(String name, Runnable action) {
     this.name = name;
-    this.action = action.withName(name + " state");
+    this.action = action;
   }
 
   @Getter ArrayList<Transition> transitions = new ArrayList<>();

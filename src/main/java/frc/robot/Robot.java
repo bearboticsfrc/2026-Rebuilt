@@ -239,7 +239,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   }
 
   public Flywheel getFlywheel() {
-    return flywheel;
+    return this.flywheel;
+  }
+
+  public Rollers getRollers() {
+    return this.rollers;
   }
 
   public HubTracker getTracker() {

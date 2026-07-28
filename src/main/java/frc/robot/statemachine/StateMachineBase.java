@@ -1,6 +1,7 @@
 package frc.robot.statemachine;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.ArrayList;
@@ -28,18 +29,10 @@ public class StateMachineBase extends SubsystemBase {
    */
   public StateMachineBase(State... states) {
     Collections.addAll(this.states, states);
-
     this.current = this.states.get(0);
 
-    for (State state : this.states) {
-      this.transitions.addAll(state.getTransitions());
-    }
-
-    for (State state : this.states) {
-      final State s = state;
-      this.stateTriggers.put(state, new Trigger(() -> s == current));
-    }
-
+    transitionsInit();
+    populateStateTriggers();
     execute();
   }
 
@@ -75,7 +68,25 @@ public class StateMachineBase extends SubsystemBase {
     return current.name;
   }
 
+  /** Initializes every {@link Transition} for every {@link State} in state machine. */
+  public void transitionsInit() {
+    for (State state : this.states) {
+      this.transitions.addAll(state.getTransitions());
+    }
+  }
+
+  /** Creates an "on enter" {@link Trigger} for every state. */
+  private void populateStateTriggers() {
+    for (State state : this.states) {
+      final State s = state;
+      this.stateTriggers.put(state, new Trigger(() -> s == current));
+    }
+  }
+
+  /** Manages and executes proper actions when states are entered. */
   private void execute() {
-    this.on(current).onTrue(current.action);
+    for (State state : this.states) {
+      this.on(state).onTrue(Commands.runOnce(state.action).finallyDo(()-> state.action));
+    }
   }
 }
