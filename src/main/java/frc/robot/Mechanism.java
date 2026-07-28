@@ -3,6 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -12,9 +13,11 @@ import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -31,11 +34,15 @@ public class Mechanism extends SubsystemBase {
 
   protected TalonFX motor;
 
-  protected StatusSignal<Current> motorSupplyCurrent;
-  protected StatusSignal<Current> motorStatorCurrent;
-  protected StatusSignal<AngularVelocity> motorVelocity;
-  protected StatusSignal<Temperature> motorTemperature;
-  protected StatusSignal<Double> motorClosedLoopError;
+  protected final StatusSignal<Current> motorSupplyCurrent;
+  protected final StatusSignal<Current> motorStatorCurrent;
+  protected final StatusSignal<AngularVelocity> motorVelocity;
+  protected final StatusSignal<Temperature> motorTemperature;
+  protected final StatusSignal<Double> motorClosedLoopError;
+  protected final StatusSignal<Voltage> motorVoltage;
+  protected final StatusSignal<Angle> motorPosition;
+  protected final StatusSignal<Double> setpoint;
+  protected final StatusSignal<Double> motorProfileVelocity;
 
   private final String UNDERVOLTAGE_STICKY_KEY;
   private final String BOOT_DURING_ENABLE_STICKY_KEY;
@@ -72,6 +79,10 @@ public class Mechanism extends SubsystemBase {
     motorVelocity = motor.getVelocity(false);
     motorTemperature = motor.getDeviceTemp(false);
     motorClosedLoopError = motor.getClosedLoopError(false);
+    motorPosition = motor.getPosition(false);
+    motorProfileVelocity = motor.getClosedLoopReferenceSlope(false);
+    motorVoltage = motor.getMotorVoltage(false);
+    setpoint = motor.getClosedLoopReference(false);
 
     UNDERVOLTAGE_STICKY_KEY = lowerCaseName + "/faults/sticky/undervoltage";
     BOOT_DURING_ENABLE_STICKY_KEY = lowerCaseName + "/faults/sticky/bootDuringEnable";
@@ -144,7 +155,7 @@ public class Mechanism extends SubsystemBase {
   }
 
   /**
-   * Logs motor supplu current for mechanism
+   * Logs motor supply current for mechanism
    *
    * @return Current, motorSupplyCurrent
    */
@@ -166,11 +177,72 @@ public class Mechanism extends SubsystemBase {
   /**
    * Logs motor temperature for mechanism
    *
-   * @return double, mototTemperature
+   * @return double, motorTemperature
    */
   @Logged(name = "temperature")
   public double getTemperature() {
     return motorTemperature.getValue().in(Celsius);
+  }
+
+  // logs motor voltage for mechanism
+  // @return Voltage, motorVoltage
+  @Logged(name = "voltage")
+  public Voltage getMotorVoltageMeasure() {
+    return motorVoltage.getValue();
+  }
+
+  // logs motor position as a double for mechanism
+  // @return double, motorPosition
+  @Logged(name = "position")
+  public double getPosition() {
+    return motorPosition.getValueAsDouble();
+  }
+
+  // logs motor position as an angle for mechanism
+  // @return Angle, motorPosition
+  @Logged(name = "angle")
+  public Angle getAngle() {
+    return motorPosition.getValue();
+  }
+
+  // logs setpoint in degrees for mechanism
+  // @return double, setpoint
+  @Logged(name = "setpointDegrees")
+  public double getSetpointDegrees() {
+    return setpoint.getValueAsDouble() * 360.0;
+  }
+
+  // logs profile velocity in rps for mechanism
+  // @return double, motorProfileVelocity
+  @Logged(name = "velocityRPS")
+  public double getProfileVelocityRPS() {
+    return motorProfileVelocity.getValue();
+  }
+
+  @Override
+  public void periodic() {
+    /* refresh all status signals */
+    BaseStatusSignal.refreshAll(
+        motorPosition,
+        motorVelocity,
+        motorStatorCurrent,
+        motorSupplyCurrent,
+        motorVoltage,
+        motorTemperature,
+        setpoint);
+    logFaults(motor);
+  }
+
+  protected void optimizeCAN() {
+    motorPosition.setUpdateFrequency(250);
+    motorVelocity.setUpdateFrequency(250);
+    motorSupplyCurrent.setUpdateFrequency(50);
+    motorStatorCurrent.setUpdateFrequency(50);
+    motorClosedLoopError.setUpdateFrequency(50);
+    motorTemperature.setUpdateFrequency(4);
+    motorProfileVelocity.setUpdateFrequency(50);
+
+    motor.optimizeBusUtilization();
   }
 
   /**

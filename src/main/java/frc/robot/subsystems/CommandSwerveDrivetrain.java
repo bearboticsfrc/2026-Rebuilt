@@ -380,7 +380,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
   private void checkForNAN() {
     Pose2d current = getStateCopy().Pose;
-    if (current.getX() == Double.NaN || current.getY() == Double.NaN) {
+    if (Double.isNaN(current.getX()) || Double.isNaN(current.getY())) {
 
       Pose2d lastPose = getPoseAtTimestamp(Utils.getCurrentTimeSeconds() - 0.02);
       System.out.println(

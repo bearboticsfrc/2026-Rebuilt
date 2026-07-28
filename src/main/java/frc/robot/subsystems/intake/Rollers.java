@@ -3,7 +3,6 @@ package frc.robot.subsystems.intake;
 import static edu.wpi.first.units.Units.RPM;
 import static frc.robot.util.PhoenixUtil.applyConfig;
 
-import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
@@ -77,28 +76,6 @@ public class Rollers extends Mechanism implements SelfTestable {
 
     buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
-  }
-
-  private void optimizeCAN() {
-    motorSupplyCurrent.setUpdateFrequency(50);
-    motorStatorCurrent.setUpdateFrequency(50);
-    motorVelocity.setUpdateFrequency(250);
-    motorTemperature.setUpdateFrequency(4);
-    motorClosedLoopError.setUpdateFrequency(50);
-
-    motor.optimizeBusUtilization();
-  }
-
-  @Override
-  public void periodic() {
-    BaseStatusSignal.refreshAll(
-        motorSupplyCurrent,
-        motorStatorCurrent,
-        motorVelocity,
-        motorTemperature,
-        motorClosedLoopError);
-
-    super.logFaults(motor);
   }
 
   @Override
