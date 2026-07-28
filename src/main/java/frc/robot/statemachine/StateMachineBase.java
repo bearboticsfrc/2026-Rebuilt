@@ -11,11 +11,12 @@ import java.util.List;
 
 public class StateMachineBase extends SubsystemBase {
 
-  private List<State> states = new ArrayList<>();
-  private ArrayList<Transition> transitions = new ArrayList<>();
-  private HashMap<State, Trigger> stateTriggers = new HashMap<>();
+  protected List<State> states = new ArrayList<>();
+  protected ArrayList<Transition> transitions = new ArrayList<>();
+  protected HashMap<State, Trigger> stateTriggers = new HashMap<>();
 
   protected State current;
+  protected State previous;
 
   /**
    * Class for FRC state machine, manages states and their transitions, utilizing the {@link State}
@@ -28,12 +29,9 @@ public class StateMachineBase extends SubsystemBase {
    * @param states The robot {@link State}(s)
    */
   public StateMachineBase(State... states) {
+    this.current = null;
     Collections.addAll(this.states, states);
-    this.current = this.states.get(0);
-
-    transitionsInit();
-    populateStateTriggers();
-    execute();
+    previous = current;
   }
 
   @Override
@@ -45,9 +43,17 @@ public class StateMachineBase extends SubsystemBase {
   private void update() {
     for (Transition transition : transitions) {
       if (current == transition.origin) {
-        if (transition.condition.get()) {
+        if (transition.transitionCondition.getAsBoolean()) {
           current = transition.goal;
+          previous = transition.origin;
           return;
+        }
+        // allow for transition back to a previous state if the current state cannot be completed.
+        if (transition.goal == previous
+            && transition.transitionRequest.getAsBoolean()
+            && !current.isComplete()) {
+          current = transition.goal;
+          previous = transition.origin;
         }
       }
     }
@@ -63,30 +69,62 @@ public class StateMachineBase extends SubsystemBase {
   }
 
   /** Logs the current state */
-  @Logged(name = "Current State")
+  @Logged
   public String currentState() {
-    return current.name;
+    if (current != null) {
+      return !current.isComplete() ? "Transitioning" : current.name;
+    }
+    return "Waiting for Init...";
   }
 
-  /** Initializes every {@link Transition} for every {@link State} in state machine. */
+  /**
+   * Initializes every {@link Transition} for every {@link State} in state machine. Call this on
+   * initialization!
+   */
   public void transitionsInit() {
     for (State state : this.states) {
       this.transitions.addAll(state.getTransitions());
     }
   }
 
-  /** Creates an "on enter" {@link Trigger} for every state. */
-  private void populateStateTriggers() {
+  /** Creates an "on enter" {@link Trigger} for every state. Call this on initialization! */
+  protected void triggersInit() {
     for (State state : this.states) {
       final State s = state;
       this.stateTriggers.put(state, new Trigger(() -> s == current));
     }
   }
 
-  /** Manages and executes proper actions when states are entered. */
-  private void execute() {
+  /** Manages proper actions when states are entered. Call this last on initialization! */
+  protected void configure() {
     for (State state : this.states) {
-      this.on(state).onTrue(Commands.runOnce(state.action).finallyDo(()-> state.action));
+      this.on(state)
+          .whileTrue(
+              Commands.defer(state.action, state.action.get().getRequirements())
+                  .withName(getName() + "." + state.name));
     }
+  }
+
+  /**
+   * Sets the starting state of the state machine.
+   *
+   * @param state The starting state.
+   */
+  protected void initState(State state) {
+    if (!states.isEmpty() && states.contains(state)) {
+      current = state;
+    }
+  }
+
+  /**
+   * Returns the corresponding state via the state's name.
+   *
+   * @param name The name of the state.
+   */
+  protected State get(String name) {
+    for (State state : this.states) {
+      if (name.equals(state.name)) return state;
+    }
+    return null;
   }
 }

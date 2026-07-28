@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.CAN;
-import frc.robot.Copilot;
 import frc.robot.Mechanism;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
@@ -74,7 +73,7 @@ public class Rollers extends Mechanism implements SelfTestable {
               motor, gearRatio, 0.001, ChassisReference.CounterClockwise_Positive);
     }
 
-    buttonMappings();
+    // buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
   }
 
@@ -90,7 +89,7 @@ public class Rollers extends Mechanism implements SelfTestable {
   }
 
   public Command run() {
-    return runOnce(() -> setOutput(ROLLER_SPEED)).withName(NAME + ".Run");
+    return run(() -> setOutput(ROLLER_SPEED)).withName(NAME + ".Run");
   }
 
   public Command runReverse() {
@@ -170,11 +169,11 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   /* Button Mappings for Copilot */
 
-  public void buttonMappings() {
-    Copilot.rollerIdle().onTrue(stop());
-    Copilot.rollerFwdSlow().onTrue(runSlow()).onFalse(stop());
-    Copilot.rollerFwdFast().onTrue(run()).onFalse(stop());
-    Copilot.rollerRevSlow().onTrue(runSlowReverse()).onFalse(stop());
-    Copilot.rollerRevFast().onTrue(runReverse()).onFalse(stop());
-  }
+  // public void buttonMappings() {
+  //   Copilot.rollerIdle().onTrue(stop());
+  //   Copilot.rollerFwdSlow().onTrue(runSlow()).onFalse(stop());
+  //   Copilot.rollerFwdFast().onTrue(run()).onFalse(stop());
+  //   Copilot.rollerRevSlow().onTrue(runSlowReverse()).onFalse(stop());
+  //   Copilot.rollerRevFast().onTrue(runReverse()).onFalse(stop());
+  // }
 }

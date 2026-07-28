@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.field.Field;
-import frc.robot.statemachine.StateMachineTest;
 import frc.robot.subsystems.DynamicShootingCalculator;
 import lombok.*;
 
@@ -152,10 +151,5 @@ public class RobotState {
   @Logged(name = "Zones")
   public Translation2d[] getZones() {
     return Field.getMyTestZone().get();
-  }
-
-  @Logged
-  public String currentState() {
-    return StateMachineTest.getInstance().currentState();
   }
 }

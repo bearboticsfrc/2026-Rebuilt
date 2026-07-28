@@ -48,6 +48,7 @@ import frc.robot.commands.InterpolatedShootCommand;
 import frc.robot.commands.StaticShootCommand;
 import frc.robot.field.AllianceFlipUtil;
 import frc.robot.generated.TunerConstants;
+import frc.robot.statemachine.StateMachineTest;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.DynamicShootingCalculator;
 import frc.robot.subsystems.intake.Rollers;
@@ -115,6 +116,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   private final TurretVisionHelper turretVisionHelper;
 
+  @Logged(name = "state machine", importance = Importance.CRITICAL)
+  private final StateMachineTest stateMachineTest;
+
   private Command introspectedAutoCommand;
 
   @Logged(name = "Auto Start Pose", importance = Importance.CRITICAL)
@@ -158,7 +162,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   public Robot() {
     instance = this;
-    // Telemetry.start(true, false, PrintPriority.NORMAL);
 
     tracker = new HubTracker();
     rollers = new Rollers();
@@ -186,6 +189,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     turretVisionHelper = new TurretVisionHelper();
 
+    stateMachineTest = new StateMachineTest(rollers, pilot);
+
     System.out.println("All subsystems Initialized");
 
     interpolatedShootCommand = new InterpolatedShootCommand(hood, flywheel, spindexer, kicker);
@@ -210,24 +215,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     AllianceColor.addListener(this);
 
     DriverStation.silenceJoystickConnectionWarning(false);
-
-    // Set the scheduler to log when a command initializes, interrupts, or finishes
-    // CommandScheduler scheduler = CommandScheduler.getInstance();
-    // scheduler.onCommandInitialize(
-    //     command ->
-    //         NetworkTableInstance.getDefault()
-    //             .getEntry("Misc/Robot Status")
-    //             .setString("Initialized: " + command.getName()));
-    // scheduler.onCommandInterrupt(
-    //     (command, interrupter) ->
-    //         DogLog.log(
-    //             "Misc/Robot Status",
-    //             "Interrupted: "
-    //                 + command.getName()
-    //                 + " , by: "
-    //                 + (interrupter.isPresent() ? interrupter.get().getName() : "")));
-    // scheduler.onCommandFinish(
-    //     command -> DogLog.log("Misc/Robot Status", "Finished: " + command.getName()));
 
     new Trigger(() -> RobotState.getInstance().isInAllianceZone())
         .onTrue(Commands.runOnce(() -> resetCorrection()))
@@ -447,42 +434,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   public void configureBindings() {
 
-    pilot
-        .leftTrigger()
-        .onTrue(rollers.run().alongWith(slider.extend()).withName("ParallelIntake"))
-        .onFalse(
-            slider
-                .retract()
-                .alongWith(
-                    Commands.waitSeconds(1)
-                        .andThen(rollers.stop())
-                        .andThen(Commands.waitSeconds(2)))
-                .withName("ParallelRetractIntake"));
-
-    pilot
-        .rightTrigger()
-        .onTrue(dynamicShootingCommand.shoot())
-        .onFalse(dynamicShootingCommand.stop());
-
-    pilot
-        .leftBumper()
-        .whileTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
-        .onFalse(slider.retract().alongWith(rollers.stop()));
-
-    pilot
-        .x()
-        .whileTrue(
-            drivetrain.applyRequest(
-                () ->
-                    hubAlign
-                        .withVelocityX(
-                            -pilot.getLeftY()
-                                * getMaxLinearVelocity()
-                                    .get()) // Drive forward with negative Y (forward)
-                        .withVelocityY(-pilot.getLeftX() * getMaxLinearVelocity().get())
-                        .withHeadingPID(13, 0, 2)
-                        .withTargetDirection(robotState.getAngleToHub())));
-
     // copilot controlls
 
     /* turret */
@@ -527,23 +478,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     }
     return AllianceFlipUtil.apply(resetPose);
   }
-
-  // public void bindDriveSysidTriggers() {
-  //   pilot.leftBumper().onTrue(Commands.runOnce(SignalLogger::start));
-  //   pilot.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop));
-
-  //   /*
-  //    * Joystick Y = quasistatic forward
-  //    * Joystick A = quasistatic reverse
-  //    * Joystick B = dynamic forward
-  //    * Joystick X = dyanmic reverse
-  //    */
-
-  //   pilot.y().whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-  //   pilot.a().whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-  //   pilot.b().whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-  //   pilot.x().whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-  // }
 
   // Rolling average of the correction offset
   private double correctionOffsetRads = 0.0;
