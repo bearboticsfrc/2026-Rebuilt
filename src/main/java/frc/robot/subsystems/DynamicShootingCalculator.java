@@ -32,6 +32,7 @@ public class DynamicShootingCalculator {
   private AngularVelocity turretVelocity = RadiansPerSecond.of(0);
 
   private ChassisSpeeds filteredVel = new ChassisSpeeds();
+
   private static final double VELOCITY_FILTER_ALPHA = 0.1; // tune: lower = smoother
 
   public static DynamicShootingCalculator getInstance() {

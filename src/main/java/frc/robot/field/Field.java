@@ -30,6 +30,19 @@ public class Field {
           new Translation2d(10, 5),
           new Translation2d(10, 2));
 
+  public static Zone2d blueNet =
+      new Zone2d(
+          new Translation2d(5.33, 4.74),
+          new Translation2d(7.325, 4.041),
+          new Translation2d(5.33, 3.459));
+
+  public static Zone2d blueTower =
+      new Zone2d(
+          new Translation2d(0.0, 4.15),
+          new Translation2d(1.1, 4.15),
+          new Translation2d(1.1, 3.36),
+          new Translation2d(0.0, 3.36));
+
   public static Pose2d getMyOutputPose() {
     return AllianceFlipUtil.apply(BLUE_OUTPOST_POSE);
   }
@@ -57,6 +70,14 @@ public class Field {
 
   public static Zone2d getMyTestZone() {
     return test;
+  }
+
+  public static Zone2d getMyNet() {
+    return AllianceFlipUtil.shouldFlip() ? blueNet.flip() : blueNet;
+  }
+
+  public static Zone2d getMyTower() {
+    return AllianceFlipUtil.shouldFlip() ? blueTower.flip() : blueTower;
   }
 
   public static boolean poseOutOfField(Pose2d pose2D) {

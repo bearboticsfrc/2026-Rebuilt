@@ -21,7 +21,7 @@ public class StateMachineTest extends StateMachineBase {
     State b = this.states.get(1);
 
     // Declare state transitions
-    a.to(b).condition(() -> robotState.isInNeutralZone());
+    a.to(b).condition(() -> robotState.isInNeutralZone().getAsBoolean());
     b.to(a).condition(() -> robotState.isInAllianceZone());
 
     // Intialize state logic into StateMachineBase.

@@ -38,15 +38,21 @@ public class Slider extends Mechanism implements SelfTestable {
     Extended(Inches.of(11.2)); // max travel
 
     /** The position target as a mechanism angle (rotations of the pinion). */
-    public final Angle target;
+    public Angle target;
 
     /** The position target as a linear distance. */
-    public final Distance targetDist;
+    public Distance targetDist;
 
     private Setpoint(Distance target) {
       this.targetDist = target;
       // distance = rotations * kPinionCircumference  →  rotations = distance / kPinionCircumference
       this.target = Rotations.of(target.in(Inches) / kPinionCircumference.in(Inches));
+    }
+
+    public Setpoint add(Distance target) {
+      this.targetDist = target;
+      this.target = Rotations.of(target.in(Inches) / kPinionCircumference.in(Inches));
+      return this;
     }
   }
 
@@ -137,6 +143,16 @@ public class Slider extends Mechanism implements SelfTestable {
         .withName(getName() + ".highOscillate");
   }
 
+  private final Timer manageStallTimer = new Timer();
+
+  /** Moves slider 1 inch in front of current position for 1 second. */
+  public Command manageStall() {
+    return runOnce(() -> manageStallTimer.restart())
+        .andThen(defer(() -> goToSetpoint(Inches.of(getPositionInches() + 1.0))))
+        .until(() -> manageStallTimer.hasElapsed(1.0))
+        .withName(getName() + ".manageStall");
+  }
+
   /**
    * Drives the slider to the provided position setpoint.
    *
@@ -147,6 +163,21 @@ public class Slider extends Mechanism implements SelfTestable {
     return run(
         () -> {
           motionMagicRequest.withPosition(setpoint.get().target);
+          motor.setControl(motionMagicRequest);
+        });
+  }
+
+  /**
+   * Drives the slider to the provided position setpoint.
+   *
+   * @param distance Distance of a setpoint.
+   * @return Command to run
+   */
+  private Command goToSetpoint(Distance distance) {
+    return run(
+        () -> {
+          motionMagicRequest.withPosition(
+              Rotations.of(distance.in(Inches) / kPinionCircumference.in(Inches)));
           motor.setControl(motionMagicRequest);
         });
   }
@@ -237,7 +268,6 @@ public class Slider extends Mechanism implements SelfTestable {
               var nt = NetworkTableInstance.getDefault();
               nt.getEntry(ntKey + "/message").setString("Running...");
               nt.getEntry(ntKey + "/passed").unpublish();
-              ;
             })
         .andThen(calibrateZero())
         .andThen(goToSetpoint(() -> target))

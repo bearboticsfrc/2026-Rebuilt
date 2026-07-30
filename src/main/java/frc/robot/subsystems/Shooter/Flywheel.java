@@ -130,7 +130,9 @@ public class Flywheel extends Mechanism implements SelfTestable {
    */
   public Command runAtSpeed(DoubleSupplier rpm) {
     // Command to run the flywheel at a given speed\
-    RobotState.getInstance().setShooting(true);
+    if (!RobotState.getInstance().isInNeutralZone().getAsBoolean()) {
+      RobotState.getInstance().setShooting(true);
+    }
     return run(() -> setVelocity(RPM.of(rpm.getAsDouble())))
         .withName(getName() + ".runAtSpeed(supplier)");
   }

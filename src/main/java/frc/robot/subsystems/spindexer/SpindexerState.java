@@ -31,13 +31,15 @@ public class SpindexerState extends StateMachineBase {
     initState(idle);
 
     idle.to(run).condition(() -> Pilot.shoot().getAsBoolean() && shootState.shooterReady());
-    run.to(idle).condition(() -> !Pilot.shoot().getAsBoolean());
+
+    run.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
 
     triggersInit();
     transitionsInit();
     configure();
   }
 
+  /** Signals if the spindexer is running. */
   @Logged
   public boolean spindexerReady() {
     return !kicker.isStopped() && !spindexer.isStopped();

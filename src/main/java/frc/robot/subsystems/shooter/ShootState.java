@@ -23,7 +23,7 @@ public class ShootState extends StateMachineBase {
                         .alongWith(
                             hood.goToSetpointRotationsDouble(
                                 () -> calculator.getParameters().hoodAngle())))
-            .withEnd(() -> flywheel.isAtTarget()));
+            .withEnd(flywheel::isAtTarget));
 
     this.flywheel = flywheel;
 
@@ -33,14 +33,16 @@ public class ShootState extends StateMachineBase {
 
     initState(idle);
 
-    idle.to(shoot).condition(() -> Pilot.shoot().getAsBoolean());
-    shoot.to(idle).condition(() -> !Pilot.shoot().getAsBoolean());
+    idle.to(shoot).condition(Pilot.shoot()::getAsBoolean);
+
+    shoot.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
 
     triggersInit();
     transitionsInit();
     configure();
   }
 
+  /** Signals if the shooter is ready. */
   @Logged
   public boolean shooterReady() {
     return flywheel.isAtTarget();

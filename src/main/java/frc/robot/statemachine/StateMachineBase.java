@@ -32,6 +32,8 @@ public class StateMachineBase extends SubsystemBase {
     this.current = null;
     Collections.addAll(this.states, states);
     previous = current;
+
+    System.out.println(getName() + " Initialized!");
   }
 
   @Override
