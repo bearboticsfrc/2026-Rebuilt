@@ -9,11 +9,6 @@ public class StateMachineTest extends StateMachineBase {
 
   private static RobotState robotState = RobotState.getInstance();
 
-  @Override
-  public void periodic() {
-    super.periodic();
-  }
-
   public StateMachineTest(Rollers rollers, CommandXboxController pilot) {
 
     // Construct new StateMachineBase by passing in states.

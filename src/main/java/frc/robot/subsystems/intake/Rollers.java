@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.CAN;
+import frc.robot.Copilot;
 import frc.robot.Mechanism;
 import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
@@ -167,13 +168,18 @@ public class Rollers extends Mechanism implements SelfTestable {
     return motorVelocity.getValue().in(RPM);
   }
 
+  @Logged
+  public boolean isStopped() {
+    return motor.getMotorVoltage().getValueAsDouble() <= 0.5;
+  }
+
   /* Button Mappings for Copilot */
 
-  // public void buttonMappings() {
-  //   Copilot.rollerIdle().onTrue(stop());
-  //   Copilot.rollerFwdSlow().onTrue(runSlow()).onFalse(stop());
-  //   Copilot.rollerFwdFast().onTrue(run()).onFalse(stop());
-  //   Copilot.rollerRevSlow().onTrue(runSlowReverse()).onFalse(stop());
-  //   Copilot.rollerRevFast().onTrue(runReverse()).onFalse(stop());
-  // }
+  public void buttonMappings() {
+    Copilot.rollerIdle().onTrue(stop());
+    Copilot.rollerFwdSlow().onTrue(runSlow()).onFalse(stop());
+    Copilot.rollerFwdFast().onTrue(run()).onFalse(stop());
+    Copilot.rollerRevSlow().onTrue(runSlowReverse()).onFalse(stop());
+    Copilot.rollerRevFast().onTrue(runReverse()).onFalse(stop());
+  }
 }

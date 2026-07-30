@@ -77,6 +77,12 @@ public class StateMachineBase extends SubsystemBase {
     return "Waiting for Init...";
   }
 
+  /** Logs the state that is requested (ie currently being transitioned into). */
+  @Logged
+  public String requested() {
+    return !current.isComplete() ? current.name : "";
+  }
+
   /**
    * Initializes every {@link Transition} for every {@link State} in state machine. Call this on
    * initialization!
@@ -99,7 +105,7 @@ public class StateMachineBase extends SubsystemBase {
   protected void configure() {
     for (State state : this.states) {
       this.on(state)
-          .whileTrue(
+          .onTrue(
               Commands.defer(state.action, state.action.get().getRequirements())
                   .withName(getName() + "." + state.name));
     }

@@ -59,4 +59,15 @@ public class Transition {
     this.origin.transitions.add(this);
     return this;
   }
+
+  /**
+   * Added to a transition to override saftey logic. Intended use onto emergency states, where a
+   * forced transition would not cause mechanical damage
+   */
+  public Transition fallback() {
+    this.origin.transitions.remove(this);
+    this.transitionCondition = transitionRequest;
+    this.origin.transitions.add(this);
+    return this;
+  }
 }
