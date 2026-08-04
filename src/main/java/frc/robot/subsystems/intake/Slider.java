@@ -38,21 +38,27 @@ public class Slider extends Mechanism implements SelfTestable {
     Extended(Inches.of(10.8)); // max travel
 
     /** The position target as a mechanism angle (rotations of the pinion). */
-    public final Angle target;
+    public Angle target;
 
     /** The position target as a linear distance. */
-    public final Distance targetDist;
+    public Distance targetDist;
 
     private Setpoint(Distance target) {
       this.targetDist = target;
       // distance = rotations * kPinionCircumference  →  rotations = distance / kPinionCircumference
       this.target = Rotations.of(target.in(Inches) / kPinionCircumference.in(Inches));
     }
+
+    public Setpoint add(Distance target) {
+      this.targetDist = target;
+      this.target = Rotations.of(target.in(Inches) / kPinionCircumference.in(Inches));
+      return this;
+    }
   }
 
   private static final Distance kPinionCircumference = Inches.of(1.0 * Math.PI);
 
-  private static final double gearRatio = 1.8; // 1.58; // 6.04; // motor-to-pinion gear reduction
+  private static final double gearRatio = 1.8;
 
   private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0);
   private final DutyCycleOut calibrateRequest = new DutyCycleOut(0).withIgnoreSoftwareLimits(true);
@@ -70,12 +76,11 @@ public class Slider extends Mechanism implements SelfTestable {
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimit = Amps.of(50).in(Amps);
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.Slot0.kS = 0.7; //  1.0; // 1.5;
+    config.Slot0.kS = 0.7;
     config.Slot0.kV = 0.17;
     config.Slot0.kP = 3.0;
     config.Slot0.kD = 0.05;
-    // config.Slot0.kI = 1.0;
-    config.Slot0.kG = -0.3; // TODO: tune kG for tilt angle once mechanism angle is known
+    config.Slot0.kG = -0.3;
     config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
     config.Feedback.SensorToMechanismRatio = gearRatio;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Setpoint.Extended.target.in(Rotations);
@@ -136,6 +141,16 @@ public class Slider extends Mechanism implements SelfTestable {
         .withName(getName() + ".highOscillate");
   }
 
+  private final Timer manageStallTimer = new Timer();
+
+  /** Moves slider 1 inch in front of current position for 1 second. */
+  public Command manageStall() {
+    return runOnce(() -> manageStallTimer.restart())
+        .andThen(defer(() -> goToSetpoint(Inches.of(getPositionInches() + 1.0))))
+        .until(() -> manageStallTimer.hasElapsed(1.0))
+        .withName(getName() + ".manageStall");
+  }
+
   /**
    * Drives the slider to the provided position setpoint.
    *
@@ -143,47 +158,26 @@ public class Slider extends Mechanism implements SelfTestable {
    * @return Command to run
    */
   private Command goToSetpoint(Supplier<Setpoint> setpoint) {
-    return Commands.runEnd(
-        () -> {
-          if (isStalled || hasStalled) {
-            System.out.println(getName() + " is stalled, holding position.");
-            motionMagicRequest.withPosition(motorPosition.getValue());
-            hasStalled = true;
-          } else {
-            motionMagicRequest.withPosition(setpoint.get().target);
-          }
-          motor.setControl(motionMagicRequest);
-        },
-        () -> {
-          hasStalled = false;
-        },
-        this);
-  }
-
-  /**
-   * Drives the slider to an arbitrary distance target.
-   *
-   * @param distance Function returning the target distance
-   * @return Command to run
-   */
-  private Command goToDistance(Supplier<Distance> distance) {
     return run(
         () -> {
-          double rotations = distance.get().in(Inches) / kPinionCircumference.in(Inches);
-          motionMagicRequest.withPosition(Rotations.of(rotations));
+          motionMagicRequest.withPosition(setpoint.get().target);
           motor.setControl(motionMagicRequest);
         });
   }
 
   /**
-   * Holds the slider at the current position using PID.
+   * Drives the slider to the provided position setpoint.
    *
+   * @param distance Distance of a setpoint.
    * @return Command to run
    */
-  public Command holdPosition() {
-    return runOnce(() -> motionMagicRequest.withPosition(motorPosition.getValue()))
-        .andThen(run(() -> motor.setControl(motionMagicRequest)))
-        .withName(getName() + ".HoldPosition");
+  private Command goToSetpoint(Distance distance) {
+    return run(
+        () -> {
+          motionMagicRequest.withPosition(
+              Rotations.of(distance.in(Inches) / kPinionCircumference.in(Inches)));
+          motor.setControl(motionMagicRequest);
+        });
   }
 
   // Stall thresholds
@@ -193,7 +187,6 @@ public class Slider extends Mechanism implements SelfTestable {
 
   private final Timer stallTimer = new Timer();
   private boolean isStalled = false;
-  private boolean hasStalled = false;
 
   public void periodic() {
     super.periodic();
@@ -201,6 +194,11 @@ public class Slider extends Mechanism implements SelfTestable {
   }
 
   public boolean checkIfStalled() {
+
+    if (isCalibrating) {
+      isStalled = false;
+      return false;
+    }
     // Check if conditions meet stall criteria
     if (Math.abs(getVelocity().in(RotationsPerSecond)) < STALL_VELOCITY_RPS
         && getStatorCurrent().in(Amps) > STALL_CURRENT_AMPS) {
@@ -227,6 +225,8 @@ public class Slider extends Mechanism implements SelfTestable {
   private static final double kCalibrateOutput = -.12;
   private static final double kCalibrateStallAmps = 50.0;
 
+  private boolean isCalibrating = false;
+
   /**
    * Recalibrates the slider zero point. This slowly drives the slider up until we see a drop in
    * velocity and a spike in stator current, indicating that we've hit a hard stop.
@@ -234,11 +234,14 @@ public class Slider extends Mechanism implements SelfTestable {
    * @return Command to run
    */
   public Command calibrateZero() {
-    return run(() -> {
-          calibrateRequest.withOutput(kCalibrateOutput);
-
-          motor.setControl(calibrateRequest);
-        })
+    return runOnce(() -> isZeroed = false)
+        .andThen(
+            run(
+                () -> {
+                  calibrateRequest.withOutput(kCalibrateOutput);
+                  isCalibrating = true;
+                  motor.setControl(calibrateRequest);
+                }))
         .until(() -> motorStatorCurrent.getValue().in(Amps) > kCalibrateStallAmps)
         .withTimeout(3.0)
         .andThen(
@@ -248,6 +251,7 @@ public class Slider extends Mechanism implements SelfTestable {
                   motor.setPosition(Rotations.of(0));
                   isZeroed = true;
                 }))
+        .finallyDo(() -> isCalibrating = false)
         .withName(getName() + ".CalibrateZero");
   }
 
@@ -256,15 +260,12 @@ public class Slider extends Mechanism implements SelfTestable {
   @Logged private boolean selfTestPassed = false;
   private static final double SELF_TEST_TOLERANCE_INCHES = 0.5;
 
-  // TODO: safeguard the position of the slider, should start at 0
-  // TODO: retract slider at end of test
   private Command selfTestAt(Setpoint target, String ntKey) {
     return Commands.runOnce(
             () -> {
               var nt = NetworkTableInstance.getDefault();
               nt.getEntry(ntKey + "/message").setString("Running...");
               nt.getEntry(ntKey + "/passed").unpublish();
-              ;
             })
         .andThen(calibrateZero())
         .andThen(goToSetpoint(() -> target))
@@ -337,7 +338,7 @@ public class Slider extends Mechanism implements SelfTestable {
   @Logged
   public boolean isExtended() {
     return getPositionInches()
-        >= Setpoint.Extended.targetDist.in(Inches) - SELF_TEST_TOLERANCE_INCHES;
+        >= Setpoint.Extended.targetDist.in(Inches) - SELF_TEST_TOLERANCE_INCHES + 0.4;
   }
 
   @Logged
@@ -357,6 +358,11 @@ public class Slider extends Mechanism implements SelfTestable {
   }
 
   @Logged
+  public boolean isCalibrating() {
+    return isCalibrating;
+  }
+
+  @Logged 
   public boolean isStalled() {
     return isStalled;
   }

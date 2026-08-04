@@ -21,7 +21,13 @@ public class IntakeState extends StateMachineBase {
         new State("Intake", () -> rollers.run().alongWith(slider.extend()))
             .withEnd(() -> slider.isExtended() && !rollers.isStopped()),
         new State("Oscillate", () -> rollers.runSlow().alongWith(slider.highOscillate()))
-            .withEnd(() -> true));
+            .withEnd(() -> true),
+        new State(
+                "ManageStall",
+                () -> {
+                  return slider.manageStall();
+                })
+            .withEnd(() -> !slider.isStalled()));
 
     this.slider = slider;
 
