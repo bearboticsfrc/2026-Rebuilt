@@ -29,8 +29,6 @@ import frc.robot.Robot;
 import frc.robot.test.SelfTestable;
 import java.util.function.Supplier;
 
-//test commit
-
 public class Slider extends Mechanism implements SelfTestable {
 
   /** Position setpoints for the Slider. */
