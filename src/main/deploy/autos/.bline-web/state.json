@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "editor_config": {
+    "gui": {
+      "robot": {
+        "length_meters": 0.9,
+        "width_meters": 0.9
+      },
+      "protrusions": {
+        "enabled": false,
+        "distance_meters": 0.0,
+        "side": "none",
+        "default_state": "",
+        "show_on_event_keys": [],
+        "hide_on_event_keys": []
+      },
+      "field": {
+        "selected_field_id": "frc2026-rebuilt",
+        "custom_fields": []
+      }
+    },
+    "kinematic_constraints": {
+      "default_auto_velocity_velocity_safety_factor": 0.9,
+      "default_auto_velocity_acceleration_safety_factor": 0.8,
+      "default_auto_velocity_merge_tolerance_meters_per_sec": 0.3
+    }
+  },
+  "active_path_file_name": "test.json",
+  "active_path_group_id": null,
+  "path_groups": [],
+  "linked_targets": [],
+  "paths": {
+    "test.json": {
+      "display_name": "test",
+      "editor_metadata": {
+        "ranged_constraints": [
+          {
+            "key": "max_velocity_meters_per_sec",
+            "value": 1.12,
+            "start_ordinal": 1,
+            "end_ordinal": 2,
+            "source": "auto_velocity",
+            "auto_velocity": {
+              "velocity_safety_factor": 0.25,
+              "acceleration_safety_factor": 0.8,
+              "merge_tolerance_meters_per_sec": 0.3,
+              "input_signature": "{\"pathElements\":[{\"type\":\"waypoint\",\"xMeters\":9.52,\"yMeters\":4.885,\"handoffRadiusMeters\":0.45,\"rotationRadians\":0,\"profiledRotation\":true},{\"type\":\"waypoint\",\"xMeters\":10.27,\"yMeters\":5.234999999999999,\"handoffRadiusMeters\":0.45,\"rotationRadians\":0,\"profiledRotation\":true}],\"scalarConstraints\":{\"maxVelocityMps\":null,\"maxAccelerationMps2\":null,\"maxVelocityDegPerSec\":null,\"maxAccelerationDegPerSec\":null},\"rotationRangedConstraints\":[],\"config\":{\"maxVelocityMps\":4.5,\"maxAccelerationMps2\":12,\"handoffRadiusMeters\":0.45,\"maxVelocityDegPerSec\":720,\"maxAccelerationDegPerSec\":1500,\"autoVelocityVelocitySafetyFactor\":0.9,\"autoVelocityAccelerationSafetyFactor\":0.8},\"options\":{\"velocitySafetyFactor\":0.25,\"accelerationSafetyFactor\":0.8,\"sampleStepMeters\":null}}"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "field_assets": {}
+}
