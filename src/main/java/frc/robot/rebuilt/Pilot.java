@@ -1,7 +1,8 @@
-package frc.robot;
+package frc.robot.rebuilt;
 
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.RobotState;
 
 /** Class used for cleaner pilot controller reference and abstraction. */
 public class Pilot {
@@ -42,5 +43,9 @@ public class Pilot {
   /** Returns value of driver input on the right x-axis. */
   public static double getRightX() {
     return -pilot.getRightX();
+  }
+
+  public static Trigger reverse() {
+    return pilot.b();
   }
 }

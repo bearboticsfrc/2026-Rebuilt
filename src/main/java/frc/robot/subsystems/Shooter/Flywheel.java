@@ -7,8 +7,9 @@ package frc.robot.subsystems.shooter;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.util.PhoenixUtil.applyConfig;
+import static frc.robot.rebuilt.PhoenixUtil.applyConfig;
 
+import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -24,11 +25,10 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.CAN;
-import frc.robot.Copilot;
-import frc.robot.Mechanism;
 import frc.robot.Robot;
 import frc.robot.RobotState;
+import frc.robot.rebuilt.CAN;
+import frc.robot.rebuilt.Copilot;
 import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
 

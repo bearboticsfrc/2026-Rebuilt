@@ -2,8 +2,9 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
-import static frc.robot.util.PhoenixUtil.applyConfig;
+import static frc.robot.rebuilt.PhoenixUtil.applyConfig;
 
+import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -17,10 +18,9 @@ import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.CAN;
-import frc.robot.Copilot;
-import frc.robot.Mechanism;
 import frc.robot.Robot;
+import frc.robot.rebuilt.CAN;
+import frc.robot.rebuilt.Copilot;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 

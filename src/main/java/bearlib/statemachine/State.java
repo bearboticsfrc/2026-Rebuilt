@@ -1,4 +1,4 @@
-package frc.robot.statemachine;
+package bearlib.statemachine;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import java.util.ArrayList;
@@ -34,6 +34,12 @@ public class State {
    */
   public Transition to(State goal) {
     return new Transition(this, goal);
+  }
+
+  public Transition global() {
+    Transition transition = new Transition(this, this);
+    transition.global = true;
+    return transition;
   }
 
   /**

@@ -5,10 +5,9 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static frc.robot.util.PhoenixUtil.applyConfig;
 
+import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -22,10 +21,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.CAN;
-import frc.robot.Copilot;
-import frc.robot.Mechanism;
 import frc.robot.Robot;
+import frc.robot.rebuilt.CAN;
 import frc.robot.test.SelfTestable;
 import java.util.function.Supplier;
 
@@ -45,14 +42,7 @@ public class Slider extends Mechanism implements SelfTestable {
 
     private Setpoint(Distance target) {
       this.targetDist = target;
-      // distance = rotations * kPinionCircumference  →  rotations = distance / kPinionCircumference
       this.target = Rotations.of(target.in(Inches) / kPinionCircumference.in(Inches));
-    }
-
-    public Setpoint add(Distance target) {
-      this.targetDist = target;
-      this.target = Rotations.of(target.in(Inches) / kPinionCircumference.in(Inches));
-      return this;
     }
   }
 
@@ -65,35 +55,44 @@ public class Slider extends Mechanism implements SelfTestable {
 
   private DCMotorSim motorSimModel;
 
+  private final double STALL_VELOCITY_RPS = 0.05;
+  private final double STALL_CURRENT_AMPS = 50.0;
+  private final double STALL_TIME_SECONDS = 0.15;
+
+  private final Timer stallTimer = new Timer();
+  private boolean isStalled = false;
+  private boolean hasStalled = false;
+
+  @Logged private boolean isZeroed = false;
+  @Logged private boolean selfTestPassed = false;
+  private static final double SELF_TEST_TOLERANCE_INCHES = 0.5;
+
+  private static final double kCalibrateOutput = -.12;
+  private static final double kCalibrateStallAmps = 50.0;
+
+  private boolean isCalibrating = false;
+
   public Slider() {
     super("Slider", CAN.SLIDER, new CANBus(CAN.NAME));
 
-    TalonFXConfiguration config = new TalonFXConfiguration();
+    neutralMode(NeutralModeValue.Brake);
+    inverted(InvertedValue.CounterClockwise_Positive);
+    statorCurrentLimit(Amps.of(70).in(Amps));
+    supplyCurrentLimit(Amps.of(50).in(Amps));
+    kS(0.7);
+    kV(0.17);
+    kP(3.0);
+    kD(0.05);
+    kG(-0.3);
+    gravityType(GravityTypeValue.Elevator_Static);
+    sensorToMechanismRatio(gearRatio);
+    forwardSoftLimit(Setpoint.Extended.target.in(Rotations));
+    reverseSoftLimit(0.00);
+    motionMagicCruiseVelocity(RotationsPerSecond.of(20).in(RotationsPerSecond));
+    motionMagicAcceleration(RotationsPerSecondPerSecond.of(240).in(RotationsPerSecondPerSecond));
+    motionMagicJerk(800);
 
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    config.CurrentLimits.StatorCurrentLimit = Amps.of(70).in(Amps);
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLimit = Amps.of(50).in(Amps);
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.Slot0.kS = 0.7;
-    config.Slot0.kV = 0.17;
-    config.Slot0.kP = 3.0;
-    config.Slot0.kD = 0.05;
-    config.Slot0.kG = -0.3;
-    config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-    config.Feedback.SensorToMechanismRatio = gearRatio;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Setpoint.Extended.target.in(Rotations);
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.00;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-
-    config.MotionMagic.MotionMagicCruiseVelocity = RotationsPerSecond.of(20).in(RotationsPerSecond);
-    config.MotionMagic.MotionMagicAcceleration =
-        RotationsPerSecondPerSecond.of(240).in(RotationsPerSecondPerSecond);
-    config.MotionMagic.MotionMagicJerk = 800;
-
-    applyConfig(() -> motor.getConfigurator().apply(config), getName());
+    addConfig();
 
     motor.setPosition(Rotations.of(0)); // assume retracted at startup
 
@@ -106,22 +105,27 @@ public class Slider extends Mechanism implements SelfTestable {
     System.out.println(getName() + " Subsystem Initialized");
   }
 
+  /** Runs the slider to the extended setpoint. */
   public Command extend() {
     return goToSetpoint(() -> Setpoint.Extended).withName(getName() + ".Extend");
   }
 
+  /** Runs the slider to the retracted setpoint. */
   public Command retract() {
     return goToSetpoint(() -> Setpoint.Retracted).withName(getName() + ".Retract");
   }
 
+  /** Runs the slider to the middle setpoint. */
   public Command mid() {
     return goToSetpoint(() -> Setpoint.Middle).withName(getName() + ".Mid");
   }
 
+  /** Stops the slider. */
   public Command stop() {
     return runOnce(() -> motor.stopMotor()).withName(getName() + ".Stop");
   }
 
+  /** Oscilates the slider. */
   public Command lowOscillate() {
     return mid()
         .withTimeout(0.75)
@@ -133,24 +137,6 @@ public class Slider extends Mechanism implements SelfTestable {
         .withName(getName() + ".lowOscillate");
   }
 
-  public Command highOscillate() {
-    return mid()
-        .withTimeout(0.5)
-        .andThen(extend().withTimeout(0.5))
-        .repeatedly()
-        .withName(getName() + ".highOscillate");
-  }
-
-  private final Timer manageStallTimer = new Timer();
-
-  /** Moves slider 1 inch in front of current position for 1 second. */
-  public Command manageStall() {
-    return runOnce(() -> manageStallTimer.restart())
-        .andThen(defer(() -> goToSetpoint(Inches.of(getPositionInches() + 1.0))))
-        .until(() -> manageStallTimer.hasElapsed(1.0))
-        .withName(getName() + ".manageStall");
-  }
-
   /**
    * Drives the slider to the provided position setpoint.
    *
@@ -158,48 +144,31 @@ public class Slider extends Mechanism implements SelfTestable {
    * @return Command to run
    */
   private Command goToSetpoint(Supplier<Setpoint> setpoint) {
-    return run(
+    return Commands.runEnd(
         () -> {
-          motionMagicRequest.withPosition(setpoint.get().target);
+          if (isStalled || hasStalled) {
+            motionMagicRequest.withPosition(motorPosition.getValue());
+            hasStalled = true;
+          } else {
+            motionMagicRequest.withPosition(setpoint.get().target);
+          }
           motor.setControl(motionMagicRequest);
-        });
+        },
+        () -> {
+          hasStalled = false;
+        },
+        this);
   }
 
-  /**
-   * Drives the slider to the provided position setpoint.
-   *
-   * @param distance Distance of a setpoint.
-   * @return Command to run
-   */
-  private Command goToSetpoint(Distance distance) {
-    return run(
-        () -> {
-          motionMagicRequest.withPosition(
-              Rotations.of(distance.in(Inches) / kPinionCircumference.in(Inches)));
-          motor.setControl(motionMagicRequest);
-        });
-  }
-
-  // Stall thresholds
-  private final double STALL_VELOCITY_RPS = 0.05; // Near zero movement
-  private final double STALL_CURRENT_AMPS = 50.0; // High load threshold for Kraken X60
-  private final double STALL_TIME_SECONDS = 0.15; // Continuous duration to confirm stall
-
-  private final Timer stallTimer = new Timer();
-  private boolean isStalled = false;
-
+  /** Subsytem periodic. */
   public void periodic() {
     super.periodic();
     checkIfStalled();
   }
 
+  /** Signals whether or not the slider is stalled. */
   public boolean checkIfStalled() {
 
-    if (isCalibrating) {
-      isStalled = false;
-      return false;
-    }
-    // Check if conditions meet stall criteria
     if (Math.abs(getVelocity().in(RotationsPerSecond)) < STALL_VELOCITY_RPS
         && getStatorCurrent().in(Amps) > STALL_CURRENT_AMPS) {
       if (stallTimer.get() == 0) {
@@ -217,15 +186,6 @@ public class Slider extends Mechanism implements SelfTestable {
 
     return isStalled;
   }
-
-  public boolean isElevatorStalled() {
-    return isStalled;
-  }
-
-  private static final double kCalibrateOutput = -.12;
-  private static final double kCalibrateStallAmps = 50.0;
-
-  private boolean isCalibrating = false;
 
   /**
    * Recalibrates the slider zero point. This slowly drives the slider up until we see a drop in
@@ -255,11 +215,12 @@ public class Slider extends Mechanism implements SelfTestable {
         .withName(getName() + ".CalibrateZero");
   }
 
-  @Logged private boolean isZeroed = false;
-
-  @Logged private boolean selfTestPassed = false;
-  private static final double SELF_TEST_TOLERANCE_INCHES = 0.5;
-
+  /**
+   * Self test at target speed.
+   *
+   * @param target The target speed.
+   * @param ntKey The NT key.
+   */
   private Command selfTestAt(Setpoint target, String ntKey) {
     return Commands.runOnce(
             () -> {
@@ -291,18 +252,21 @@ public class Slider extends Mechanism implements SelfTestable {
         .finallyDo(() -> motor.stopMotor());
   }
 
+  /** Self test for slider at slow speed. */
   @Override
   public Command selfTestSlow() {
     return selfTestAt(Setpoint.Middle, "Robot/Tests/slider/slow")
         .withName(getName() + ".SelfTestSlow");
   }
 
+  /** Self test for slider at fast speed. */
   @Override
   public Command selfTestFast() {
     return selfTestAt(Setpoint.Extended, "Robot/Tests/slider/fast")
         .withName(getName() + ".SelfTestFast");
   }
 
+  /** The setpoint of the slider. */
   @Logged(name = "setpoint")
   public double getSetpoint() {
     return motionMagicRequest.Position;
@@ -341,42 +305,42 @@ public class Slider extends Mechanism implements SelfTestable {
         >= Setpoint.Extended.targetDist.in(Inches) - SELF_TEST_TOLERANCE_INCHES + 0.4;
   }
 
+  /** Signals if the slider is retracted. */
   @Logged
   public boolean isRetracted() {
     return getPositionInches()
         <= Setpoint.Retracted.targetDist.in(Inches) + SELF_TEST_TOLERANCE_INCHES;
   }
 
+  /*
+   * Signals if the slider is stopped.
+   */
   @Logged
   public boolean isStopped() {
     return motor.getMotorVoltage().getValueAsDouble() <= 0.5;
   }
 
+  /** Signals if the slider is zeroed. */
   @Logged
   public boolean isZeroed() {
     return isZeroed;
   }
 
+  /** Signals if the slider is calibrating */
   @Logged
   public boolean isCalibrating() {
     return isCalibrating;
   }
 
-  @Logged 
+  /** Signals if slider is stalled. */
+  @Logged
   public boolean isStalled() {
     return isStalled;
   }
 
+  /** Simulation periodic. */
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, gearRatio, motorSimModel);
-  }
-
-  public void buttonMappings() {
-    Copilot.sliderIdle().onTrue(stop());
-    Copilot.sliderIn().onTrue(retract());
-    Copilot.sliderMiddle().onTrue(mid());
-    Copilot.sliderOut().onTrue(extend());
-    Copilot.sliderCalibrate().onTrue(calibrateZero());
   }
 }

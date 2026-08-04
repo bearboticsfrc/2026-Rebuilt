@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Robot;
-import frc.robot.field.Field;
+import frc.robot.rebuilt.Field;
 import frc.robot.vision.VisionSystem.RejectionReason;
 import frc.robot.vision.VisionSystem.VisionEstimate;
 import java.util.Optional;

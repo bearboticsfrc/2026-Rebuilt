@@ -3,7 +3,6 @@ package bearlib.util;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.field.AllianceFlipUtil;
 
 public class GeomUtil {
 

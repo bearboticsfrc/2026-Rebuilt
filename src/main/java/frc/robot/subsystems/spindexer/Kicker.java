@@ -1,10 +1,9 @@
 package frc.robot.subsystems.spindexer;
 
 import static edu.wpi.first.units.Units.RPM;
-import static frc.robot.util.PhoenixUtil.applyConfig;
 
+import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -15,10 +14,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.CAN;
-import frc.robot.Copilot;
-import frc.robot.Mechanism;
 import frc.robot.Robot;
+import frc.robot.rebuilt.CAN;
 import frc.robot.test.SelfTestable;
 
 public class Kicker extends Mechanism implements SelfTestable {
@@ -27,7 +24,6 @@ public class Kicker extends Mechanism implements SelfTestable {
 
   private final VelocityVoltage velocityReq = new VelocityVoltage(0.0).withEnableFOC(true);
 
-  // theoretical max == 2400 RPM
   private final AngularVelocity NORMAL_SPEED = RPM.of(2200);
   private final AngularVelocity SLOW_SPEED = RPM.of(200);
 
@@ -36,8 +32,6 @@ public class Kicker extends Mechanism implements SelfTestable {
 
   private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(200);
 
-  private final double tolerance = 750.0;
-
   @Logged private boolean selfTestPassed = false;
 
   private DCMotorSim simModel;
@@ -45,32 +39,17 @@ public class Kicker extends Mechanism implements SelfTestable {
   public Kicker() {
     super("Kicker", CAN.KICKER, new CANBus(CAN.NAME));
 
-    TalonFXConfiguration config = new TalonFXConfiguration();
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    neutralMode(NeutralModeValue.Coast);
+    inverted(InvertedValue.Clockwise_Positive);
+    statorCurrentLimit(60);
+    supplyCurrentLimit(60);
+    kS(0.25);
+    kV(0.32);
+    kA(0.0);
+    kP(0.2);
+    sensorToMechanismRatio(kGearRatio);
 
-    config.CurrentLimits.StatorCurrentLimit = 60;
-    config.CurrentLimits.SupplyCurrentLimit = 60;
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-
-    config.Slot0.kS = 0.25;
-    config.Slot0.kV = 0.32; // ~12V / (40 RPS) = 0.3  (was.3)
-    config.Slot0.kA = 0.0;
-    config.Slot0.kP = 0.2; // was .1
-
-    /*
-      Tuning order:
-      1. Set only kS and kV, run at your target RPM — check if steady-state velocity is close
-      2. If there's consistent error under load (fuel backed up), increase kV slightly or add a small kP
-      3. kS is the one most likely to need adjustment — too low and it won't start moving from rest, too high and it jerks on startup
-
-      Since the kicker is downstream of the spindexer and only sees the fuel briefly, tight velocity control matters less here than on the flywheel. Getting kV approximately right is sufficient
-      for consistent behavior.
-    */
-    config.Feedback.SensorToMechanismRatio = kGearRatio;
-
-    applyConfig(() -> motor.getConfigurator().apply(config), getName());
+    addConfig();
 
     if (Robot.isSimulation()) {
       simModel =
@@ -78,51 +57,64 @@ public class Kicker extends Mechanism implements SelfTestable {
     }
 
     optimizeCAN();
-    buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
   }
 
+  /** Simulation periodic. */
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, kGearRatio, simModel);
   }
 
-  /* Commands */
-
+  /** Runs the kicker. */
   public Command run() {
     return run(() -> motor.setControl(velocityReq.withVelocity(NORMAL_SPEED)))
         .withName(getName() + ".Run");
   }
 
+  /** Runs the kicker slow. */
   public Command runSlow() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(SLOW_SPEED)))
         .withName(getName() + ".RunSlow");
   }
 
+  /** Runs the kicker reverse. */
   public Command reverse() {
     return run(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED)))
         .withName(getName() + ".Reverse");
   }
 
+  /** Runs the kicker reverse slowly. */
   public Command reverseSlow() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED_SLOW)))
         .withName(getName() + ".Reverse");
   }
 
+  /** Stops the kicker. */
   public Command stop() {
     return runOnce(() -> stopMotor()).withName(getName() + ".Stop");
   }
 
+  /** Runnable to stop the kicker. */
   public void stopMotor() {
     motor.stopMotor();
   }
 
-  /* Self Test */
-
+  /**
+   * Signals whether the kicker is near a specific setpoint velocity.
+   *
+   * @param target The setpoint velocity.
+   */
   private boolean isNearTarget(AngularVelocity target) {
     return motorVelocity.getValue().isNear(target, SELF_TEST_VELOCITY_THRESHOLD_RPM);
   }
 
+  /**
+   * Self tests at a setpoint velocity.
+   *
+   * @param target The setpoint velocity.
+   * @param ntKey The NT key.
+   */
   private Command selfTestAt(AngularVelocity target, String ntKey) {
     return Commands.runOnce(
             () -> {
@@ -153,41 +145,34 @@ public class Kicker extends Mechanism implements SelfTestable {
         .finallyDo(() -> motor.stopMotor());
   }
 
+  /** Self tests at slow speed. */
   @Override
   public Command selfTestSlow() {
     return selfTestAt(SLOW_SPEED, "Robot/Tests/kicker/slow").withName(getName() + ".SelfTestSlow");
   }
 
+  /** Self tests at normal speed. */
   @Override
   public Command selfTestFast() {
     return selfTestAt(NORMAL_SPEED, "Robot/Tests/kicker/fast")
         .withName(getName() + ".SelfTestFast");
   }
 
-  /* Logged Values*/
-
+  /** The velocity in RPM. */
   @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
     return motorVelocity.getValue().in(RPM);
   }
 
+  /** The setpoint velocity in RPM. */
   @Logged(name = "setpointRPM")
   public double getSetpointInRPM() {
     return velocityReq.Velocity * 60.0;
   }
 
+  /** Signals whether or not the kicker is stopped. */
   @Logged
   public boolean isStopped() {
     return Math.abs(getVelocityInRPM()) <= 0.0;
-  }
-
-  /* Button Mappings for Copilot */
-
-  public void buttonMappings() {
-    Copilot.kickerIdle().onTrue(stop());
-    Copilot.kickerFwdSlow().onTrue(runSlow()).onFalse(stop());
-    Copilot.kickerFwdFast().onTrue(run()).onFalse(stop());
-    Copilot.kickerRevSlow().onTrue(reverseSlow()).onFalse(stop());
-    Copilot.kickerRevFast().onTrue(reverse()).onFalse(stop());
   }
 }
