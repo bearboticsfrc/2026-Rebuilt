@@ -141,16 +141,6 @@ public class Slider extends Mechanism implements SelfTestable {
         .withName(getName() + ".highOscillate");
   }
 
-  private final Timer manageStallTimer = new Timer();
-
-  /** Moves slider 1 inch in front of current position for 1 second. */
-  public Command manageStall() {
-    return runOnce(() -> manageStallTimer.restart())
-        .andThen(defer(() -> goToSetpoint(Inches.of(getPositionInches() + 1.0))))
-        .until(() -> manageStallTimer.hasElapsed(1.0))
-        .withName(getName() + ".manageStall");
-  }
-
   /**
    * Drives the slider to the provided position setpoint.
    *
@@ -158,11 +148,21 @@ public class Slider extends Mechanism implements SelfTestable {
    * @return Command to run
    */
   private Command goToSetpoint(Supplier<Setpoint> setpoint) {
-    return run(
+    return Commands.runEnd(
         () -> {
-          motionMagicRequest.withPosition(setpoint.get().target);
+          if (isStalled || hasStalled) {
+            System.out.println(getName() + " is stalled, holding position.");
+            motionMagicRequest.withPosition(motorPosition.getValue());
+            hasStalled = true;
+          } else {
+            motionMagicRequest.withPosition(setpoint.get().target);
+          }
           motor.setControl(motionMagicRequest);
-        });
+        },
+        () -> {
+          hasStalled = false;
+        },
+        this);
   }
 
   /**
@@ -187,6 +187,7 @@ public class Slider extends Mechanism implements SelfTestable {
 
   private final Timer stallTimer = new Timer();
   private boolean isStalled = false;
+  private boolean hasStalled = false;
 
   public void periodic() {
     super.periodic();
@@ -195,10 +196,6 @@ public class Slider extends Mechanism implements SelfTestable {
 
   public boolean checkIfStalled() {
 
-    if (isCalibrating) {
-      isStalled = false;
-      return false;
-    }
     // Check if conditions meet stall criteria
     if (Math.abs(getVelocity().in(RotationsPerSecond)) < STALL_VELOCITY_RPS
         && getStatorCurrent().in(Amps) > STALL_CURRENT_AMPS) {
@@ -362,7 +359,7 @@ public class Slider extends Mechanism implements SelfTestable {
     return isCalibrating;
   }
 
-  @Logged 
+  @Logged
   public boolean isStalled() {
     return isStalled;
   }

@@ -21,13 +21,7 @@ public class IntakeState extends StateMachineBase {
         new State("Intake", () -> rollers.run().alongWith(slider.extend()))
             .withEnd(() -> slider.isExtended() && !rollers.isStopped()),
         new State("Oscillate", () -> rollers.runSlow().alongWith(slider.highOscillate()))
-            .withEnd(() -> true),
-        new State(
-                "ManageStall",
-                () -> {
-                  return slider.manageStall();
-                })
-            .withEnd(() -> !slider.isStalled()));
+            .withEnd(() -> true));
 
     this.slider = slider;
 
@@ -35,7 +29,6 @@ public class IntakeState extends StateMachineBase {
     State retract = this.states.get(1);
     State intake = this.states.get(3);
     State oscillate = this.states.get(4);
-    State manageStall = this.states.get(5);
 
     initState(retract);
 
@@ -48,10 +41,6 @@ public class IntakeState extends StateMachineBase {
     oscillate.to(retract).condition(Pilot.oscillate().negate()::getAsBoolean);
 
     intake.to(oscillate).condition(Pilot.oscillate()::getAsBoolean);
-
-    retract.to(manageStall).condition(slider::isStalled).fallback();
-
-    manageStall.to(retract).condition(() -> true);
 
     triggersInit();
     transitionsInit();
