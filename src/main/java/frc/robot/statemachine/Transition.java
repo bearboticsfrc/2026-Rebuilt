@@ -17,6 +17,7 @@ public class Transition {
   public final State goal;
   public BooleanSupplier transitionCondition;
   public BooleanSupplier transitionRequest;
+  public boolean forced;
 
   /**
    * Default Constructor for a Transition, not used in implementation.
@@ -30,6 +31,7 @@ public class Transition {
     this.goal = goal;
     this.transitionCondition = condition;
     this.transitionRequest = condition;
+    this.forced = false;
   }
 
   /**
@@ -51,12 +53,21 @@ public class Transition {
    * <b>Notice:</b> For a state transition to "automatically" occur/occur when an origin state is
    * complete, pass in a {@link BooleanSupplier} that returns true.
    *
-   * @param condition The condition required
+   * @param condition The condition required.
    */
   public Transition condition(BooleanSupplier condition) {
     this.transitionRequest = condition;
-    this.transitionCondition = () -> condition.getAsBoolean() && this.origin.isComplete();
-    this.origin.transitions.add(this);
+
+    // only use transition request if transition is forced
+    if (this.forced) {
+      this.transitionCondition = () -> condition.getAsBoolean();
+      this.origin.transitions.add(this);
+    }
+    // normal behavior
+    else {
+      this.transitionCondition = () -> condition.getAsBoolean() && this.origin.isComplete();
+      this.origin.transitions.add(this);
+    }
     return this;
   }
 
@@ -69,5 +80,10 @@ public class Transition {
     this.transitionCondition = transitionRequest;
     this.origin.transitions.add(this);
     return this;
+  }
+
+  /** Signals whether or not a transition is forced, meaning it can be entered from any state. */
+  public boolean forced() {
+    return this.forced;
   }
 }

@@ -58,6 +58,15 @@ public class StateMachineBase extends SubsystemBase {
           previous = transition.origin;
         }
       }
+      // forced transitions ignore origin
+      if (transition.forced()) {
+        State active = current;
+        if (transition.transitionCondition.getAsBoolean()) {
+          current = transition.goal;
+          previous = active;
+          return;
+        }
+      }
     }
   }
 

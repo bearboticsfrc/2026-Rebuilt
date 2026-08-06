@@ -1,5 +1,6 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -8,6 +9,8 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.epilogue.Logged;
@@ -34,6 +37,8 @@ public class Mechanism extends SubsystemBase {
 
   protected TalonFX motor;
 
+  protected TalonFXConfiguration motorConfig;
+
   protected final StatusSignal<Current> motorSupplyCurrent;
   protected final StatusSignal<Current> motorStatorCurrent;
   protected final StatusSignal<AngularVelocity> motorVelocity;
@@ -43,22 +48,6 @@ public class Mechanism extends SubsystemBase {
   protected final StatusSignal<Angle> motorPosition;
   protected final StatusSignal<Double> setpoint;
   protected final StatusSignal<Double> motorProfileVelocity;
-
-  private final String UNDERVOLTAGE_STICKY_KEY;
-  private final String BOOT_DURING_ENABLE_STICKY_KEY;
-  private final String DEVICE_TEMP_STICKY_KEY;
-  private final String HARDWARE_STICKY_KEY;
-  private final String STATOR_CURR_LIMIT_STICKY_KEY;
-  private final String BRIDGE_BROWNOUT_STICKY_KEY;
-
-  private final String UNDERVOLTAGE_LIVE_KEY;
-  private final String BOOT_DURING_ENABLE_LIVE_KEY;
-  private final String DEVICE_TEMP_LIVE_KEY;
-  private final String HARDWARE_LIVE_KEY;
-  private final String STATOR_CURR_LIMIT_LIVE_KEY;
-  private final String BRIDGE_BROWNOUT_LIVE_KEY;
-
-  private final String FAULT_SUMMARY_KEY;
 
   /**
    * Constructor.
@@ -70,9 +59,9 @@ public class Mechanism extends SubsystemBase {
   public Mechanism(String name, int ID, CANBus canivore) {
     super(name);
 
-    String lowerCaseName = name.toLowerCase();
-
     motor = new TalonFX(ID, canivore);
+
+    motorConfig = new TalonFXConfiguration();
 
     motorSupplyCurrent = motor.getSupplyCurrent(false);
     motorStatorCurrent = motor.getStatorCurrent(false);
@@ -83,21 +72,49 @@ public class Mechanism extends SubsystemBase {
     motorProfileVelocity = motor.getClosedLoopReferenceSlope(false);
     motorVoltage = motor.getMotorVoltage(false);
     setpoint = motor.getClosedLoopReference(false);
+  }
 
-    UNDERVOLTAGE_STICKY_KEY = lowerCaseName + "/faults/sticky/undervoltage";
-    BOOT_DURING_ENABLE_STICKY_KEY = lowerCaseName + "/faults/sticky/bootDuringEnable";
-    DEVICE_TEMP_STICKY_KEY = lowerCaseName + "/faults/sticky/deviceTemp";
-    HARDWARE_STICKY_KEY = lowerCaseName + "/faults/sticky/hardware";
-    STATOR_CURR_LIMIT_STICKY_KEY = lowerCaseName + "/faults/sticky/statorCurrLimit";
-    BRIDGE_BROWNOUT_STICKY_KEY = lowerCaseName + "/faults/sticky/bridgeBrownout";
+  /** Refresh status signals, log faults. */
+  @Override
+  public void periodic() {
+    /* refresh all status signals */
+    BaseStatusSignal.refreshAll(
+        motorPosition,
+        motorVelocity,
+        motorStatorCurrent,
+        motorSupplyCurrent,
+        motorVoltage,
+        motorTemperature,
+        setpoint);
+    logFaults(motor);
+  }
 
-    UNDERVOLTAGE_LIVE_KEY = lowerCaseName + "/faults/live/undervoltage";
-    BOOT_DURING_ENABLE_LIVE_KEY = lowerCaseName + "/faults/live/bootDuringEnable";
-    DEVICE_TEMP_LIVE_KEY = lowerCaseName + "/faults/live/deviceTemp";
-    HARDWARE_LIVE_KEY = lowerCaseName + "/faults/live/hardware";
-    STATOR_CURR_LIMIT_LIVE_KEY = lowerCaseName + "/faults/live/statorCurrLimit";
-    BRIDGE_BROWNOUT_LIVE_KEY = lowerCaseName + "/faults/live/bridgeBrownout";
-    FAULT_SUMMARY_KEY = lowerCaseName + "/hasFault";
+  /**
+   * Updates the simulation for the mechanism.
+   *
+   * @param motor The TalonFX motor controller being simulated.
+   * @param gearRatio The gear ratio of the mechanism.
+   * @param motorSimModel The physics simulation model associated with this mechanism.
+   */
+  public void simulationPeriodic(TalonFX motor, double gearRatio, DCMotorSim motorSimModel) {
+    var talonFXSim = motor.getSimState();
+
+    // set the supply voltage of the TalonFX
+    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+
+    // get the motor voltage of the TalonFX
+    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
+
+    // use the motor voltage to calculate new position and velocity
+    // using WPILib's DCMotorSim class for physics simulation
+    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
+    motorSimModel.update(0.020); // assume 20 ms loop time
+
+    // apply the new rotor position and velocity to the TalonFX;
+    // note that this is rotor position/velocity (before gear ratio), but
+    // DCMotorSim returns mechanism position/velocity (after gear ratio)
+    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
+    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
   }
 
   /**
@@ -110,18 +127,10 @@ public class Mechanism extends SubsystemBase {
       return;
     }
 
-    boolean stickyUndervoltage = motor.getStickyFault_Undervoltage().getValue();
-    boolean stickyBootDuring = motor.getStickyFault_BootDuringEnable().getValue();
-    boolean stickyDeviceTemp = motor.getStickyFault_DeviceTemp().getValue();
-    boolean stickyHardware = motor.getStickyFault_Hardware().getValue();
-    boolean stickyStatorCurrLimit = motor.getStickyFault_StatorCurrLimit().getValue();
-    boolean stickyBridgeBrownout = motor.getStickyFault_BridgeBrownout().getValue();
-
     boolean liveUndervoltage = motor.getFault_Undervoltage().getValue();
     boolean liveBootDuring = motor.getFault_BootDuringEnable().getValue();
     boolean liveDeviceTemp = motor.getFault_DeviceTemp().getValue();
     boolean liveHardware = motor.getFault_Hardware().getValue();
-    boolean liveStatorCurrLimit = motor.getFault_StatorCurrLimit().getValue();
     boolean liveBridgeBrownout = motor.getFault_BridgeBrownout().getValue();
 
     boolean hasFault =
@@ -133,6 +142,112 @@ public class Mechanism extends SubsystemBase {
     }
     lastHasFault = hasFault;
   }
+
+  /* CONFIG */
+
+  /**
+   * Sets and enables the stator current limit for the mechanism.
+   *
+   * @param value The stator current limit value.
+   */
+  public void statorCurrentLimit(double value) {
+    motorConfig.CurrentLimits.StatorCurrentLimit = Amps.of(value).in(Amps);
+    motorConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+  }
+
+  /**
+   * Sets and enables the supply current for the mechanism.
+   *
+   * @param value The supply current limit value.
+   */
+  public void supplyCurrentLimit(double value) {
+    motorConfig.CurrentLimits.SupplyCurrentLimit = Amps.of(value).in(Amps);
+    motorConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+  }
+
+  /**
+   * Sets the proportional gain of motor controller.
+   *
+   * @param p The propotional gain.
+   */
+  public void kP(double p) {
+    motorConfig.Slot0.kP = p;
+  }
+
+  /**
+   * Sets the integral gain of motor controller.
+   *
+   * @param i The integral gain.
+   */
+  public void kI(double i) {
+    motorConfig.Slot0.kI = i;
+  }
+
+  /**
+   * Sets the derivative gain of motor controller.
+   *
+   * @param d The derivative gain.
+   */
+  public void kD(double d) {
+    motorConfig.Slot0.kD = d;
+  }
+
+  /**
+   * Sets the static feedforward gain of motor controller.
+   *
+   * @param s The static feedforward gain.
+   */
+  public void kS(double s) {
+    motorConfig.Slot0.kS = s;
+  }
+
+  /**
+   * Sets the gravity feedback/forward gain of motor controller.
+   *
+   * @param g The gravity feedback/forward gain.
+   */
+  public void kG(double g) {
+    motorConfig.Slot0.kG = g;
+  }
+
+  /**
+   * Sets the acceleration feedforward gain of motor controller.
+   *
+   * @param a The acceleration feedforward gain.
+   */
+  public void kA(double a) {
+    motorConfig.Slot0.kA = a;
+  }
+
+   /**
+   * Sets the velocity feedforward gain of motor controller.
+   *
+   * @param a The velocity feedforward gain.
+   */
+  public void kV(double v) {
+    motorConfig.Slot0.kV = v;
+  }
+
+  /**
+   * Sets the neutral mode output for mechanism.
+   * 
+   * @param neutralModeValue The neutral mode.
+   */
+  public void neutralMode(NeutralModeValue neutralModeValue){
+    motorConfig.MotorOutput.NeutralMode = neutralModeValue;
+  }
+
+/**
+   * Sets the inverted output for mechanism.
+   * 
+   * @param invertedValue The inverted value.
+   */
+  public void inverted(InvertedValue invertedValue){
+    motorConfig.MotorOutput.Inverted = invertedValue;
+  }
+
+
+  /* LOGGED VALUES */
 
   /**
    * Logs closed loop error for mechanism
@@ -184,53 +299,54 @@ public class Mechanism extends SubsystemBase {
     return motorTemperature.getValue().in(Celsius);
   }
 
-  // logs motor voltage for mechanism
-  // @return Voltage, motorVoltage
+  /**
+   * Logs motor voltage for mechanism.
+   *
+   * @return Voltage, motorVoltage
+   */
   @Logged(name = "voltage")
   public Voltage getMotorVoltageMeasure() {
     return motorVoltage.getValue();
   }
 
-  // logs motor position as a double for mechanism
-  // @return double, motorPosition
+  /**
+   * Logs motor position for mechanism.
+   *
+   * @return double, motorPosition
+   */
   @Logged(name = "position")
   public double getPosition() {
     return motorPosition.getValueAsDouble();
   }
 
-  // logs motor position as an angle for mechanism
-  // @return Angle, motorPosition
+  /**
+   * Logs motor position as an angle for mechanism.
+   *
+   * @return Angle, motorPosition
+   */
   @Logged(name = "angle")
   public Angle getAngle() {
     return motorPosition.getValue();
   }
 
-  // logs setpoint in degrees for mechanism
-  // @return double, setpoint
+  /**
+   * Logs setpoint in degrees for mechanism.
+   *
+   * @return double, setpoint
+   */
   @Logged(name = "setpointDegrees")
   public double getSetpointDegrees() {
     return setpoint.getValueAsDouble() * 360.0;
   }
 
-  // logs profile velocity in rps for mechanism
-  // @return double, motorProfileVelocity
+  /**
+   * Logs profile velocity in rps for mechanism.
+   *
+   * @return double, motorProfileVelocity
+   */
   @Logged(name = "velocityRPS")
   public double getProfileVelocityRPS() {
     return motorProfileVelocity.getValue();
-  }
-
-  @Override
-  public void periodic() {
-    /* refresh all status signals */
-    BaseStatusSignal.refreshAll(
-        motorPosition,
-        motorVelocity,
-        motorStatorCurrent,
-        motorSupplyCurrent,
-        motorVoltage,
-        motorTemperature,
-        setpoint);
-    logFaults(motor);
   }
 
   protected void optimizeCAN() {
@@ -244,6 +360,8 @@ public class Mechanism extends SubsystemBase {
 
     motor.optimizeBusUtilization();
   }
+
+  /* SIMULATION */
 
   /**
    * Initializes simulation for Kraken X44 motor.
@@ -301,33 +419,5 @@ public class Mechanism extends SubsystemBase {
     motor.getConfigurator().apply(simConfig);
 
     return motorSimModel;
-  }
-
-  /**
-   * Updates the simulation for the mechanism.
-   *
-   * @param motor The TalonFX motor controller being simulated.
-   * @param gearRatio The gear ratio of the mechanism.
-   * @param motorSimModel The physics simulation model associated with this mechanism.
-   */
-  public void simulationPeriodic(TalonFX motor, double gearRatio, DCMotorSim motorSimModel) {
-    var talonFXSim = motor.getSimState();
-
-    // set the supply voltage of the TalonFX
-    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = talonFXSim.getMotorVoltageMeasure();
-
-    // use the motor voltage to calculate new position and velocity
-    // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage.in(Volts));
-    motorSimModel.update(0.020); // assume 20 ms loop time
-
-    // apply the new rotor position and velocity to the TalonFX;
-    // note that this is rotor position/velocity (before gear ratio), but
-    // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    talonFXSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(gearRatio));
-    talonFXSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(gearRatio));
   }
 }

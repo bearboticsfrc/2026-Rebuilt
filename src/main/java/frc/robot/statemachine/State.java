@@ -50,4 +50,15 @@ public class State {
   public boolean isComplete() {
     return this.end.getAsBoolean();
   }
+
+  /**
+   * Creates a {@link Transition} that can be entered from any state.
+   *
+   * @param goal The goal state
+   */
+  public Transition force(State goal) {
+    Transition forceTransition = new Transition(null, goal);
+    forceTransition.forced = true;
+    return forceTransition;
+  }
 }
