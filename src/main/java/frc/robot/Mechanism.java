@@ -219,7 +219,7 @@ public class Mechanism extends SubsystemBase {
     motorConfig.Slot0.kA = a;
   }
 
-   /**
+  /**
    * Sets the velocity feedforward gain of motor controller.
    *
    * @param a The velocity feedforward gain.
@@ -230,22 +230,59 @@ public class Mechanism extends SubsystemBase {
 
   /**
    * Sets the neutral mode output for mechanism.
-   * 
+   *
    * @param neutralModeValue The neutral mode.
    */
-  public void neutralMode(NeutralModeValue neutralModeValue){
+  public void neutralMode(NeutralModeValue neutralModeValue) {
     motorConfig.MotorOutput.NeutralMode = neutralModeValue;
   }
 
-/**
+  /**
    * Sets the inverted output for mechanism.
-   * 
+   *
    * @param invertedValue The inverted value.
    */
-  public void inverted(InvertedValue invertedValue){
+  public void inverted(InvertedValue invertedValue) {
     motorConfig.MotorOutput.Inverted = invertedValue;
   }
 
+  /**
+   * Sets the forward soft limit.
+   *
+   * @param softLimit The value of the soft limit.
+   */
+  public void forwardSoftLimit(double softLimit) {
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitThreshold = softLimit;
+    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+  }
+
+  /**
+   * Sets the reverse soft limit.
+   *
+   * @param softLimit The value of the soft limit.
+   */
+  public void reverseSoftLimit(double softLimit) {
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = softLimit;
+    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+  }
+
+  /**
+   * Sets the motion magic acceleration.
+   *
+   * @param acceleration MotionMagic acceleration value.
+   */
+  public void motionMagicAcceleration(double acceleration) {
+    motorConfig.MotionMagic.MotionMagicAcceleration = acceleration;
+  }
+
+  /**
+   * Sets the motion magic velocity.
+   *
+   * @param velocity MotionMagic velocity value.
+   */
+  public void motionMagicCruiseVelocity(double velocity) {
+    motorConfig.MotionMagic.MotionMagicCruiseVelocity = velocity;
+  }
 
   /* LOGGED VALUES */
 
