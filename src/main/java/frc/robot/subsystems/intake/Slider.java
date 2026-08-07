@@ -165,21 +165,6 @@ public class Slider extends Mechanism implements SelfTestable {
         this);
   }
 
-  /**
-   * Drives the slider to the provided position setpoint.
-   *
-   * @param distance Distance of a setpoint.
-   * @return Command to run
-   */
-  private Command goToSetpoint(Distance distance) {
-    return run(
-        () -> {
-          motionMagicRequest.withPosition(
-              Rotations.of(distance.in(Inches) / kPinionCircumference.in(Inches)));
-          motor.setControl(motionMagicRequest);
-        });
-  }
-
   // Stall thresholds
   private final double STALL_VELOCITY_RPS = 0.05; // Near zero movement
   private final double STALL_CURRENT_AMPS = 50.0; // High load threshold for Kraken X60

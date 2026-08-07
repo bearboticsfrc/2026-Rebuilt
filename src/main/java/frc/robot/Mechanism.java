@@ -3,6 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Volts;
+import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
@@ -284,10 +285,15 @@ public class Mechanism extends SubsystemBase {
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = velocity;
   }
 
+  /** Applies config to motor. */
+  public void addConfig() {
+    applyConfig(() -> motor.getConfigurator().apply(motorConfig), getName());
+  }
+
   /* LOGGED VALUES */
 
   /**
-   * Logs closed loop error for mechanism
+   * Logs closed loop error for mechanism.
    *
    * @return double, closedLoopError
    */
