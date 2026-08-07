@@ -3,6 +3,7 @@ package bearlib.util;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import frc.robot.field.AllianceFlipUtil;
 
 public class GeomUtil {
 
@@ -23,6 +24,16 @@ public class GeomUtil {
       System.arraycopy(coords, 0, border, 0, coords.length);
       border[border.length - 1] = border[0];
       return border;
+    }
+
+    /** Apply alliance flip util to zone coords. */
+    public Zone2d flip() {
+      Translation2d[] flipCoords = new Translation2d[this.coords.length];
+      for (int i = 0; i < coords.length; i++) {
+        flipCoords[i] = AllianceFlipUtil.apply(coords[i]);
+      }
+
+      return new Zone2d(flipCoords);
     }
   }
 

@@ -28,6 +28,7 @@ import frc.robot.CAN;
 import frc.robot.Copilot;
 import frc.robot.Mechanism;
 import frc.robot.Robot;
+import frc.robot.RobotState;
 import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
 
@@ -128,7 +129,10 @@ public class Flywheel extends Mechanism implements SelfTestable {
    * @return The command to run the flywheel at the given speed.
    */
   public Command runAtSpeed(DoubleSupplier rpm) {
-    // Command to run the flywheel at a given speed
+    // Command to run the flywheel at a given speed\
+    if (!RobotState.getInstance().isInNeutralZone().getAsBoolean()) {
+      RobotState.getInstance().setShooting(true);
+    }
     return run(() -> setVelocity(RPM.of(rpm.getAsDouble())))
         .withName(getName() + ".runAtSpeed(supplier)");
   }
@@ -139,6 +143,7 @@ public class Flywheel extends Mechanism implements SelfTestable {
    * @return The command to stop the flywheel.
    */
   public Command stopCommand() {
+    RobotState.getInstance().setShooting(false);
     return runOnce(() -> stop());
   }
 
@@ -172,6 +177,11 @@ public class Flywheel extends Mechanism implements SelfTestable {
     return getTargetVelocityInRPM() > 0
         && Math.abs(getVelocityInRPM() - getTargetVelocityInRPM())
             < tolerance; // Check if the current velocity is near the target velocity
+  }
+
+  @Logged
+  public boolean isStopped() {
+    return Math.abs(getVelocityInRPM()) <= 0.5;
   }
 
   // Stop the flywheel motors

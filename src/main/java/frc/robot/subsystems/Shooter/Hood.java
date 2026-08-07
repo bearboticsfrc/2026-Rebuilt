@@ -142,7 +142,7 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   @Logged(name = "atSetpoint")
   public boolean isAtSetpoint() {
     // checks to see if the position is within 0.05 percent of the setpoint
-    return getAngle().isNear(getSetpoint(), 0.05);
+    return getAngle().isNear(getSetpoint(), 0.15);
   }
 
   /* Commands */

@@ -52,6 +52,7 @@ public class Spindexer extends Mechanism implements SelfTestable {
   @Logged private boolean selfTestPassed = false;
 
   private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(25);
+  private final double tolerance = 150;
 
   public Spindexer() {
     super("Spindexer", CAN.SPINDEXER, new CANBus(CAN.NAME));
@@ -111,7 +112,7 @@ public class Spindexer extends Mechanism implements SelfTestable {
   }
 
   public Command reverse() {
-    return runOnce(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED)))
+    return run(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED)))
         .withName(getName() + ".Reverse");
   }
 
@@ -206,6 +207,11 @@ public class Spindexer extends Mechanism implements SelfTestable {
   @Logged(name = "setpointRPM")
   public double getSetpointInRPM() {
     return velocityReq.Velocity * 60.0;
+  }
+
+  @Logged
+  public boolean isStopped() {
+    return Math.abs(getVelocityInRPM()) <= 0.0;
   }
 
   /* Button Mappings for Copilot */

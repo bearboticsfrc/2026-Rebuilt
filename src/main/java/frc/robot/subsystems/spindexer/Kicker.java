@@ -36,6 +36,8 @@ public class Kicker extends Mechanism implements SelfTestable {
 
   private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(200);
 
+  private final double tolerance = 750.0;
+
   @Logged private boolean selfTestPassed = false;
 
   private DCMotorSim simModel;
@@ -88,7 +90,7 @@ public class Kicker extends Mechanism implements SelfTestable {
   /* Commands */
 
   public Command run() {
-    return runOnce(() -> motor.setControl(velocityReq.withVelocity(NORMAL_SPEED)))
+    return run(() -> motor.setControl(velocityReq.withVelocity(NORMAL_SPEED)))
         .withName(getName() + ".Run");
   }
 
@@ -98,7 +100,7 @@ public class Kicker extends Mechanism implements SelfTestable {
   }
 
   public Command reverse() {
-    return runOnce(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED)))
+    return run(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED)))
         .withName(getName() + ".Reverse");
   }
 
@@ -172,6 +174,11 @@ public class Kicker extends Mechanism implements SelfTestable {
   @Logged(name = "setpointRPM")
   public double getSetpointInRPM() {
     return velocityReq.Velocity * 60.0;
+  }
+
+  @Logged
+  public boolean isStopped() {
+    return Math.abs(getVelocityInRPM()) <= 0.0;
   }
 
   /* Button Mappings for Copilot */

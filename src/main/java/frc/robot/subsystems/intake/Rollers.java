@@ -74,7 +74,7 @@ public class Rollers extends Mechanism implements SelfTestable {
               motor, gearRatio, 0.001, ChassisReference.CounterClockwise_Positive);
     }
 
-    buttonMappings();
+    // buttonMappings();
     System.out.println(getName() + " Subsystem Initialized");
   }
 
@@ -90,7 +90,7 @@ public class Rollers extends Mechanism implements SelfTestable {
   }
 
   public Command run() {
-    return runOnce(() -> setOutput(ROLLER_SPEED)).withName(NAME + ".Run");
+    return run(() -> setOutput(ROLLER_SPEED)).withName(NAME + ".Run");
   }
 
   public Command runReverse() {
@@ -166,6 +166,11 @@ public class Rollers extends Mechanism implements SelfTestable {
   @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
     return motorVelocity.getValue().in(RPM);
+  }
+
+  @Logged
+  public boolean isStopped() {
+    return motor.getMotorVoltage().getValueAsDouble() <= 0.5;
   }
 
   /* Button Mappings for Copilot */

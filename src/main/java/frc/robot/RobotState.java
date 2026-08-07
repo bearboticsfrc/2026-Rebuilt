@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.field.Field;
 import frc.robot.subsystems.DynamicShootingCalculator;
+import java.util.function.BooleanSupplier;
 import lombok.*;
 
 public class RobotState {
@@ -63,7 +64,6 @@ public class RobotState {
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
   }
 
-  // needs work
   public boolean isStopped() {
     if (isInAllianceZone()) {
       return Math.abs(getFieldVelocity().vxMetersPerSecond) < 0.00005
@@ -81,10 +81,11 @@ public class RobotState {
   }
 
   @Logged
-  public boolean isInNeutralZone() {
-    if (isBlueAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
-    else if (isRedAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
-    else return false;
+  public BooleanSupplier isInNeutralZone() {
+    if (isBlueAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return () -> true;
+    else if (isRedAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX())
+      return () -> true;
+    else return () -> false;
   }
 
   @Logged
@@ -95,17 +96,18 @@ public class RobotState {
 
   @Logged
   public boolean isLeftNeutralZone() {
-    return (iSLeft() && isInNeutralZone());
+    return (iSLeft() && isInNeutralZone().getAsBoolean());
   }
 
   @Logged
   public boolean isRightNeutralZone() {
-    return (!iSLeft() && isInNeutralZone());
+    return (!iSLeft() && isInNeutralZone().getAsBoolean());
   }
 
   @Logged
-  public boolean inDeadZone() {
-    return (isInNeutralZone() && robotPose.getY() > 3.5 && robotPose.getY() < 4.7);
+  public boolean shootBlocked() {
+    return GeomUtil.inZone(Field.getMyNet(), robotPose)
+        || GeomUtil.inZone(Field.getMyTower(), robotPose);
   }
 
   public Rotation2d getAngleToHub() {
@@ -121,7 +123,7 @@ public class RobotState {
 
   @Logged
   public double getTargetDistance() {
-    if (isInNeutralZone()) {
+    if (isInNeutralZone().getAsBoolean()) {
       return (iSLeft())
           ? Field.getMyLeft().getDistance((robotPose.transformBy(turretToRobot).getTranslation()))
           : Field.getMyRight().getDistance(robotPose.transformBy(turretToRobot).getTranslation());
@@ -131,25 +133,16 @@ public class RobotState {
 
   public double getLookaheadDistanceToHub() {
     return Field.getMyHub()
-        .getDistance(
-            (DynamicShootingCalculator.getInstance()
-                .getLookaheadPose()
-                // .transformBy(turretToRobot)
-                .getTranslation()));
+        .getDistance((DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation()));
   }
 
-  @Logged
-  public boolean inHubZone() {
-    return GeomUtil.inZone(Field.getMyTestZone(), robotPose);
+  @Logged(name = "Tower")
+  public Translation2d[] getTowerZone() {
+    return Field.getMyTower().get();
   }
 
-  @Logged
-  public double getDistanceFromHubZone() {
-    return GeomUtil.getDistanceFromZone(Field.getMyTestZone(), robotPose);
-  }
-
-  @Logged(name = "Zones")
-  public Translation2d[] getZones() {
-    return Field.getMyTestZone().get();
+  @Logged(name = "Net")
+  public Translation2d[] getNetZone() {
+    return Field.getMyNet().get();
   }
 }
