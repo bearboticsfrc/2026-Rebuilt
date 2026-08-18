@@ -10,6 +10,7 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
@@ -283,6 +284,33 @@ public class Mechanism extends SubsystemBase {
    */
   public void motionMagicCruiseVelocity(double velocity) {
     motorConfig.MotionMagic.MotionMagicCruiseVelocity = velocity;
+  }
+
+  /**
+   * Sets the gravity type.
+   *
+   * @param gravityTypeValue The gravity value for the gravity type.
+   */
+  public void gravityType(GravityTypeValue gravityTypeValue) {
+    motorConfig.Slot0.GravityType = gravityTypeValue;
+  }
+
+  /**
+   * Sets the sensor to mechanism ratio.
+   *
+   * @param sensorToMechanismRatio The sensor to mechanism ratio.
+   */
+  public void sensorToMechanismRatio(double sensorToMechanismRatio) {
+    motorConfig.Feedback.SensorToMechanismRatio = sensorToMechanismRatio;
+  }
+
+  /**
+   * Sets the motion magic jerk.
+   *
+   * @param motionMagicJerk The motion magic jerk value.
+   */
+  public void motionMagicJerk(double motionMagicJerk) {
+    motorConfig.MotionMagic.MotionMagicJerk = motionMagicJerk;
   }
 
   /** Applies config to motor. */

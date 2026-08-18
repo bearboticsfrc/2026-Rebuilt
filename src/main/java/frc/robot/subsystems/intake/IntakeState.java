@@ -20,7 +20,7 @@ public class IntakeState extends StateMachineBase {
             .withEnd(slider::isExtended),
         new State("Intake", () -> rollers.run().alongWith(slider.extend()))
             .withEnd(() -> slider.isExtended() && !rollers.isStopped()),
-        new State("Oscillate", () -> rollers.runSlow().alongWith(slider.highOscillate()))
+        new State("Oscillate", () -> rollers.runSlow().alongWith(slider.lowOscillate()))
             .withEnd(() -> true));
 
     this.slider = slider;

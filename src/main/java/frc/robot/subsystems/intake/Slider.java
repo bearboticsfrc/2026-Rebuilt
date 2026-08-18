@@ -5,10 +5,8 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
-import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -48,12 +46,6 @@ public class Slider extends Mechanism implements SelfTestable {
       // distance = rotations * kPinionCircumference  →  rotations = distance / kPinionCircumference
       this.target = Rotations.of(target.in(Inches) / kPinionCircumference.in(Inches));
     }
-
-    public Setpoint add(Distance target) {
-      this.targetDist = target;
-      this.target = Rotations.of(target.in(Inches) / kPinionCircumference.in(Inches));
-      return this;
-    }
   }
 
   private static final Distance kPinionCircumference = Inches.of(1.0 * Math.PI);
@@ -68,32 +60,24 @@ public class Slider extends Mechanism implements SelfTestable {
   public Slider() {
     super("Slider", CAN.SLIDER, new CANBus(CAN.NAME));
 
-    TalonFXConfiguration config = new TalonFXConfiguration();
+    neutralMode(NeutralModeValue.Brake);
+    inverted(InvertedValue.CounterClockwise_Positive);
+    statorCurrentLimit(Amps.of(70).in(Amps));
+    supplyCurrentLimit(Amps.of(50).in(Amps));
+    kS(0.7);
+    kV(0.17);
+    kP(3.0);
+    kD(0.05);
+    kG(-0.3);
+    gravityType(GravityTypeValue.Elevator_Static);
+    sensorToMechanismRatio(gearRatio);
+    forwardSoftLimit(Setpoint.Extended.target.in(Rotations));
+    reverseSoftLimit(0.00);
+    motionMagicCruiseVelocity(RotationsPerSecond.of(20).in(RotationsPerSecond));
+    motionMagicAcceleration(RotationsPerSecondPerSecond.of(240).in(RotationsPerSecondPerSecond));
+    motionMagicJerk(800);
 
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-    config.CurrentLimits.StatorCurrentLimit = Amps.of(70).in(Amps);
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLimit = Amps.of(50).in(Amps);
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.Slot0.kS = 0.7;
-    config.Slot0.kV = 0.17;
-    config.Slot0.kP = 3.0;
-    config.Slot0.kD = 0.05;
-    config.Slot0.kG = -0.3;
-    config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-    config.Feedback.SensorToMechanismRatio = gearRatio;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = Setpoint.Extended.target.in(Rotations);
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = 0.00;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-
-    config.MotionMagic.MotionMagicCruiseVelocity = RotationsPerSecond.of(20).in(RotationsPerSecond);
-    config.MotionMagic.MotionMagicAcceleration =
-        RotationsPerSecondPerSecond.of(240).in(RotationsPerSecondPerSecond);
-    config.MotionMagic.MotionMagicJerk = 800;
-
-    applyConfig(() -> motor.getConfigurator().apply(config), getName());
+    addConfig();
 
     motor.setPosition(Rotations.of(0)); // assume retracted at startup
 
@@ -106,22 +90,27 @@ public class Slider extends Mechanism implements SelfTestable {
     System.out.println(getName() + " Subsystem Initialized");
   }
 
+  /** Runs the slider to the extended setpoint. */
   public Command extend() {
     return goToSetpoint(() -> Setpoint.Extended).withName(getName() + ".Extend");
   }
 
+  /** Runs the slider to the retracted setpoint. */
   public Command retract() {
     return goToSetpoint(() -> Setpoint.Retracted).withName(getName() + ".Retract");
   }
 
+  /** Runs the slider to the middle setpoint. */
   public Command mid() {
     return goToSetpoint(() -> Setpoint.Middle).withName(getName() + ".Mid");
   }
 
+  /** Stops the slider. */
   public Command stop() {
     return runOnce(() -> motor.stopMotor()).withName(getName() + ".Stop");
   }
 
+  /** Oscilates the slider. */
   public Command lowOscillate() {
     return mid()
         .withTimeout(0.75)
@@ -131,14 +120,6 @@ public class Slider extends Mechanism implements SelfTestable {
         .andThen(retract().withTimeout(1.25))
         .repeatedly()
         .withName(getName() + ".lowOscillate");
-  }
-
-  public Command highOscillate() {
-    return mid()
-        .withTimeout(0.5)
-        .andThen(extend().withTimeout(0.5))
-        .repeatedly()
-        .withName(getName() + ".highOscillate");
   }
 
   /**
