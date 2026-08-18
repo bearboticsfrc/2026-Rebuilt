@@ -17,7 +17,7 @@ public class Transition {
   public final State goal;
   public BooleanSupplier transitionCondition;
   public BooleanSupplier transitionRequest;
-  public boolean forced;
+  public boolean global;
 
   /**
    * Default Constructor for a Transition, not used in implementation.
@@ -31,7 +31,7 @@ public class Transition {
     this.goal = goal;
     this.transitionCondition = condition;
     this.transitionRequest = condition;
-    this.forced = false;
+    this.global = false;
   }
 
   /**
@@ -59,7 +59,7 @@ public class Transition {
     this.transitionRequest = condition;
 
     // only use transition request if transition is forced
-    if (this.forced) {
+    if (this.global) {
       this.transitionCondition = () -> condition.getAsBoolean();
       this.origin.transitions.add(this);
     }
@@ -82,8 +82,8 @@ public class Transition {
     return this;
   }
 
-  /** Signals whether or not a transition is forced, meaning it can be entered from any state. */
-  public boolean forced() {
-    return this.forced;
+  /** Signals whether or not a transition is global, meaning it can be entered from any state. */
+  public boolean global() {
+    return this.global;
   }
 }

@@ -27,12 +27,15 @@ public class SpindexerState extends StateMachineBase {
     /* setup transitions */
     State idle = this.states.get(0);
     State run = this.states.get(1);
+    State reverse = this.states.get(2);
 
     initState(idle);
 
     idle.to(run).condition(() -> Pilot.shoot().getAsBoolean() && shootState.shooterReady());
 
     run.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
+
+    reverse.global().condition(Pilot.reverse()::getAsBoolean);
 
     triggersInit();
     transitionsInit();

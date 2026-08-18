@@ -43,4 +43,8 @@ public class Pilot {
   public static double getRightX() {
     return -pilot.getRightX();
   }
+
+  public static Trigger reverse() {
+    return pilot.b();
+  }
 }

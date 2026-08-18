@@ -17,6 +17,7 @@ public class StateMachineBase extends SubsystemBase {
 
   protected State current;
   protected State previous;
+  private State initial;
 
   /**
    * Class for FRC state machine, manages states and their transitions, utilizing the {@link State}
@@ -32,6 +33,7 @@ public class StateMachineBase extends SubsystemBase {
     this.current = null;
     Collections.addAll(this.states, states);
     previous = current;
+    initial = null;
 
     System.out.println(getName() + " Initialized!");
   }
@@ -44,6 +46,15 @@ public class StateMachineBase extends SubsystemBase {
   /** Manages and monitors transitions from state to state. */
   private void update() {
     for (Transition transition : transitions) {
+
+      if (transition.global()) {
+
+        if (transition.transitionCondition.getAsBoolean()) {
+          previous = current;
+          current = transition.goal;
+        }
+      }
+
       if (current == transition.origin) {
         if (transition.transitionCondition.getAsBoolean()) {
           current = transition.goal;
@@ -56,15 +67,6 @@ public class StateMachineBase extends SubsystemBase {
             && !current.isComplete()) {
           current = transition.goal;
           previous = transition.origin;
-        }
-      }
-      // forced transitions ignore origin
-      if (transition.forced()) {
-        State active = current;
-        if (transition.transitionCondition.getAsBoolean()) {
-          current = transition.goal;
-          previous = active;
-          return;
         }
       }
     }
@@ -101,6 +103,18 @@ public class StateMachineBase extends SubsystemBase {
   public void transitionsInit() {
     for (State state : this.states) {
       this.transitions.addAll(state.getTransitions());
+
+      try {
+        for (Transition transition : state.transitions) {
+          if (transition.global()) {
+            Transition undo =
+                new Transition(transition.goal, initial)
+                    .condition(() -> !transition.transitionCondition.getAsBoolean());
+            this.transitions.add(undo);
+          }
+        }
+      } catch (Exception e) {
+      }
     }
   }
 
@@ -130,6 +144,7 @@ public class StateMachineBase extends SubsystemBase {
   protected void initState(State state) {
     if (!states.isEmpty() && states.contains(state)) {
       current = state;
+      initial = state;
     }
   }
 

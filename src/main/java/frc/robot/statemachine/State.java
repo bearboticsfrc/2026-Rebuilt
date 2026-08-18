@@ -36,6 +36,12 @@ public class State {
     return new Transition(this, goal);
   }
 
+  public Transition global() {
+    Transition transition = new Transition(this, this);
+    transition.global = true;
+    return transition;
+  }
+
   /**
    * Assigns an explicit end to a state.
    *
@@ -49,16 +55,5 @@ public class State {
   /** Signals whether or not a state is completed. */
   public boolean isComplete() {
     return this.end.getAsBoolean();
-  }
-
-  /**
-   * Creates a {@link Transition} that can be entered from any state.
-   *
-   * @param goal The goal state
-   */
-  public Transition force(State goal) {
-    Transition forceTransition = new Transition(null, goal);
-    forceTransition.forced = true;
-    return forceTransition;
   }
 }

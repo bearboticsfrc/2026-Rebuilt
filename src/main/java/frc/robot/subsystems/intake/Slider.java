@@ -151,7 +151,6 @@ public class Slider extends Mechanism implements SelfTestable {
     return Commands.runEnd(
         () -> {
           if (isStalled || hasStalled) {
-            System.out.println(getName() + " is stalled, holding position.");
             motionMagicRequest.withPosition(motorPosition.getValue());
             hasStalled = true;
           } else {
