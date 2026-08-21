@@ -63,8 +63,7 @@ public class Rollers extends Mechanism implements SelfTestable {
           simulationInitKrakenX60(
               motor, gearRatio, 0.001, ChassisReference.CounterClockwise_Positive);
     }
-
-    // buttonMappings();
+    
     System.out.println(getName() + " Subsystem Initialized");
   }
 

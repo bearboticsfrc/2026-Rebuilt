@@ -63,7 +63,7 @@ public class Spindexer extends Mechanism implements SelfTestable {
     kA(0);
     kP(0.2);
 
-    applyConfig(() -> motor.getConfigurator().apply(config), getName());
+    addConfig();
 
     if (Robot.isSimulation()) {
       simModel =
@@ -83,62 +83,69 @@ public class Spindexer extends Mechanism implements SelfTestable {
 
   /* Commands */
 
+  /**
+   * Runs the spindexer at normal speed.
+   */
   public Command run() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(NORMAL_SPEED)))
         .withName(getName() + ".Run");
   }
 
+  /**
+   * Runs the spindexer at a slow speed.
+   */
   public Command runSlow() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(SLOW_SPEED)))
         .withName(getName() + ".RunSlow");
   }
 
+  /**
+   * Runs the spindexer reverse at normal speed.
+   */
   public Command reverse() {
     return run(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED)))
         .withName(getName() + ".Reverse");
   }
 
+  /**
+   * Runs the spindexer reverse at slow speed.
+   */
   public Command reverseSlow() {
     return runOnce(() -> motor.setControl(velocityReq.withVelocity(REVERSE_SPEED_SLOW)))
         .withName(getName() + ".ReverseSlow");
   }
 
+  /**
+   * Stops the spindexer.
+   */
   public Command stop() {
     return runOnce(() -> stopMotor()).withName(getName() + ".Stop");
   }
 
+  /**
+   * Runnable for stop().
+   */
   public void stopMotor() {
     motor.stopMotor();
   }
 
-  public Command oscillate() {
-    return Commands.defer(
-            () -> {
-              Angle startPosition = position.getValue();
-              Angle forwardTarget = startPosition.plus(Rotations.of(.25));
-              Angle reverseTarget = startPosition;
-
-              return run(() ->
-                      motor.setControl(positionReq.withPosition(forwardTarget).withEnableFOC(true)))
-                  .until(() -> position.getValue().isNear(forwardTarget, Rotations.of(.05)))
-                  .andThen(
-                      run(() ->
-                              motor.setControl(
-                                  positionReq.withPosition(reverseTarget).withEnableFOC(true)))
-                          .until(
-                              () -> position.getValue().isNear(reverseTarget, Rotations.of(.05))))
-                  .repeatedly();
-            },
-            Set.of(this))
-        .withName(getName() + ".oscillate");
-  }
-
   /* Self Test */
 
+  /**
+   * Signals if the spindexer is near a target velocity.
+   * 
+   * @param target The target velocity.
+   */
   private boolean isNearTarget(AngularVelocity target) {
     return motorVelocity.getValue().isNear(target, SELF_TEST_VELOCITY_THRESHOLD_RPM);
   }
 
+  /**
+   * Self tests the motor at a specific velocity.
+   * 
+   * @param target The specific velocity.
+   * @param ntKey The NT key.
+   */
   private Command selfTestAt(AngularVelocity target, String ntKey) {
     return Commands.runOnce(
             () -> {
@@ -169,12 +176,18 @@ public class Spindexer extends Mechanism implements SelfTestable {
         .finallyDo(() -> motor.stopMotor());
   }
 
+  /**
+   * Self tests at slow speed.
+   */
   @Override
   public Command selfTestSlow() {
     return selfTestAt(SLOW_SPEED, "Robot/Tests/spindexer/slow")
         .withName(getName() + ".SelfTestSlow");
   }
 
+  /**
+   * Self tests at fast speed.
+   */
   @Override
   public Command selfTestFast() {
     return selfTestAt(NORMAL_SPEED, "Robot/Tests/spindexer/fast")

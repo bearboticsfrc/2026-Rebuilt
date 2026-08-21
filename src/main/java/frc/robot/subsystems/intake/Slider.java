@@ -121,7 +121,7 @@ public class Slider extends Mechanism implements SelfTestable {
     return goToSetpoint(() -> Setpoint.Middle).withName(getName() + ".Mid");
   }
 
-  /** Stops the slider. */
+  /** Stops the slider.*/
   public Command stop() {
     return runOnce(() -> motor.stopMotor()).withName(getName() + ".Stop");
   }
@@ -220,6 +220,12 @@ public class Slider extends Mechanism implements SelfTestable {
         .withName(getName() + ".CalibrateZero");
   }
 
+/**
+ * Self test at target speed.
+ * 
+ * @param target The target speed.
+ * @param ntKey The NT key.
+ */  
   private Command selfTestAt(Setpoint target, String ntKey) {
     return Commands.runOnce(
             () -> {
