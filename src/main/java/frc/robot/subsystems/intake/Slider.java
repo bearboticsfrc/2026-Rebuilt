@@ -317,7 +317,6 @@ public class Slider extends Mechanism implements SelfTestable {
         <= Setpoint.Retracted.targetDist.in(Inches) + SELF_TEST_TOLERANCE_INCHES;
   }
 
-<<<<<<< HEAD
   @Logged
   public boolean isStopped() {
     return motor.getMotorVoltage().getValueAsDouble() <= 0.5;
@@ -334,9 +333,6 @@ public class Slider extends Mechanism implements SelfTestable {
   }
 
   @Logged
-=======
-  @Logged 
->>>>>>> 096e094bf166dafdabb3d1b1ffb5ebb01b50234f
   public boolean isStalled() {
     return isStalled;
   }
