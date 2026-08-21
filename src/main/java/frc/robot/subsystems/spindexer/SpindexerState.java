@@ -20,11 +20,11 @@ public class SpindexerState extends StateMachineBase {
         new State("Run", () -> kicker.run().alongWith(spindexer.run()))
             .withEnd(() -> !kicker.isStopped() && !spindexer.isStopped()),
         new State("Spindexer Run Slow", () -> spindexer.run())
-            .withEnd(() -> !spindexer.isStopped());
+            .withEnd(() -> !spindexer.isStopped()));
         new State("Spindexer Reverse Slow", () -> spindexer.reverseSlow())
             .withEnd(() -> !spindexer.isStopped());
         new State("Spindexer Reverse", () -> spindexer.reverse())
-            .withEnd(() -> !spindexer.isStopped()));
+            .withEnd(() -> !spindexer.isStopped());
   
     this.kicker = kicker;
     this.spindexer = spindexer;
