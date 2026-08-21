@@ -33,9 +33,9 @@ public class Slider extends Mechanism implements SelfTestable {
 
   /** Position setpoints for the Slider. */
   public enum Setpoint {
-    Retracted(Inches.of(0.02)),
+    Retracted(Inches.of(0.2)),
     Middle(Inches.of(6)),
-    Extended(Inches.of(11.2)); // max travel
+    Extended(Inches.of(10.8)); // max travel
 
     /** The position target as a mechanism angle (rotations of the pinion). */
     public final Angle target;
@@ -119,12 +119,10 @@ public class Slider extends Mechanism implements SelfTestable {
   public Command lowOscillate() {
     return mid()
         .withTimeout(0.75)
-        .andThen(retract().withTimeout(0.75))
+        .andThen(retract().withTimeout(1.25))
         .andThen(mid())
         .withTimeout(0.75)
-        .andThen(extend())
-        .withTimeout(.75)
-        .andThen(retract().withTimeout(0.75))
+        .andThen(retract().withTimeout(1.25))
         .repeatedly()
         .withName(getName() + ".lowOscillate");
   }
@@ -319,6 +317,7 @@ public class Slider extends Mechanism implements SelfTestable {
         <= Setpoint.Retracted.targetDist.in(Inches) + SELF_TEST_TOLERANCE_INCHES;
   }
 
+<<<<<<< HEAD
   @Logged
   public boolean isStopped() {
     return motor.getMotorVoltage().getValueAsDouble() <= 0.5;
@@ -335,6 +334,9 @@ public class Slider extends Mechanism implements SelfTestable {
   }
 
   @Logged
+=======
+  @Logged 
+>>>>>>> 096e094bf166dafdabb3d1b1ffb5ebb01b50234f
   public boolean isStalled() {
     return isStalled;
   }
