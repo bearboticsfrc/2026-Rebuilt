@@ -211,11 +211,11 @@ public class Spindexer extends Mechanism implements SelfTestable {
 
   /* Button Mappings for Copilot */
 
-  public void buttonMappings() {
-    Copilot.spindexerIdle().onTrue(stop());
-    Copilot.spindexerFwdSlow().onTrue(runSlow()).onFalse(stop());
-    Copilot.spindexerFwdFast().onTrue(run()).onFalse(stop());
-    Copilot.spindexerRevSlow().onTrue(reverseSlow()).onFalse(stop());
-    Copilot.spindexerRevFast().onTrue(reverse()).onFalse(stop());
-  }
+  // public void buttonMappings() {
+  //   Copilot.spindexerIdle().onTrue(stop());
+  //   Copilot.spindexerFwdSlow().onTrue(runSlow()).onFalse(stop());
+  //   Copilot.spindexerFwdFast().onTrue(run()).onFalse(stop());
+  //   Copilot.spindexerRevSlow().onTrue(reverseSlow()).onFalse(stop());
+  //   Copilot.spindexerRevFast().onTrue(reverse()).onFalse(stop());
+  // }
 }
