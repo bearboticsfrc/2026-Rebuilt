@@ -6,7 +6,6 @@ import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -55,29 +54,14 @@ public class Spindexer extends Mechanism implements SelfTestable {
   public Spindexer() {
     super("Spindexer", CAN.SPINDEXER, new CANBus(CAN.NAME));
 
-    TalonFXConfiguration config = new TalonFXConfiguration();
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-    config.CurrentLimits.StatorCurrentLimit = 60;
-    config.CurrentLimits.SupplyCurrentLimit = 60;
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-
-    // Velocity Control Gains
-    config.Slot0.kS = 0.2; // was .1
-    config.Slot0.kV = 0.75; // was .75 // ~12V / (7530 RPM / 60 / 7.2) = 0.69
-    config.Slot0.kA = 0;
-    config.Slot0.kP = 0.2;
-
-    // Position Control Gains (using Motion Magic)
-    config.Slot1.kS = 0.1;
-    config.Slot1.kV = 0.7; // ~12V / (7530 RPM / 60 / 7.2) = 0.69
-    config.Slot1.kA = 0;
-    config.Slot1.kP = 1;
-    config.MotionMagic.MotionMagicCruiseVelocity = 0.5; // RPS, mechanism
-    config.MotionMagic.MotionMagicAcceleration = 4; // RPS/s, mechanism
-    config.Feedback.SensorToMechanismRatio = kGearRatio;
+    statorCurrentLimit(60);
+    supplyCurrentLimit(60);
+    neutralMode(NeutralModeValue.Coast);
+    inverted(InvertedValue.CounterClockwise_Positive);
+    kS(0.2);
+    kV(0.75);
+    kA(0);
+    kP(0.2);
 
     applyConfig(() -> motor.getConfigurator().apply(config), getName());
 
