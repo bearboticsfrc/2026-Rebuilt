@@ -1,10 +1,8 @@
 package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.RPM;
-import static frc.robot.util.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -46,25 +44,17 @@ public class Rollers extends Mechanism implements SelfTestable {
 
     super(NAME, CAN.ROLLERS, new CANBus(CAN.NAME));
 
-    TalonFXConfiguration config = new TalonFXConfiguration();
+    neutralMode(NeutralModeValue.Coast);
+    inverted(InvertedValue.CounterClockwise_Positive);
+    statorCurrentLimit(80);
+    supplyCurrentLimit(60);
+    kP(6.0);
+    kS(0.5);
+    kV(0.12);
+    kA(0.0);
+    sensorToMechanismRatio(gearRatio);
 
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-
-    config.CurrentLimits.StatorCurrentLimit = 80;
-    config.CurrentLimits.SupplyCurrentLimit = 60;
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-
-    // TorqueCurrentFOC gains — units are amps, not volts
-    config.Slot0.kS = 0.5; // amps to overcome static friction — tune on real robot
-    config.Slot0.kV = 0.12; // amps per mechanism RPS — tune for steady-state accuracy under load
-    config.Slot0.kP = 6.0; // amps per RPS of error — tune if residual error under load
-    config.Slot0.kA = 0.0; // leave at 0, not needed for simple rollers
-
-    config.Feedback.SensorToMechanismRatio = gearRatio;
-
-    applyConfig(() -> motor.getConfigurator().apply(config), getName());
+    addConfig();
 
     optimizeCAN();
 
