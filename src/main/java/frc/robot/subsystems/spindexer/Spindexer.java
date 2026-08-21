@@ -39,7 +39,6 @@ public class Spindexer extends Mechanism implements SelfTestable {
   private final MotionMagicVoltage positionReq =
       new MotionMagicVoltage(0.0).withEnableFOC(true).withSlot(1);
 
-  // Theoretical max RPM == 1045, under load probably 900
   private final AngularVelocity NORMAL_SPEED = RPM.of(600);
   private final AngularVelocity SLOW_SPEED = RPM.of(60);
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
@@ -52,7 +51,6 @@ public class Spindexer extends Mechanism implements SelfTestable {
   @Logged private boolean selfTestPassed = false;
 
   private static final AngularVelocity SELF_TEST_VELOCITY_THRESHOLD_RPM = RPM.of(25);
-  private final double tolerance = 150;
 
   public Spindexer() {
     super("Spindexer", CAN.SPINDEXER, new CANBus(CAN.NAME));

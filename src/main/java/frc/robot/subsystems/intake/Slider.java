@@ -43,7 +43,6 @@ public class Slider extends Mechanism implements SelfTestable {
 
     private Setpoint(Distance target) {
       this.targetDist = target;
-      // distance = rotations * kPinionCircumference  →  rotations = distance / kPinionCircumference
       this.target = Rotations.of(target.in(Inches) / kPinionCircumference.in(Inches));
     }
   }
@@ -56,6 +55,23 @@ public class Slider extends Mechanism implements SelfTestable {
   private final DutyCycleOut calibrateRequest = new DutyCycleOut(0).withIgnoreSoftwareLimits(true);
 
   private DCMotorSim motorSimModel;
+
+  private final double STALL_VELOCITY_RPS = 0.05;
+  private final double STALL_CURRENT_AMPS = 50.0;
+  private final double STALL_TIME_SECONDS = 0.15;
+
+  private final Timer stallTimer = new Timer();
+  private boolean isStalled = false;
+  private boolean hasStalled = false;
+
+  @Logged private boolean isZeroed = false;
+  @Logged private boolean selfTestPassed = false;
+  private static final double SELF_TEST_TOLERANCE_INCHES = 0.5;
+
+  private static final double kCalibrateOutput = -.12;
+  private static final double kCalibrateStallAmps = 50.0;
+
+  private boolean isCalibrating = false;
 
   public Slider() {
     super("Slider", CAN.SLIDER, new CANBus(CAN.NAME));
@@ -145,23 +161,15 @@ public class Slider extends Mechanism implements SelfTestable {
         this);
   }
 
-  // Stall thresholds
-  private final double STALL_VELOCITY_RPS = 0.05; // Near zero movement
-  private final double STALL_CURRENT_AMPS = 50.0; // High load threshold for Kraken X60
-  private final double STALL_TIME_SECONDS = 0.15; // Continuous duration to confirm stall
-
-  private final Timer stallTimer = new Timer();
-  private boolean isStalled = false;
-  private boolean hasStalled = false;
-
+  /** Subsytem periodic. */
   public void periodic() {
     super.periodic();
     checkIfStalled();
   }
 
+  /** Signals whether or not the slider is stalled. */
   public boolean checkIfStalled() {
 
-    // Check if conditions meet stall criteria
     if (Math.abs(getVelocity().in(RotationsPerSecond)) < STALL_VELOCITY_RPS
         && getStatorCurrent().in(Amps) > STALL_CURRENT_AMPS) {
       if (stallTimer.get() == 0) {
@@ -183,11 +191,6 @@ public class Slider extends Mechanism implements SelfTestable {
   public boolean isElevatorStalled() {
     return isStalled;
   }
-
-  private static final double kCalibrateOutput = -.12;
-  private static final double kCalibrateStallAmps = 50.0;
-
-  private boolean isCalibrating = false;
 
   /**
    * Recalibrates the slider zero point. This slowly drives the slider up until we see a drop in
@@ -216,11 +219,6 @@ public class Slider extends Mechanism implements SelfTestable {
         .finallyDo(() -> isCalibrating = false)
         .withName(getName() + ".CalibrateZero");
   }
-
-  @Logged private boolean isZeroed = false;
-
-  @Logged private boolean selfTestPassed = false;
-  private static final double SELF_TEST_TOLERANCE_INCHES = 0.5;
 
   private Command selfTestAt(Setpoint target, String ntKey) {
     return Commands.runOnce(
@@ -253,18 +251,27 @@ public class Slider extends Mechanism implements SelfTestable {
         .finallyDo(() -> motor.stopMotor());
   }
 
+  /**
+   * Self test for slider at slow speed.
+   */
   @Override
   public Command selfTestSlow() {
     return selfTestAt(Setpoint.Middle, "Robot/Tests/slider/slow")
         .withName(getName() + ".SelfTestSlow");
   }
 
+/**
+ * Self test for slider at fast speed.
+ */
   @Override
   public Command selfTestFast() {
     return selfTestAt(Setpoint.Extended, "Robot/Tests/slider/fast")
         .withName(getName() + ".SelfTestFast");
   }
 
+  /**
+   * The setpoint of the slider.
+   */
   @Logged(name = "setpoint")
   public double getSetpoint() {
     return motionMagicRequest.Position;
@@ -303,32 +310,50 @@ public class Slider extends Mechanism implements SelfTestable {
         >= Setpoint.Extended.targetDist.in(Inches) - SELF_TEST_TOLERANCE_INCHES + 0.4;
   }
 
+  /**
+   * Signals if the slider is retracted.
+   */
   @Logged
   public boolean isRetracted() {
     return getPositionInches()
         <= Setpoint.Retracted.targetDist.in(Inches) + SELF_TEST_TOLERANCE_INCHES;
   }
 
+  /*
+   * Signals if the slider is stopped.
+   */
   @Logged
   public boolean isStopped() {
     return motor.getMotorVoltage().getValueAsDouble() <= 0.5;
   }
 
+  /**
+   * Signals if the slider is zeroed.
+   */
   @Logged
   public boolean isZeroed() {
     return isZeroed;
   }
 
+  /**
+   * Signals if the slider is calibrating
+   */
   @Logged
   public boolean isCalibrating() {
     return isCalibrating;
   }
 
+  /**
+   * Signals if slider is stalled.
+   */
   @Logged
   public boolean isStalled() {
     return isStalled;
   }
 
+  /**
+   * Simulation periodic.
+   */
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, gearRatio, motorSimModel);
