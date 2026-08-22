@@ -1,4 +1,4 @@
-package frc.robot.statemachine;
+package bearlib.statemachine;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Commands;

@@ -32,8 +32,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotState;
-import frc.robot.field.Field;
-import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.rebuilt.Field;
+import frc.robot.subsystems.drive.TunerConstants.TunerSwerveDrivetrain;
 import java.util.function.Supplier;
 
 /**

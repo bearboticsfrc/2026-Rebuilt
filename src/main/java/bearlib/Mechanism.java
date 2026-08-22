@@ -1,9 +1,9 @@
-package frc.robot;
+package bearlib;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.util.PhoenixUtil.applyConfig;
+import static frc.robot.rebuilt.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;

@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
+import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -20,10 +21,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.CAN;
-import frc.robot.Copilot;
-import frc.robot.Mechanism;
 import frc.robot.Robot;
+import frc.robot.rebuilt.CAN;
 import frc.robot.test.SelfTestable;
 import java.util.function.Supplier;
 
@@ -121,7 +120,7 @@ public class Slider extends Mechanism implements SelfTestable {
     return goToSetpoint(() -> Setpoint.Middle).withName(getName() + ".Mid");
   }
 
-  /** Stops the slider.*/
+  /** Stops the slider. */
   public Command stop() {
     return runOnce(() -> motor.stopMotor()).withName(getName() + ".Stop");
   }
@@ -188,10 +187,6 @@ public class Slider extends Mechanism implements SelfTestable {
     return isStalled;
   }
 
-  public boolean isElevatorStalled() {
-    return isStalled;
-  }
-
   /**
    * Recalibrates the slider zero point. This slowly drives the slider up until we see a drop in
    * velocity and a spike in stator current, indicating that we've hit a hard stop.
@@ -220,12 +215,12 @@ public class Slider extends Mechanism implements SelfTestable {
         .withName(getName() + ".CalibrateZero");
   }
 
-/**
- * Self test at target speed.
- * 
- * @param target The target speed.
- * @param ntKey The NT key.
- */  
+  /**
+   * Self test at target speed.
+   *
+   * @param target The target speed.
+   * @param ntKey The NT key.
+   */
   private Command selfTestAt(Setpoint target, String ntKey) {
     return Commands.runOnce(
             () -> {
@@ -257,27 +252,21 @@ public class Slider extends Mechanism implements SelfTestable {
         .finallyDo(() -> motor.stopMotor());
   }
 
-  /**
-   * Self test for slider at slow speed.
-   */
+  /** Self test for slider at slow speed. */
   @Override
   public Command selfTestSlow() {
     return selfTestAt(Setpoint.Middle, "Robot/Tests/slider/slow")
         .withName(getName() + ".SelfTestSlow");
   }
 
-/**
- * Self test for slider at fast speed.
- */
+  /** Self test for slider at fast speed. */
   @Override
   public Command selfTestFast() {
     return selfTestAt(Setpoint.Extended, "Robot/Tests/slider/fast")
         .withName(getName() + ".SelfTestFast");
   }
 
-  /**
-   * The setpoint of the slider.
-   */
+  /** The setpoint of the slider. */
   @Logged(name = "setpoint")
   public double getSetpoint() {
     return motionMagicRequest.Position;
@@ -316,9 +305,7 @@ public class Slider extends Mechanism implements SelfTestable {
         >= Setpoint.Extended.targetDist.in(Inches) - SELF_TEST_TOLERANCE_INCHES + 0.4;
   }
 
-  /**
-   * Signals if the slider is retracted.
-   */
+  /** Signals if the slider is retracted. */
   @Logged
   public boolean isRetracted() {
     return getPositionInches()
@@ -333,43 +320,27 @@ public class Slider extends Mechanism implements SelfTestable {
     return motor.getMotorVoltage().getValueAsDouble() <= 0.5;
   }
 
-  /**
-   * Signals if the slider is zeroed.
-   */
+  /** Signals if the slider is zeroed. */
   @Logged
   public boolean isZeroed() {
     return isZeroed;
   }
 
-  /**
-   * Signals if the slider is calibrating
-   */
+  /** Signals if the slider is calibrating */
   @Logged
   public boolean isCalibrating() {
     return isCalibrating;
   }
 
-  /**
-   * Signals if slider is stalled.
-   */
+  /** Signals if slider is stalled. */
   @Logged
   public boolean isStalled() {
     return isStalled;
   }
 
-  /**
-   * Simulation periodic.
-   */
+  /** Simulation periodic. */
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, gearRatio, motorSimModel);
-  }
-
-  public void buttonMappings() {
-    Copilot.sliderIdle().onTrue(stop());
-    Copilot.sliderIn().onTrue(retract());
-    Copilot.sliderMiddle().onTrue(mid());
-    Copilot.sliderOut().onTrue(extend());
-    Copilot.sliderCalibrate().onTrue(calibrateZero());
   }
 }

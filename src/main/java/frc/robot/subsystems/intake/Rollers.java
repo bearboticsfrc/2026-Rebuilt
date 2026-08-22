@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import static edu.wpi.first.units.Units.RPM;
 
+import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -13,10 +14,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.CAN;
-import frc.robot.Copilot;
-import frc.robot.Mechanism;
 import frc.robot.Robot;
+import frc.robot.rebuilt.CAN;
 import frc.robot.test.SelfTestable;
 
 public class Rollers extends Mechanism implements SelfTestable {
@@ -25,7 +24,6 @@ public class Rollers extends Mechanism implements SelfTestable {
 
   private final VelocityTorqueCurrentFOC velocityTorqueCurrent = new VelocityTorqueCurrentFOC(0.0);
 
-  // Theoretical max == 5400
   public final AngularVelocity ROLLER_SPEED = RPM.of(5000);
   public final AngularVelocity ROLLER_SPEED_REVERSE = RPM.of(-5000);
 
@@ -63,47 +61,64 @@ public class Rollers extends Mechanism implements SelfTestable {
           simulationInitKrakenX60(
               motor, gearRatio, 0.001, ChassisReference.CounterClockwise_Positive);
     }
-    
     System.out.println(getName() + " Subsystem Initialized");
   }
 
+  /** Simulation periodic. */
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, gearRatio, motorSimModel);
   }
 
-  /* Commands */
-
+  /**
+   * Runnable to set the velocity output of the rollers
+   *
+   * @param velocity The velocity output setpoint.
+   */
   private void setOutput(AngularVelocity velocity) {
     motor.setControl(velocityTorqueCurrent.withVelocity(velocity));
   }
 
+  /** Runs the rollers at normal speed. */
   public Command run() {
     return run(() -> setOutput(ROLLER_SPEED)).withName(NAME + ".Run");
   }
 
+  /** Runs the rollers at normal speed reverse. */
   public Command runReverse() {
     return runOnce(() -> setOutput(ROLLER_SPEED_REVERSE)).withName(NAME + ".RunReverse");
   }
 
+  /** Runs the rollers a slow speed. */
   public Command runSlow() {
     return runOnce(() -> setOutput(ROLLER_SPEED_SLOW)).withName(NAME + ".RunSlow");
   }
 
+  /** Runs the rollers at slow speed reverse. */
   public Command runSlowReverse() {
     return runOnce(() -> setOutput(ROLLER_SPEED_SLOW_REVERSE)).withName(NAME + ".RunSlowReverse");
   }
 
+  /** Stops the rollers. */
   public Command stop() {
     return runOnce(() -> motor.stopMotor()).withName(NAME + ".Stop");
   }
 
-  /* Self Test */
-
+  /**
+   * Signals whether or not the rollers are near a target velocity.
+   *
+   * @param target The target velocity.
+   */
   private boolean isNearTarget(AngularVelocity target) {
     return motorVelocity.getValue().isNear(target, VELOCITY_TOLERANCE);
   }
 
+  /**
+   * Self tests at a target velocity.
+   *
+   * @param target The target velocity.
+   * @param ntKey The NT key.
+   */
   private Command selfTestAt(AngularVelocity target, String ntKey) {
     return Commands.runOnce(
             () -> {
@@ -133,42 +148,37 @@ public class Rollers extends Mechanism implements SelfTestable {
         .finallyDo(() -> motor.stopMotor());
   }
 
+  /** Self tests at slow speed. */
   @Override
   public Command selfTestSlow() {
     return selfTestAt(ROLLER_SPEED_SLOW, "Robot/Tests/rollers/slow")
         .withName(getName() + ".SelfTestSlow");
   }
 
+  /** Self tests at normal speed. */
   @Override
   public Command selfTestFast() {
     return selfTestAt(ROLLER_SPEED, "Robot/Tests/rollers/fast")
         .withName(getName() + ".SelfTestFast");
   }
 
-  /* Logged Values */
-
+  /*
+   * The setpoint velocity in RPM.
+   */
   @Logged(name = "setpointRPM")
   public double getSetpoint() {
     return velocityTorqueCurrent.Velocity * 60.0;
   }
 
+  /** The roller velocity in RPM. */
   @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
     return motorVelocity.getValue().in(RPM);
   }
 
+  /** Signals whether or not the rollers are stopped. */
   @Logged
   public boolean isStopped() {
     return motor.getMotorVoltage().getValueAsDouble() <= 0.5;
-  }
-
-  /* Button Mappings for Copilot */
-
-  public void buttonMappings() {
-    Copilot.rollerIdle().onTrue(stop());
-    Copilot.rollerFwdSlow().onTrue(runSlow()).onFalse(stop());
-    Copilot.rollerFwdFast().onTrue(run()).onFalse(stop());
-    Copilot.rollerRevSlow().onTrue(runSlowReverse()).onFalse(stop());
-    Copilot.rollerRevFast().onTrue(runReverse()).onFalse(stop());
   }
 }

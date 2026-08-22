@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.rebuilt;
 
 public class CAN {
   public static final String NAME = "Default Name";

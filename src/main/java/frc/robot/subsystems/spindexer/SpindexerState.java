@@ -1,10 +1,10 @@
 package frc.robot.subsystems.spindexer;
 
+import bearlib.statemachine.State;
+import bearlib.statemachine.StateMachineBase;
 import edu.wpi.first.epilogue.Logged;
-import frc.robot.Copilot;
-import frc.robot.Pilot;
-import frc.robot.statemachine.State;
-import frc.robot.statemachine.StateMachineBase;
+import frc.robot.rebuilt.Copilot;
+import frc.robot.rebuilt.Pilot;
 import frc.robot.subsystems.shooter.ShootState;
 
 public class SpindexerState extends StateMachineBase {
@@ -19,15 +19,13 @@ public class SpindexerState extends StateMachineBase {
             .withEnd(() -> kicker.isStopped() && spindexer.isStopped()),
         new State("Run", () -> kicker.run().alongWith(spindexer.run()))
             .withEnd(() -> !kicker.isStopped() && !spindexer.isStopped()),
+        // Override states
         new State("Spindexer Run Slow", () -> spindexer.run())
-            .withEnd(() -> !spindexer.isStopped()));
+            .withEnd(() -> !spindexer.isStopped()),
         new State("Spindexer Reverse Slow", () -> spindexer.reverseSlow())
-            .withEnd(() -> !spindexer.isStopped());
+            .withEnd(() -> !spindexer.isStopped()),
         new State("Spindexer Reverse", () -> spindexer.reverse())
-            .withEnd(() -> !spindexer.isStopped());
-  
-    this.kicker = kicker;
-    this.spindexer = spindexer;
+            .withEnd(() -> !spindexer.isStopped()));
 
     /* setup transitions */
     State idle = this.states.get(0);
@@ -47,6 +45,9 @@ public class SpindexerState extends StateMachineBase {
     spindexerReverseSlow.global().condition(Copilot.spindexerRevSlow().negate()::getAsBoolean);
 
     spindexerReverse.global().condition(Copilot.spindexerRevFast().negate()::getAsBoolean);
+
+    this.kicker = kicker;
+    this.spindexer = spindexer;
 
     triggersInit();
     transitionsInit();

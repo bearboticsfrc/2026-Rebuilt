@@ -1,10 +1,9 @@
 package frc.robot.subsystems.shooter;
 
+import bearlib.statemachine.State;
+import bearlib.statemachine.StateMachineBase;
 import edu.wpi.first.epilogue.Logged;
-import frc.robot.Pilot;
-import frc.robot.statemachine.State;
-import frc.robot.statemachine.StateMachineBase;
-import frc.robot.subsystems.DynamicShootingCalculator;
+import frc.robot.rebuilt.Pilot;
 
 public class ShootState extends StateMachineBase {
 

@@ -1,4 +1,4 @@
-package frc.robot.statemachine;
+package bearlib.statemachine;
 
 import java.util.function.BooleanSupplier;
 
