@@ -1,20 +1,11 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.rebuilt.PhoenixUtil.applyConfig;
 
 import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
@@ -24,36 +15,19 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Robot;
 import frc.robot.RobotState;
 import frc.robot.rebuilt.CAN;
-import frc.robot.rebuilt.Copilot;
 import frc.robot.test.SelfTestable;
 import java.util.function.DoubleSupplier;
 
 public class Flywheel extends Mechanism implements SelfTestable {
 
-  // Velocity output control for the flywheel
   private final MotionMagicVelocityVoltage velocityOut = new MotionMagicVelocityVoltage(0);
 
-  // Tolerance for the flywheel velocity
-  private final double tolerance = 750; // RPM
-
-  private final VoltageOut m_voltReq = new VoltageOut(0.0);
+  private final double tolerance = 750;
 
   @Logged private boolean selfTestPassed = false;
-
-  private final SysIdRoutine m_sysIdRoutine =
-      new SysIdRoutine(
-          new SysIdRoutine.Config(
-              null, // Use default ramp rate (1 V/s)
-              Volts.of(4), // Reduce dynamic step voltage to 4 to prevent brownout
-              null, // Use default timeout (10 s)
-              // Log state with Phoenix SignalLogger class
-              (state) -> SignalLogger.writeString("state", state.toString())),
-          new SysIdRoutine.Mechanism(
-              (volts) -> motor.setControl(m_voltReq.withOutput(volts.in(Volts))), null, this));
 
   private DCMotorSim motorSimModel;
 
@@ -63,28 +37,22 @@ public class Flywheel extends Mechanism implements SelfTestable {
   public Flywheel() {
     super("FLYWHEEL", CAN.FLYWHEEL, new CANBus(CAN.NAME));
 
-    TalonFXConfiguration config = new TalonFXConfiguration();
-    // Put's the motor in Coast mode to make it easier to move by hand
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    neutralMode(NeutralModeValue.Coast);
+    inverted(InvertedValue.CounterClockwise_Positive);
+    kS(0.31576);
+    kV(0.11941);
+    kA(0.015595);
+    kP(0.185);
+    motionMagicCruiseVelocity(9000);
+    motionMagicAcceleration(9000);
+    peakForwardTorqueCurrent(100);
+    peakReverseTorqueCurrent(0);
+    peakForwardDutyCycle(1);
+    peakReverseDutyCycle(0);
+    statorCurrentLimit(Amps.of(80).in(Amps));
+    supplyCurrentLimit(Amps.of(60).in(Amps));
 
-    config.Slot0.kS = 0.31576; // Static gain
-    config.Slot0.kV = 0.11941; // Velocity gain
-    config.Slot0.kA = 0.015595;
-    config.Slot0.kP = .185; // Proportional gain
-    config.MotionMagic.MotionMagicCruiseVelocity = 9000; // Max velocity
-    config.MotionMagic.MotionMagicAcceleration = 9000; // Max acceleration allowed
-    config.TorqueCurrent.PeakForwardTorqueCurrent = 100;
-    config.TorqueCurrent.PeakReverseTorqueCurrent = 0;
-    config.MotorOutput.PeakForwardDutyCycle = 1;
-    config.MotorOutput.PeakReverseDutyCycle = 0;
-    config.CurrentLimits.StatorCurrentLimit = Amps.of(80).in(Amps);
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLimit = Amps.of(60).in(Amps);
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-
-    // Try to apply config multiple time. Break after successfully applying
-    applyConfig(() -> motor.getConfigurator().apply(config), getName());
+    addConfig();
 
     if (Robot.isSimulation()) {
       motorSimModel =
@@ -93,43 +61,39 @@ public class Flywheel extends Mechanism implements SelfTestable {
     }
 
     System.out.println(getName() + " Subsystem Initialized");
-    buttonMappings();
     optimizeCAN();
   }
 
+  /** Simulation periodic. */
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, SIM_GEAR_RATIO, motorSimModel);
   }
 
-  /* Commands */
-
+  /**
+   * Runnable to set flywheel velocity.
+   *
+   * @param velocity The velocity setpoint.
+   */
   public void setVelocity(AngularVelocity velocity) {
-    // motor.setControl(new VelocityDutyCycle(velocity));
     motor.setControl(velocityOut.withVelocity(velocity));
   }
 
   /**
-   * Command to run the flywheel at a given speed.
+   * Runs the flywheel at a specific velocity in RPM.
    *
-   * @return The command to run the flywheel at the given speed.
+   * @param rpm The target velocity in RPM.
    */
   public Command runAtSpeed(double rpm) {
-    // Command to run the flywheel at a given speed
     return runOnce(() -> setVelocity(RPM.of(rpm))).withName(getName() + ".runAtSpeed(double)");
   }
 
-  public Command warmUp() {
-    return runAtSpeed(() -> 1600.0);
-  }
-
   /**
-   * Command to run the flywheel at a given speed.
+   * Runs flywheel at a specific velocity in RPM
    *
-   * @return The command to run the flywheel at the given speed.
+   * @param rpm The target velocity in RPM
    */
   public Command runAtSpeed(DoubleSupplier rpm) {
-    // Command to run the flywheel at a given speed\
     if (!RobotState.getInstance().isInNeutralZone().getAsBoolean()) {
       RobotState.getInstance().setShooting(true);
     }
@@ -137,58 +101,36 @@ public class Flywheel extends Mechanism implements SelfTestable {
         .withName(getName() + ".runAtSpeed(supplier)");
   }
 
-  /**
-   * Command to stop the flywheel.
-   *
-   * @return The command to stop the flywheel.
-   */
+  /** Stops the flywheel. */
   public Command stopCommand() {
     RobotState.getInstance().setShooting(false);
     return runOnce(() -> stop());
   }
 
-  /**
-   * Returns a command that will execute a quasistatic test in the given direction.
-   *
-   * @param direction The direction (forward or reverse) to run the test in
-   */
-  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    return m_sysIdRoutine.quasistatic(direction);
-  }
-
-  /**
-   * Returns a command that will execute a dynamic test in the given direction.
-   *
-   * @param direction The direction (forward or reverse) to run the test in
-   */
-  public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    return m_sysIdRoutine.dynamic(direction);
-  }
-
-  /* Self Test */
-
-  /**
-   * Checks if the flywheel is at its target speed.
-   *
-   * @return true if at target speed, false otherwise
-   */
+  /** Signals whether or not the flywheel is at its setpoint. */
   @Logged
   public boolean isAtTarget() {
     return getTargetVelocityInRPM() > 0
-        && Math.abs(getVelocityInRPM() - getTargetVelocityInRPM())
-            < tolerance; // Check if the current velocity is near the target velocity
+        && Math.abs(getVelocityInRPM() - getTargetVelocityInRPM()) < tolerance;
   }
 
+  /** Signals whether or not the flywheel is stopped. */
   @Logged
   public boolean isStopped() {
     return Math.abs(getVelocityInRPM()) <= 0.5;
   }
 
-  // Stop the flywheel motors
+  /** Runnable to stop flywheel. */
   public void stop() {
     motor.stopMotor();
   }
 
+  /**
+   * Self tests at a specifc target velocity.
+   *
+   * @param target The target velocity.
+   * @param ntKey The NT key
+   */
   private Command selfTestAt(AngularVelocity target, String ntKey) {
     return Commands.runOnce(
             () -> {
@@ -218,36 +160,29 @@ public class Flywheel extends Mechanism implements SelfTestable {
         .finallyDo(() -> motor.stopMotor());
   }
 
+  /** Self tests at slow speed. */
   @Override
   public Command selfTestSlow() {
     return selfTestAt(RPM.of(1000), "Robot/Tests/flywheel/slow")
         .withName(getName() + ".SelfTestSlow");
   }
 
+  /** Self tests at normal speed. */
   @Override
   public Command selfTestFast() {
     return selfTestAt(RPM.of(3150), "Robot/Tests/flywheel/fast")
         .withName(getName() + ".SelfTestFast");
   }
 
-  /* Logged Values */
-
+  /** The velocity in RPM. */
   @Logged(name = "velocityRPM")
   public double getVelocityInRPM() {
     return motorVelocity.getValue().in(RPM);
   }
 
+  /** The target velocity in RPM. */
   @Logged(name = "targetVelocityRPM")
   public double getTargetVelocityInRPM() {
     return velocityOut.getVelocityMeasure().in(RPM);
-  }
-
-  /* Simulation */
-
-  public void buttonMappings() {
-    Copilot.flywheelIdle().onTrue(stopCommand());
-    Copilot.flywheel500().onTrue(runAtSpeed(500.0));
-    Copilot.flywheel1200().onTrue(runAtSpeed(1200.0));
-    Copilot.flywheel3700().onTrue(runAtSpeed(3700.0));
   }
 }

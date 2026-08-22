@@ -27,7 +27,6 @@ import limelight.networktables.LimelightPoseEstimator;
 import limelight.networktables.LimelightPoseEstimator.EstimationMode;
 import limelight.networktables.LimelightSettings;
 import limelight.networktables.LimelightSettings.ImuMode;
-// import limelight.networktables.LimelightSettings.RewindState;
 import limelight.networktables.LimelightTargetData;
 import limelight.networktables.Orientation3d;
 import limelight.networktables.PoseEstimate;

@@ -5,7 +5,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.rebuilt.PhoenixUtil.applyConfig;
+import static frc.robot.PhoenixUtil.applyConfig;
 
 import bearlib.Mechanism;
 import bearlib.util.AllianceFlipUtil;
@@ -51,12 +51,11 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
   private PositionVoltage positionVoltage = new PositionVoltage(0);
   private PositionVoltage positionHold = new PositionVoltage(0).withSlot(1);
 
-  /* Turret config values */
   @Getter private double currentLimit = 44;
   @Getter private double torqueCurrentLimit = 400;
 
   @Getter private double gearRatio = 10.44;
-  // set these small to start
+
   @Getter public Angle minRotations = Rotations.of(-.25);
   @Getter public Angle maxRotations = Rotations.of(.25);
 
@@ -64,10 +63,7 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
 
   @Logged private boolean selfTestPassed = false;
 
-  // percent error tolerance for self test
   private static final double SELF_TEST_VARIANCE_THRESHOLD = 0.01;
-
-  //  private final TurretVisionHelper limelight;
 
   private DCMotorSim motorSimModel;
 
@@ -346,7 +342,6 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
     return getAngle().isNear(target, SELF_TEST_VARIANCE_THRESHOLD);
   }
 
-  // TODO: safeguard the position of the turret, should start at 0
   private Command selfTestAt(Angle target, String ntKey) {
     return Commands.runOnce(
             () -> {

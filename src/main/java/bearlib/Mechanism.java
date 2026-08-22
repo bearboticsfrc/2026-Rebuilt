@@ -3,7 +3,7 @@ package bearlib;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.rebuilt.PhoenixUtil.applyConfig;
+import static frc.robot.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
@@ -29,7 +29,8 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
- * Base class for single-motor mechanism. For CTRE hardware, handles telemetry, logging, and sim.
+ * Base class for single-motor mechanism. For CTRE hardware, handles telemetry, motor configuration,
+ * and sim.
  */
 public class Mechanism extends SubsystemBase {
 
@@ -311,6 +312,42 @@ public class Mechanism extends SubsystemBase {
    */
   public void motionMagicJerk(double motionMagicJerk) {
     motorConfig.MotionMagic.MotionMagicJerk = motionMagicJerk;
+  }
+
+  /**
+   * Sets the maximum forward output for duty cycle.
+   *
+   * @param peakForwardDutyCycle The maximum forward output value.
+   */
+  public void peakForwardDutyCycle(double peakForwardDutyCycle) {
+    motorConfig.MotorOutput.PeakForwardDutyCycle = peakForwardDutyCycle;
+  }
+
+  /**
+   * Sets the maximum reverse output for duty cycle.
+   *
+   * @param peakReverseDutyCycle The maximum revese output value.
+   */
+  public void peakReverseDutyCycle(double peakReverseDutyCycle) {
+    motorConfig.MotorOutput.PeakReverseDutyCycle = peakReverseDutyCycle;
+  }
+
+  /**
+   * Sets the maximum forward output for torque control
+   *
+   * @param peakForwardTorqueCurrent The maximum forward output value.
+   */
+  public void peakForwardTorqueCurrent(double peakForwardTorqueCurrent) {
+    motorConfig.TorqueCurrent.PeakForwardTorqueCurrent = peakForwardTorqueCurrent;
+  }
+
+  /**
+   * Sets the maximum reverse output for torque control.
+   *
+   * @param peakReverseTorqueCurrent The maxium reverse forward output value.
+   */
+  public void peakReverseTorqueCurrent(double peakReverseTorqueCurrent) {
+    motorConfig.TorqueCurrent.PeakReverseTorqueCurrent = peakReverseTorqueCurrent;
   }
 
   /** Applies config to motor. */
