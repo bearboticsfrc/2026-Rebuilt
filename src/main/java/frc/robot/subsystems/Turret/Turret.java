@@ -5,7 +5,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.rebuilt.PhoenixUtil.applyConfig;
+import static frc.robot.PhoenixUtil.applyConfig;
 
 import bearlib.Mechanism;
 import bearlib.util.AllianceFlipUtil;

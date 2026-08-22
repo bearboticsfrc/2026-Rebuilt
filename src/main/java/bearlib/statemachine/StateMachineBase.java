@@ -12,7 +12,7 @@ import java.util.List;
 public class StateMachineBase extends SubsystemBase {
 
   protected List<State> states = new ArrayList<>();
-  protected ArrayList<Transition> transitions = new ArrayList<>();
+  protected List<Transition> transitions = new ArrayList<>();
   protected HashMap<State, Trigger> stateTriggers = new HashMap<>();
 
   protected State current;
@@ -34,8 +34,6 @@ public class StateMachineBase extends SubsystemBase {
     Collections.addAll(this.states, states);
     previous = current;
     initial = null;
-
-    System.out.println(getName() + " Initialized!");
   }
 
   @Override
@@ -93,14 +91,11 @@ public class StateMachineBase extends SubsystemBase {
   /** Logs the state that is requested (ie currently being transitioned into). */
   @Logged
   public String requested() {
-    return !current.isComplete() ? current.name : "";
+    return current != null && !current.isComplete() ? current.name : "";
   }
 
-  /**
-   * Initializes every {@link Transition} for every {@link State} in state machine. Call this on
-   * initialization!
-   */
-  public void transitionsInit() {
+  /** Initializes every {@link Transition} for every {@link State} in state machine. */
+  private void transitionsInit() {
     for (State state : this.states) {
       this.transitions.addAll(state.getTransitions());
 
@@ -118,22 +113,31 @@ public class StateMachineBase extends SubsystemBase {
     }
   }
 
-  /** Creates an "on enter" {@link Trigger} for every state. Call this on initialization! */
-  protected void triggersInit() {
+  /** Creates an "on enter" {@link Trigger} for every state. */
+  private void triggersInit() {
     for (State state : this.states) {
       final State s = state;
       this.stateTriggers.put(state, new Trigger(() -> s == current));
     }
   }
 
-  /** Manages proper actions when states are entered. Call this last on initialization! */
-  protected void configure() {
+  /** Manages proper actions when states are entered. */
+  private void actionsInit() {
     for (State state : this.states) {
       this.on(state)
           .onTrue(
               Commands.defer(state.action, state.action.get().getRequirements())
                   .withName(getName() + "." + state.name));
     }
+  }
+
+  /** Initializes states, transitions, and actions in proper order. Call this last on init! */
+  public void configure() {
+    triggersInit();
+    transitionsInit();
+    actionsInit();
+
+    System.out.println(getName() + " Initialized!");
   }
 
   /**

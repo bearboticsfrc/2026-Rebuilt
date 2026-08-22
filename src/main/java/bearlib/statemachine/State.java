@@ -36,6 +36,7 @@ public class State {
     return new Transition(this, goal);
   }
 
+  /** Used for global transitions. */
   public Transition global() {
     Transition transition = new Transition(this, this);
     transition.global = true;

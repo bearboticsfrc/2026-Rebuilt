@@ -82,8 +82,6 @@ public class IntakeState extends StateMachineBase {
 
     rollersReverse.global().condition(Copilot.rollerRevFast()::getAsBoolean);
 
-    triggersInit();
-    transitionsInit();
     configure();
   }
 

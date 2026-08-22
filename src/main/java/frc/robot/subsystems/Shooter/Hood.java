@@ -2,7 +2,7 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
-import static frc.robot.rebuilt.PhoenixUtil.applyConfig;
+import static frc.robot.PhoenixUtil.applyConfig;
 
 import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;

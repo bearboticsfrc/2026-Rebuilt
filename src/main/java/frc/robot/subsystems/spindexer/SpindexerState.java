@@ -20,12 +20,10 @@ public class SpindexerState extends StateMachineBase {
         new State("Run", () -> kicker.run().alongWith(spindexer.run()))
             .withEnd(() -> !kicker.isStopped() && !spindexer.isStopped()),
         // Override states
-        new State("Spindexer Run Slow", () -> spindexer.run())
+        new State("Spindex Slow", () -> spindexer.run()).withEnd(() -> !spindexer.isStopped()),
+        new State("Spindex Rev Slow", () -> spindexer.reverseSlow())
             .withEnd(() -> !spindexer.isStopped()),
-        new State("Spindexer Reverse Slow", () -> spindexer.reverseSlow())
-            .withEnd(() -> !spindexer.isStopped()),
-        new State("Spindexer Reverse", () -> spindexer.reverse())
-            .withEnd(() -> !spindexer.isStopped()));
+        new State("Spindex Rev", () -> spindexer.reverse()).withEnd(() -> !spindexer.isStopped()));
 
     /* setup transitions */
     State idle = this.states.get(0);
@@ -40,17 +38,15 @@ public class SpindexerState extends StateMachineBase {
 
     run.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
 
-    spindexerRunSlow.global().condition(Pilot.shoot().negate()::getAsBoolean);
+    spindexerRunSlow.global().condition(Copilot.spindexerFwdSlow()::getAsBoolean);
 
-    spindexerReverseSlow.global().condition(Copilot.spindexerRevSlow().negate()::getAsBoolean);
+    spindexerReverseSlow.global().condition(Pilot.reverse());
 
-    spindexerReverse.global().condition(Copilot.spindexerRevFast().negate()::getAsBoolean);
+    spindexerReverse.global().condition(Copilot.spindexerRevFast()::getAsBoolean);
 
     this.kicker = kicker;
     this.spindexer = spindexer;
 
-    triggersInit();
-    transitionsInit();
     configure();
   }
 

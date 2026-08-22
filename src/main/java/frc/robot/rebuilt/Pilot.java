@@ -46,6 +46,6 @@ public class Pilot {
   }
 
   public static Trigger reverse() {
-    return pilot.b();
+    return pilot.y();
   }
 }

@@ -7,7 +7,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import bearlib.fms.AllianceColor;
@@ -16,10 +15,8 @@ import bearlib.util.AllianceFlipUtil;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.events.EventTrigger;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
@@ -39,7 +36,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.rebuilt.HubTracker;
 import frc.robot.rebuilt.Pilot;
@@ -122,8 +118,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged(name = "Auto Start Pose", importance = Importance.CRITICAL)
   private Pose2d autoStartPose;
 
-  private final DynamicShootingCommand dynamicShootingCommand;
-
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
 
@@ -171,25 +165,21 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     turretVisionHelper = new TurretVisionHelper();
 
-    shootState = new ShootState(flywheel, hood, calculator);
-
-    spindexerState = new SpindexerState(kicker, spindexer, shootState);
-
-    intakeState = new IntakeState(slider, rollers);
-
     System.out.println("All subsystems Initialized");
 
-    dynamicShootingCommand = new DynamicShootingCommand(hood, flywheel, spindexer, kicker, turret);
-
     selfTest = new SelfTest(rollers, flywheel, hood, spindexer, kicker, turret, slider, drivetrain);
-
-    registerPathplannerCommands();
 
     autoChooser = AutoBuilder.buildAutoChooser("2O");
     SmartDashboard.putData("Auto Mode", autoChooser);
     configureLogging();
     selfTest.bindTriggers();
     configureDefaultCommands();
+
+    shootState = new ShootState(flywheel, hood, calculator);
+
+    spindexerState = new SpindexerState(kicker, spindexer, shootState);
+
+    intakeState = new IntakeState(slider, rollers);
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);
@@ -214,8 +204,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     return RobotState.getInstance().getDistanceToHub();
   }
 
-  // TODO: Make max speed relative to distance to hub, so that we can be more precise when close to
-  // the hub and faster when far away
   public Supplier<Double> getMaxLinearVelocity() {
     double distanceToHub = robotState.getDistanceToHub();
     return () -> (robotState.isShooting()) ? 1.15 - ((distanceToHub / 5.5) * 0.5) : MaxSpeed - 0.5;
@@ -250,49 +238,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Override
   public void robotInit() {}
 
-  public void registerPathplannerCommands() {
-
-    // named commands for autonomous
-    NamedCommands.registerCommand(
-        "Intake",
-        new ScheduleCommand(rollers.run().alongWith(slider.extend()).withName("ParallelRollerArm"))
-            .withName("ScheduleIntake"));
-
-    NamedCommands.registerCommand(
-        "StopIntake",
-        new ScheduleCommand(
-                slider.retract().alongWith(rollers.stop()).withName("ParallelRetractStop"))
-            .withName("ScheduleStopIntake"));
-
-    NamedCommands.registerCommand(
-        "Shoot",
-        new ScheduleCommand(dynamicShootingCommand.shoot().withName("TurretAndShoot5"))
-            .withName("ScheduleShoot"));
-
-    NamedCommands.registerCommand(
-        "ShootRoll",
-        new ScheduleCommand(
-                dynamicShootingCommand
-                    .shoot()
-                    .withTimeout(5)
-                    .alongWith(rollers.runSlow())
-                    .withName("ShootRoll"))
-            .withName("ScheduleShootRoll"));
-
-    NamedCommands.registerCommand(
-        "StopShoot",
-        new ScheduleCommand(dynamicShootingCommand.stop().withName("StopShoot"))
-            .withName("ScheduleStopShoot"));
-
-    NamedCommands.registerCommand("OscillateIntake", new ScheduleCommand(slider.lowOscillate()));
-
-    NamedCommands.registerCommand("WarmUpFlywheel", new ScheduleCommand(flywheel.warmUp()));
-
-    new EventTrigger("PrepareShoot").onTrue(flywheel.warmUp());
-
-    new EventTrigger("TurretZero").onTrue(turret.setAngle(Rotations.of(0)));
-  }
-
   // set turret
   private Command getTurretCommand() {
     return turret
@@ -317,7 +262,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   }
 
   public Command getAutonomousCommand() {
-    /* Run the path selected from the auto chooser */
     return autoChooser.getSelected();
   }
 
@@ -346,7 +290,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     configureDefaultCommands();
   }
 
-  /** Disabled periodic which updates the autonomous starting pose. */
   @Override
   public void disabledPeriodic() {
     Command selectedAutoCommand = autoChooser.getSelected();
@@ -374,7 +317,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   public void configureDefaultCommands() {
 
-    // default drive request
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(
             () ->
@@ -406,9 +348,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     return AllianceFlipUtil.apply(resetPose);
   }
 
-  // Rolling average of the correction offset
   private double correctionOffsetRads = 0.0;
-  private static final double CORRECTION_ALPHA = 0.3; // 0.15; // low pass filter weight
+  private static final double CORRECTION_ALPHA = 0.3;
   private static final double MAX_PLAUSIBLE_CORRECTION = Units.degreesToRadians(5.0);
 
   public Angle getTargetTurretAngleRads() {
@@ -416,12 +357,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     Optional<TurretAimResult> visionResult = turretVisionHelper.getHubAimOffset();
     NetworkTableInstance nt = NetworkTableInstance.getDefault();
     nt.getEntry("hasTurretVisionResult").setBoolean(visionResult.isPresent());
-    // DogLog.log("hasTurretVisionResult", visionResult.isPresent());
 
     if (visionResult.isPresent()
         && visionResult.get().tagCount() >= 2
         && RobotState.getInstance().isInAllianceZone()) {
-      double rawCorrection = visionResult.get().yawOffset(); // already camera-relative offset
+      double rawCorrection = visionResult.get().yawOffset();
       nt.getEntry("turretVisionOffset").setDouble(rawCorrection);
 
       nt.getEntry("usingCorrection")
@@ -434,7 +374,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     }
 
     nt.getEntry("turretCorrection").setDouble(correctionOffsetRads);
-    // DogLog.log("turretCorrection", correctionOffsetRads);
     return Radians.of(turretAngleRadians + correctionOffsetRads);
   }
 
