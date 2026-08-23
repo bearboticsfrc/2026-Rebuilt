@@ -20,10 +20,17 @@ public class SpindexerState extends StateMachineBase {
         new State("Run", () -> kicker.run().alongWith(spindexer.run()))
             .withEnd(() -> !kicker.isStopped() && !spindexer.isStopped()),
         // Override states
-        new State("Spindex Slow", () -> spindexer.run()).withEnd(() -> !spindexer.isStopped()),
+        new State("Spindex Slow", () -> spindexer.runSlow()).withEnd(() -> !spindexer.isStopped()),
         new State("Spindex Rev Slow", () -> spindexer.reverseSlow())
             .withEnd(() -> !spindexer.isStopped()),
         new State("Spindex Rev", () -> spindexer.reverse()).withEnd(() -> !spindexer.isStopped()));
+        new State("Kicker Idle", () -> kicker.stop()).withEnd(() -> kicker.isStopped());
+        new State("Kicker Run Slow", () -> kicker.runSlow()).withEnd(() -> !kicker.isStopped());
+        new State("Kicker Run", () -> kicker.run()).withEnd(() -> !kicker.isStopped());
+        new State("Kicker Rev Slow", () -> kicker.reverseSlow()).withEnd(() -> !kicker.isStopped());
+        new State("Kicker Rev", () -> kicker.reverse()).withEnd(() -> !kicker.isStopped());
+
+
 
     /* setup transitions */
     State idle = this.states.get(0);
@@ -31,6 +38,13 @@ public class SpindexerState extends StateMachineBase {
     State spindexerRunSlow = this.states.get(2);
     State spindexerReverseSlow = this.states.get(3);
     State spindexerReverse = this.states.get(4);
+    State kickerIdle = this.states.get(5);
+    State kickerRunSlow = this.states.get(6);
+    State kickerRunFast = this.states.get(7);
+    State kickerReverseSlow = this.states.get(8);
+    State kickerReverse = this.states.get(9);
+
+  
 
     initState(idle);
 
@@ -43,6 +57,16 @@ public class SpindexerState extends StateMachineBase {
     spindexerReverseSlow.global().condition(Pilot.reverse());
 
     spindexerReverse.global().condition(Copilot.spindexerRevFast()::getAsBoolean);
+
+    kickerIdle.to(run).condition(() -> Pilot.shoot().getAsBoolean() && shootState.shooterReady());
+
+    kickerRunSlow.global().condition(Copilot.kickerFwdSlow()::getAsBoolean);
+
+    kickerRunFast.global().condition(Copilot.kickerFwdFast()::getAsBoolean);
+
+    kickerReverseSlow.global().condition(Copilot.kickerRevSlow()::getAsBoolean);
+
+    kickerReverse.global().condition(Copilot.kickerRevFast()::getAsBoolean);
 
     this.kicker = kicker;
     this.spindexer = spindexer;
