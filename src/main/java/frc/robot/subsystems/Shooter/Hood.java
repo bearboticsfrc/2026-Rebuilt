@@ -2,12 +2,9 @@
 package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
-import static frc.robot.PhoenixUtil.applyConfig;
 
 import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -20,11 +17,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Robot;
 import frc.robot.rebuilt.CAN;
-import frc.robot.rebuilt.Copilot;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
+
   /** Position setpoints for the hood. */
   public enum Setpoint {
     Ground(Rotations.of(0)),
@@ -50,8 +47,6 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
 
   private static final double gearRatio = 1.2;
   private static final Distance kDrumRadius = Meters.of(0.028575);
-  private final Angle MIN_ANGLE = Degrees.of(32);
-  private final Angle MAX_ANGLE = Degrees.of(69.5);
 
   private DCMotorSim motorSimModel;
 
@@ -60,148 +55,112 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   /* controls used by the leader motors */
   private final MotionMagicVoltage setpointRequest = new MotionMagicVoltage(0);
 
-  /** Configs common across all motors. */
-  private static final TalonFXConfiguration motorInitialConfigs = new TalonFXConfiguration();
-
-  /** Configs for {@link #motor}. */
-  private final TalonFXConfiguration motorConfigs =
-      motorInitialConfigs
-          .clone()
-          .withMotorOutput(
-              motorInitialConfigs.MotorOutput.clone().withNeutralMode(NeutralModeValue.Brake))
-          .withCurrentLimits(
-              motorInitialConfigs
-                  .CurrentLimits
-                  .clone()
-                  .withStatorCurrentLimit(Amps.of(40))
-                  .withStatorCurrentLimitEnable(true)
-                  .withSupplyCurrentLimit(Amps.of(30))
-                  .withSupplyCurrentLimitEnable(true))
-          .withSlot0(
-              motorInitialConfigs
-                  .Slot0
-                  .clone()
-                  .withKP(2.4)
-                  .withKI(0)
-                  .withKD(0.1) // was 0
-                  .withKS(0.1) // was .2
-                  .withKV(0.20) // was .144 // reasonable range is .12 to .20  (.3 works for 1 rot)
-                  .withKA(0)
-                  .withKG(0.28)
-                  .withGravityType(GravityTypeValue.Elevator_Static))
-          .withFeedback(motorInitialConfigs.Feedback.clone().withSensorToMechanismRatio(gearRatio))
-          .withSoftwareLimitSwitch(
-              new SoftwareLimitSwitchConfigs()
-                  .withForwardSoftLimitThreshold(Setpoint.Top.target.in(Rotations))
-                  .withForwardSoftLimitEnable(true)
-                  .withReverseSoftLimitThreshold(0.0)
-                  .withReverseSoftLimitEnable(true))
-          .withMotionMagic(
-              motorInitialConfigs
-                  .MotionMagic
-                  .clone()
-                  .withMotionMagicCruiseVelocity(RotationsPerSecond.of(8))
-                  .withMotionMagicAcceleration(RotationsPerSecondPerSecond.of(40)));
-
   public Hood() {
     super("Hood", CAN.HOOD, new CANBus(CAN.NAME));
 
-    applyConfig(() -> motor.getConfigurator().apply(motorConfigs), getName());
+    neutralMode(NeutralModeValue.Brake);
+    statorCurrentLimit(Amps.of(40).in(Amps));
+    supplyCurrentLimit(Amps.of(30).abs(Amp));
+    kP(2.4);
+    kI(0);
+    kD(0.1);
+    kS(0.1);
+    kV(0.2);
+    kA(0);
+    kG(0.28);
+    gravityType(GravityTypeValue.Elevator_Static);
+    sensorToMechanismRatio(gearRatio);
+    forwardSoftLimit(Setpoint.Top.target.in(Rotations));
+    reverseSoftLimit(0.0);
+    motionMagicCruiseVelocity(RotationsPerSecond.of(8).in(RotationsPerSecond));
+    motionMagicAcceleration(RotationsPerSecondPerSecond.of(40).in(RotationsPerSecondPerSecond));
 
-    motor.setPosition(Rotations.of(0.0));
-    optimizeCAN();
     if (Robot.isSimulation()) {
       motorSimModel =
           simulationInitKrakenX60(
               motor, gearRatio, 0.001, ChassisReference.CounterClockwise_Positive);
     }
-    buttonMappings();
-    System.out.println("Hood Subsystem Initialized");
+
+    motor.setPosition(Rotations.of(0.0));
+    System.out.println(getName() + " Subsystem Initialized");
+    optimizeCAN();
   }
 
+  /** Simulation periodic. */
   @Override
   public void simulationPeriodic() {
     super.simulationPeriodic(motor, gearRatio, motorSimModel);
   }
 
+  /** The position in rotations. */
   @Logged(name = "positionRotations")
   public double getRotations() {
     return motorPosition.getValue().in(Rotations);
   }
 
+  /** The setpoint Angle. */
   @Logged(name = "setpoint")
   public Angle getSetpoint() {
     return setpointRequest.getPositionMeasure();
   }
 
+  /** The setpoint angle in rotations. */
   @Logged(name = "setpointRotations")
   public double getSetpointRotation() {
     return setpointRequest.Position;
   }
 
+  /** Signals whether the hood is at its setpoint. */
   @Logged(name = "atSetpoint")
   public boolean isAtSetpoint() {
-    // checks to see if the position is within 0.05 percent of the setpoint
     return getAngle().isNear(getSetpoint(), 0.15);
   }
 
-  /* Commands */
-
+  /**
+   * Runnable to run hood to a position.
+   *
+   * @param angle The position angle.
+   */
   private void controlMotor(Angle angle) {
     motor.setControl(setpointRequest.withPosition(angle).withEnableFOC(true));
   }
 
-  /**
-   * Holds the hood at the current position using PID.
-   *
-   * @return Command to run
-   */
-  public Command holdPosition() {
-    return runOnce(() -> controlMotor(motorPosition.getValue()))
-        .andThen(
-            run(
-                () -> {
-                  motor.setControl(setpointRequest);
-                }))
-        .withName(getName() + ".holdPosition");
-  }
-
-  /**
-   * Command to stop the hood motor.
-   *
-   * @return The command to stop the hood.
-   */
+  /** Stops the hood. */
   public Command stopCommand() {
     return runOnce(() -> stop()).withName(getName());
   }
 
-  // Stop the hood motor
+  /** Runnable to stop hood. */
   private void stop() {
     motor.stopMotor();
   }
 
   /**
-   * Drives the hood to the provided position setpoint.
+   * Runs the hood to a position.
    *
-   * @param setpoint Function returning the setpoint to apply
-   * @return Command to run
+   * @param setpoint The desired position.
    */
   public Command goToSetpoint(Supplier<Setpoint> setpoint) {
     return run(() -> controlMotor(setpoint.get().target)).withName(getName() + ".goToSetpoint");
   }
 
-  public Command goToSetpointAngle(Supplier<Angle> value) {
-    return run(() -> controlMotor(value.get())).withName(getName() + ".goToSetpointAngle");
-  }
-
+  /**
+   * Runs the hood to a position.
+   *
+   * @param value The desired position rotations.
+   */
   public Command goToSetpointRotationsDouble(DoubleSupplier value) {
     return run(() -> controlMotor(Rotations.of(value.getAsDouble())))
         .withName(getName() + ".goToSetpointRotationsDouble");
   }
 
-  /* Self Test */
-
-  // TODO: safeguard the position of the hood, should start at 0
+  /**
+   * Self tests at a specific speed.
+   *
+   * @param target The specifc speed.
+   * @param ntKey The NT key.
+   * @return
+   */
   private Command selfTestAt(Setpoint target, String ntKey) {
     return Commands.runOnce(
             () -> {
@@ -232,24 +191,16 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
         .finallyDo(() -> motor.stopMotor());
   }
 
+  /** Self tests slowly. */
   @Override
   public Command selfTestSlow() {
     return selfTestAt(Setpoint.Middle, "Robot/Tests/hood/slow")
         .withName(getName() + ".SelfTestSlow");
   }
 
+  /** Self tests at a normal speed. */
   @Override
   public Command selfTestFast() {
     return selfTestAt(Setpoint.Top, "Robot/Tests/hood/fast").withName(getName() + ".SelfTestFast");
-  }
-
-  /* Button Mappings for Copilot */
-
-  public void buttonMappings() {
-    Copilot.hoodIdle().onTrue(stopCommand());
-    Copilot.hood0_25().onTrue(goToSetpointRotationsDouble(() -> 0.25));
-    Copilot.hood0_5().onTrue(goToSetpointRotationsDouble(() -> 0.5));
-    Copilot.hood0_75().onTrue(goToSetpointRotationsDouble(() -> 0.75));
-    Copilot.hood1().onTrue(goToSetpointRotationsDouble(() -> 1));
   }
 }

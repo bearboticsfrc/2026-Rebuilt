@@ -11,34 +11,39 @@ import java.util.List;
 
 public class StateMachineBase extends SubsystemBase {
 
-  protected List<State> states = new ArrayList<>();
-  protected List<Transition> transitions = new ArrayList<>();
-  protected HashMap<State, Trigger> stateTriggers = new HashMap<>();
+  private List<State> states = new ArrayList<>();
+  private List<Transition> transitions = new ArrayList<>();
+  private HashMap<State, Trigger> stateTriggers = new HashMap<>();
 
-  protected State current;
+  private State current;
   protected State previous;
   private State initial;
 
   /**
    * Class for FRC state machine, manages states and their transitions, utilizing the {@link State}
    * and {@link Transition} classes.
-   *
-   * <blockquote>
-   *
-   * <b>Notice:</b> States (w/ transitions) must be defined before they are passed in.
-   *
-   * @param states The robot {@link State}(s)
    */
-  public StateMachineBase(State... states) {
-    this.current = null;
-    Collections.addAll(this.states, states);
-    previous = current;
-    initial = null;
-  }
+  public StateMachineBase() {}
 
   @Override
   public void periodic() {
     update();
+  }
+
+  /**
+   * Initializes states, transitions, and actions in proper order. Call this last on init!
+   *
+   * @param
+   */
+  public void configure(State... robotStates) {
+
+    Collections.addAll(this.states, robotStates);
+
+    triggersInit();
+    transitionsInit();
+    actionsInit();
+
+    System.out.println(getName() + " Initialized!");
   }
 
   /** Manages and monitors transitions from state to state. */
@@ -68,30 +73,6 @@ public class StateMachineBase extends SubsystemBase {
         }
       }
     }
-  }
-
-  /**
-   * Trigger used to run action during a specific state.
-   *
-   * @param state The {@link State} monitored
-   */
-  public Trigger on(State state) {
-    return this.stateTriggers.get(state);
-  }
-
-  /** Logs the current state */
-  @Logged
-  public String currentState() {
-    if (current != null) {
-      return !current.isComplete() ? "Transitioning" : current.name;
-    }
-    return "Waiting for Init...";
-  }
-
-  /** Logs the state that is requested (ie currently being transitioned into). */
-  @Logged
-  public String requested() {
-    return current != null && !current.isComplete() ? current.name : "";
   }
 
   /** Initializes every {@link Transition} for every {@link State} in state machine. */
@@ -131,36 +112,52 @@ public class StateMachineBase extends SubsystemBase {
     }
   }
 
-  /** Initializes states, transitions, and actions in proper order. Call this last on init! */
-  public void configure() {
-    triggersInit();
-    transitionsInit();
-    actionsInit();
-
-    System.out.println(getName() + " Initialized!");
-  }
-
   /**
    * Sets the starting state of the state machine.
    *
    * @param state The starting state.
    */
   protected void initState(State state) {
-    if (!states.isEmpty() && states.contains(state)) {
-      current = state;
-      initial = state;
-    }
+    current = state;
+    initial = state;
   }
 
   /**
-   * Returns the corresponding state via the state's name.
+   * Trigger used to run action during a specific state.
    *
-   * @param name The name of the state.
+   * @param state The {@link State} monitored
    */
-  protected State get(String name) {
-    for (State state : this.states) {
-      if (name.equals(state.name)) return state;
+  public Trigger on(State state) {
+    return this.stateTriggers.get(state);
+  }
+
+  /** The current state. */
+  public State current() {
+    return current;
+  }
+
+  /** The previous state. */
+  public State previous() {
+    return previous;
+  }
+
+  /** The initial/default state. */
+  public State initial() {
+    return initial;
+  }
+
+  /** Logs the current state */
+  @Logged
+  public String currentState() {
+    if (current != null) {
+      return !current.isComplete() ? "Transitioning" : current.name;
     }
-    return null;
+    return "Waiting for Init...";
+  }
+
+  /** Logs the state that is requested (ie currently being transitioned into). */
+  @Logged
+  public String requested() {
+    return current != null && !current.isComplete() ? current.name : "";
   }
 }
