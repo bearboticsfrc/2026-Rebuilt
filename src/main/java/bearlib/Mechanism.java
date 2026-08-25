@@ -178,6 +178,51 @@ public class Mechanism extends SubsystemBase {
   }
 
   /**
+   * Sets the proportional gain of motor controller.
+   *
+   * @param p
+   */
+  public void kP1(double p) {
+    motorConfig.Slot1.kP = p;
+  }
+
+  /**
+   * Sets the proportional gain of motor controller.
+   *
+   * @param d
+   */
+  public void kD1(double d) {
+    motorConfig.Slot1.kD = d;
+  }
+
+  /**
+   * Sets the proportional gain of motor controller.
+   *
+   * @param a
+   */
+  public void kA1(double a) {
+    motorConfig.Slot1.kA = a;
+  }
+
+  /**
+   * Sets the proportional gain of motor controller.
+   *
+   * @param s
+   */
+  public void kS1(double s) {
+    motorConfig.Slot1.kS = s;
+  }
+
+  /**
+   * Sets the proportional gain of motor controller.
+   *
+   * @param v
+   */
+  public void kV1(double v) {
+    motorConfig.Slot1.kV = v;
+  }
+
+  /**
    * Sets the integral gain of motor controller.
    *
    * @param i The integral gain.
@@ -229,6 +274,10 @@ public class Mechanism extends SubsystemBase {
    */
   public void kV(double v) {
     motorConfig.Slot0.kV = v;
+  }
+
+  public void rotorToSensorRatio(double rotorToSensorRatio) {
+    motorConfig.Feedback.RotorToSensorRatio = rotorToSensorRatio;
   }
 
   /**

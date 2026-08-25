@@ -4,13 +4,10 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.PhoenixUtil.applyConfig;
 
 import bearlib.Mechanism;
 import bearlib.util.AllianceFlipUtil;
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -72,55 +69,30 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
   public Turret() {
     super("Turret", CAN.TURRET, new CANBus(CAN.NAME));
 
-    TalonFXConfiguration config = new TalonFXConfiguration();
-
-    config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-    config.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-
-    config.Slot0.kP =
-        70; // 23.221; //   72 for 5 degrees, 180 for 2 degrees, 360 for 1 degrees.  Increase D
-    // with
-    // increase in P
-    config.Slot0.kD = 3; // .8981; //   start with d = p / 100 and increase until oscillation stops
-
-    config.Slot0.kA = 0.05; // .077265;
-    config.Slot0.kS = .6; // .2; // start with .4; tune up if mechanism stalls at end of moves
-    config.Slot0.kV =
-        1.25; //  ( 0.124 x 4.34 = .54  V/mechanism-RPS ) // not used in positionvoltage
-    kV = Volts.of(10.0); // consider zeroing this or zeroing the Slot0.kV and using only this
-
-    config.Slot1.kP = 150;
-    config.Slot1.kD = 12;
-    config.Slot1.kA = 0;
-    config.Slot1.kS = 0;
-    config.Slot1.kV = 0;
-
-    // var motionMagicConfigs = config.MotionMagic;
-    config.MotionMagic.MotionMagicCruiseVelocity = 3.0; // 1.8; // Target cruise velocity of 80 rps
-    config.MotionMagic.MotionMagicAcceleration =
-        20; // 12.0; // 3.6; // Target acceleration of 160 rps/s (0.5 seconds)
-    config.MotionMagic.MotionMagicJerk =
-        0; // 40; // 25; // Target jerk of 1600 rps/s/s (0.1 seconds)
-
-    config.Feedback.RotorToSensorRatio = 1.0;
-    config.Feedback.SensorToMechanismRatio = gearRatio;
-
-    config.CurrentLimits.SupplyCurrentLimit = 80;
-    config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.CurrentLimits.StatorCurrentLimit = 80;
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-
-    config.TorqueCurrent.PeakForwardTorqueCurrent = 120; // amps -- tune up from here
-    config.TorqueCurrent.PeakReverseTorqueCurrent = -120;
-
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = .62;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ReverseSoftLimitThreshold = -.62;
-
-    applyConfig(() -> motor.getConfigurator().apply(config), getName());
-
+    neutralMode(NeutralModeValue.Brake);
+    inverted(InvertedValue.Clockwise_Positive);
+    kP(70);
+    kD(3);
+    kA(0.05);
+    kS(.6);
+    kV(1.25);
+    kP1(150);
+    kD1(12);
+    kA1(0);
+    kS1(0);
+    kV1(0);
+    rotorToSensorRatio(1.0);
+    sensorToMechanismRatio(gearRatio);
+    supplyCurrentLimit(80);
+    statorCurrentLimit(80);
+    peakForwardTorqueCurrent(120);
+    peakReverseTorqueCurrent(-120);
+    forwardSoftLimit(.62);
+    reverseSoftLimit(-.62);
+    addConfig();
+    motionMagicCruiseVelocity(3.0);
+    motionMagicAcceleration(20);
+    motionMagicJerk(0);
     motor.setPosition(0);
 
     optimizeCAN();
