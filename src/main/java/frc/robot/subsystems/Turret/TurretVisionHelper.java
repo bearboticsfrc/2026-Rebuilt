@@ -188,7 +188,6 @@ public class TurretVisionHelper {
     double radiansOffset = Math.atan2(hubHorizontal.getY(), hubHorizontal.getX());
     double distance = hubHorizontal.getNorm();
 
-    // Reject if distance is implausible - likely a bad solve
     if (distance < Units.inchesToMeters(24) || distance > Units.inchesToMeters(300)) {
       return Optional.empty();
     }
@@ -196,35 +195,21 @@ public class TurretVisionHelper {
     return Optional.of(new TurretAimResult(radiansOffset, distance, pose.tagCount, true));
   }
 
-  /**
-   * Gets camera pose in field space by pulling camerapose_targetspace directly from the JSON
-   * result, which is more accurate than reconstructing from bot pose + camera offset.
-   */
-  //   private Pose3d getCameraPoseFieldSpace(PoseEstimate botPose) {
-
-  //     return limelight.getLatestResults().map(results ->
-  // results.camerapose_targetspace).orElse(null);
-  //   }
-
   private Pose3d getTargetPoseCameraSpace() {
     NetworkTable table = limelight.getNTTable();
     double[] rawPose = table.getEntry("targetpose_cameraspace").getDoubleArray(new double[0]);
 
-    // double[] rawPose = table.getEntry("camerapose_targetspace").getDoubleArray(new double[0]);
     long tid = table.getEntry("tid").getInteger(0);
 
-    // DogLog.log("targetpose_cameraspace", rawPose);
     NetworkTableInstance nt = NetworkTableInstance.getDefault();
 
     nt.getEntry("tid").setInteger(tid);
 
-    // DogLog.log("tid", tid);
     if (rawPose.length > 0) {
       nt.getEntry("angle_to_primary_id").setDouble(rawPose[5]);
     }
     if (rawPose.length < 6) return null;
 
-    // All zeros means no valid solve
     boolean allZero = true;
     for (double v : rawPose) {
       if (Math.abs(v) > 1e-6) {
@@ -239,9 +224,6 @@ public class TurretVisionHelper {
             Units.degreesToRadians(rawPose[3]),
             Units.degreesToRadians(rawPose[4]),
             Units.degreesToRadians(rawPose[5]));
-
-    // Rotation3d frameChange =
-    //     new Rotation3d(MatBuilder.fill(Nat.N3(), Nat.N3(), 0, 0, 1, -1, 0, 0, 0, 1, 0));
 
     return new Pose3d(new Translation3d(rawPose[2], -rawPose[0], rawPose[1]), limelightRotation);
   }
