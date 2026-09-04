@@ -53,6 +53,7 @@ import frc.robot.subsystems.spindexer.Kicker;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerState;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretState;
 import frc.robot.subsystems.turret.TurretVisionHelper;
 import frc.robot.subsystems.turret.TurretVisionHelper.TurretAimResult;
 import frc.robot.test.SelfTest;
@@ -112,6 +113,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged private final ShootState shootState;
 
   @Logged private final SpindexerState spindexerState;
+
+  @Logged private final TurretState turretState;
 
   private Command introspectedAutoCommand;
 
@@ -180,6 +183,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     spindexerState = new SpindexerState(kicker, spindexer, shootState);
 
     intakeState = new IntakeState(slider, rollers);
+
+    turretState = new TurretState(turret);
 
     CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     AllianceColor.addListener(this);

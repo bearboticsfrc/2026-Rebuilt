@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.RPM;
 import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.ChassisReference;
@@ -22,9 +21,6 @@ import frc.robot.test.SelfTestable;
 public class Spindexer extends Mechanism implements SelfTestable {
 
   private static final double kGearRatio = 7.2;
-
-  private final CANBus canivore = new CANBus(CAN.NAME);
-  private final TalonFX motor = new TalonFX(CAN.SPINDEXER, canivore);
 
   private final VelocityVoltage velocityReq =
       new VelocityVoltage(0.0).withEnableFOC(true).withSlot(0);
