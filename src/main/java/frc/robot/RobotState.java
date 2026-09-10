@@ -129,6 +129,13 @@ public class RobotState {
         || GeomUtil.inZone(Field.getMyTower(), robotPose);
   }
 
+  /** Signals when the robot is in danger of decapitation. */
+  @Logged
+  public boolean decapitateZone() {
+    return GeomUtil.inZone(Field.getMyLeftTrench(), robotPose)
+        || GeomUtil.inZone(Field.getMyRightTrench(), robotPose);
+  }
+
   /** The angle from the turret pose to the hub. */
   public Rotation2d getAngleToHub() {
     return Field.getMyHub()
@@ -169,5 +176,17 @@ public class RobotState {
   @Logged(name = "Net")
   public Translation2d[] getNetZone() {
     return Field.getMyNet().get();
+  }
+
+  /** The right trench. */
+  @Logged
+  public Translation2d[] getRightTrench() {
+    return Field.getMyRightTrench().get();
+  }
+
+  /** The left trench. */
+  @Logged
+  public Translation2d[] getLeftTrench() {
+    return Field.getMyLeftTrench().get();
   }
 }

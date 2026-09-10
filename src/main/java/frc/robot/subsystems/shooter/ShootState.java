@@ -3,27 +3,32 @@ package frc.robot.subsystems.shooter;
 import bearlib.statemachine.State;
 import bearlib.statemachine.StateMachineBase;
 import edu.wpi.first.epilogue.Logged;
+import frc.robot.RobotState;
 import frc.robot.rebuilt.Copilot;
 import frc.robot.rebuilt.Pilot;
 
 public class ShootState extends StateMachineBase {
 
-  public ShootState(Flywheel flywheel, Hood hood, DynamicShootingCalculator calculator) {
+  DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
+
+  RobotState robotState = RobotState.getInstance();
+
+  public ShootState(Flywheel flywheel, Hood hood) {
 
     State idle =
-        new State("Idle", () -> flywheel.stopCommand().alongWith(hood.stopCommand()))
+        new State("Idle", () -> flywheel.runAtSpeed(600).alongWith(hood.stopCommand()))
             .withEnd(() -> true);
 
     State shoot =
         new State(
                 "Shoot",
                 () ->
-                    flywheel
+                    (flywheel
                         .runAtSpeed(() -> calculator.getParameters().flywheelVelocity())
                         .alongWith(
                             hood.goToSetpointRotationsDouble(
-                                () -> calculator.getParameters().hoodAngle())))
-            .withEnd(flywheel::isAtTarget);
+                                () -> calculator.getParameters().hoodAngle()))))
+            .withEnd(() -> true);
 
     State flywheelIdle =
         new State("Flywheel Idle", () -> flywheel.stopCommand()).withEnd(flywheel::isStopped);
@@ -53,6 +58,10 @@ public class ShootState extends StateMachineBase {
     State hood100 =
         new State("Hood 1", () -> hood.goToSetpointRotationsDouble(() -> 1.0)).withEnd(() -> true);
 
+    State hoodGround =
+        new State("Hood Ground", () -> hood.ground().alongWith(flywheel.runAtSpeed(600)))
+            .withEnd(() -> true);
+
     idle.to(shoot).condition(Pilot.shoot()::getAsBoolean);
 
     shoot.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
@@ -73,6 +82,8 @@ public class ShootState extends StateMachineBase {
 
     hood100.global().condition(Copilot.hood1()::getAsBoolean);
 
+    hoodGround.global().condition(robotState::decapitateZone);
+
     initState(idle);
 
     configure(
@@ -86,12 +97,18 @@ public class ShootState extends StateMachineBase {
         hood25,
         hood50,
         hood75,
-        hood100);
+        hood100,
+        hoodGround);
   }
 
   /** Signals if the shooter is ready. */
   @Logged
   public boolean shooterReady() {
     return currentState() == "Shoot" && current().isComplete();
+  }
+
+  @Logged
+  public boolean decapitation() {
+    return currentState() == "Hood Ground";
   }
 }

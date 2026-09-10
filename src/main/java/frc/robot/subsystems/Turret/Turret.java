@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
 import bearlib.Mechanism;
 import bearlib.util.AllianceFlipUtil;
@@ -57,7 +58,7 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
 
   private DCMotorSim motorSimModel;
 
-  private Voltage kV;
+  private Voltage kV = Volts.of(10);
 
   private static final double LARGE_JUMP_THRESHOLD = 0.2;
 

@@ -39,7 +39,6 @@ public class Rollers extends Mechanism implements SelfTestable {
   private DCMotorSim motorSimModel;
 
   public Rollers() {
-
     super(NAME, CAN.ROLLERS, new CANBus(CAN.NAME));
 
     neutralMode(NeutralModeValue.Coast);

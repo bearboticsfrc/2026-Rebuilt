@@ -52,7 +52,6 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
 
   @Logged private boolean selfTestPassed = false;
 
-  /* controls used by the leader motors */
   private final MotionMagicVoltage setpointRequest = new MotionMagicVoltage(0);
 
   public Hood() {
@@ -152,6 +151,11 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   public Command goToSetpointRotationsDouble(DoubleSupplier value) {
     return run(() -> controlMotor(Rotations.of(value.getAsDouble())))
         .withName(getName() + ".goToSetpointRotationsDouble");
+  }
+
+  /** "Grounds" the hood. */
+  public Command ground() {
+    return goToSetpoint(() -> Setpoint.Ground);
   }
 
   /**

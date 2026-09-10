@@ -205,12 +205,6 @@ public class TurretController extends SubsystemBase {
 
   public void processCameraInput() {
 
-    // Optional<TurretAimResult> turretAimResult = turretVisionHelper.getHubAimSolution();
-
-    // if (turretAimResult.isEmpty()) {
-    //   return;
-    // }
-
     List<PhotonPipelineResult> cameraResults = camera.getAllUnreadResults();
     if (cameraResults.isEmpty()) return;
 

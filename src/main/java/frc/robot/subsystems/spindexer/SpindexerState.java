@@ -47,6 +47,8 @@ public class SpindexerState extends StateMachineBase {
 
     run.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
 
+    run.to(idle).condition(shootState::decapitation);
+
     spindexerRunSlow.global().condition(Copilot.spindexerFwdSlow()::getAsBoolean);
 
     spindexerReverseSlow.global().condition(Pilot.reverse());

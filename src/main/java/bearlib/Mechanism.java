@@ -1,9 +1,9 @@
 package bearlib;
 
+import static bearlib.util.PhoenixUtil.applyConfig;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Volts;
-import static frc.robot.PhoenixUtil.applyConfig;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
  * Base class for single-motor mechanism. For CTRE hardware, handles telemetry, motor configuration,
- * and sim.
+ * and simulation.
  */
 public class Mechanism extends SubsystemBase {
 

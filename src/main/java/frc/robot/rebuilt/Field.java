@@ -44,6 +44,20 @@ public class Field {
           new Translation2d(1.1, 3.36),
           new Translation2d(0.0, 3.36));
 
+  public static Zone2d leftTrench =
+      new Zone2d(
+          new Translation2d(3.638, 8.234),
+          new Translation2d(5.3, 8.324),
+          new Translation2d(5.3, 6.849),
+          new Translation2d(3.638, 6.849));
+
+  public static Zone2d rightTrench =
+      new Zone2d(
+          new Translation2d(3.638, 1.4),
+          new Translation2d(5.3, 1.4),
+          new Translation2d(5.3, 0.0),
+          new Translation2d(3.638, 0.0));
+
   public static Pose2d getMyOutputPose() {
     return AllianceFlipUtil.apply(BLUE_OUTPOST_POSE);
   }
@@ -79,6 +93,14 @@ public class Field {
 
   public static Zone2d getMyTower() {
     return AllianceFlipUtil.shouldFlip() ? blueTower.flip() : blueTower;
+  }
+
+  public static Zone2d getMyRightTrench() {
+    return AllianceFlipUtil.shouldFlip() ? rightTrench.flip() : rightTrench;
+  }
+
+  public static Zone2d getMyLeftTrench() {
+    return AllianceFlipUtil.shouldFlip() ? leftTrench.flip() : leftTrench;
   }
 
   public static boolean poseOutOfField(Pose2d pose2D) {

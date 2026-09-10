@@ -149,7 +149,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     kicker = new Kicker();
     turret = new Turret();
     drivetrain = TunerConstants.createDrivetrain();
-
     flywheel = new Flywheel();
     hood = new Hood();
 
@@ -178,7 +177,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     selfTest.bindTriggers();
     configureDefaultCommands();
 
-    shootState = new ShootState(flywheel, hood, calculator);
+    shootState = new ShootState(flywheel, hood);
 
     spindexerState = new SpindexerState(kicker, spindexer, shootState);
 
