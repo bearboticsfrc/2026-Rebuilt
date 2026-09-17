@@ -107,8 +107,6 @@ public class VisionSystem {
 
   private final CommandSwerveDrivetrain drivetrain;
 
-  private TurretLimelight turretLimelight;
-
   private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
 
   public VisionSystem(
@@ -138,17 +136,7 @@ public class VisionSystem {
       }
     }
 
-    if (enableLimelight) {
-      turretLimelight = new TurretLimelight(false);
-    }
-
     poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
-  }
-
-  public void updateCameraSettings() {
-    if (turretLimelight != null) {
-      turretLimelight.updateLimelightSettings();
-    }
   }
 
   private void poseEstimationPeriodic() {
@@ -251,21 +239,6 @@ public class VisionSystem {
       latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
     }
 
-    if (turretLimelight != null) {
-      double robotYawRads = Robot.get().getSwerve().getRobotPose().getRotation().getRadians();
-      turretLimelight.update(
-          robotYawRads,
-          Units.degreesToRadians(turretRotationSupplier.getAsDouble()),
-          robotRotationVelocitySupplier.getAsDouble());
-
-      VisionEstimate visionEstimate = turretLimelight.getTurretVisionEstimate();
-      if (visionEstimate.isAccepted()) {
-        visionEstimates.add(visionEstimate);
-
-        updatedTargetPosesFromLimelight(turretLimelight.getTagList());
-      }
-    }
-
     return visionEstimates;
   }
 
@@ -324,15 +297,6 @@ public class VisionSystem {
       if (optionalTagPose.isPresent()) {
         targetPoses.add(optionalTagPose.get().toPose2d());
       }
-    }
-  }
-
-  private void updatedTargetPosesFromLimelight(limelight.results.RawFiducial[] tags) {
-    for (limelight.results.RawFiducial tag : tags) {
-      int fiducialId = tag.id;
-      Pose3d tagPose = VisionConstants.APRIL_TAG_FIELD_LAYOUT.getTagPose(fiducialId).get();
-
-      targetPoses.add(tagPose.toPose2d());
     }
   }
 
@@ -461,12 +425,6 @@ public class VisionSystem {
     if (estimate != null && estimate.isAccepted()) {
       drivetrain.addVisionMeasurement(
           estimate.pose().toPose2d(), estimate.timestampSeconds(), estimate.stdDevs());
-    }
-  }
-
-  public void resetPose() {
-    if (turretLimelight != null) {
-      turretLimelight.resetLastAcceptedPose();
     }
   }
 

@@ -173,6 +173,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     super.resetPose(newPose);
   }
 
+  /** Pathplanner Autobuilder. */
   private void configureAutoBuilder() {
     try {
       var config = RobotConfig.fromGUISettings();

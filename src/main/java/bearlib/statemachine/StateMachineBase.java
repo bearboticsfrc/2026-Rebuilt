@@ -30,11 +30,7 @@ public class StateMachineBase extends SubsystemBase {
     update();
   }
 
-  /**
-   * Initializes states, transitions, and actions in proper order. Call this last on init!
-   *
-   * @param
-   */
+  /** Initializes states, transitions, and actions in proper order. Call this last on init! */
   public void configure(State... robotStates) {
 
     Collections.addAll(this.states, robotStates);

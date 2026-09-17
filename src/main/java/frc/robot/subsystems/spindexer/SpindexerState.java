@@ -5,11 +5,11 @@ import bearlib.statemachine.StateMachineBase;
 import edu.wpi.first.epilogue.Logged;
 import frc.robot.rebuilt.Copilot;
 import frc.robot.rebuilt.Pilot;
-import frc.robot.subsystems.shooter.ShootState;
+import frc.robot.subsystems.shooter.FlywheelState;
 
 public class SpindexerState extends StateMachineBase {
 
-  public SpindexerState(Kicker kicker, Spindexer spindexer, ShootState shootState) {
+  public SpindexerState(Kicker kicker, Spindexer spindexer, FlywheelState flywheelState) {
 
     State idle =
         new State("Idle", () -> kicker.stop().alongWith(spindexer.stop()))
@@ -43,11 +43,9 @@ public class SpindexerState extends StateMachineBase {
     State kickerReverse =
         new State("Kicker Rev", () -> kicker.reverse()).withEnd(() -> !kicker.isStopped());
 
-    idle.to(run).condition(() -> Pilot.shoot().getAsBoolean() && shootState.shooterReady());
+    idle.to(run).condition(() -> Pilot.shoot().getAsBoolean() && flywheelState.shooterReady());
 
     run.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
-
-    run.to(idle).condition(shootState::decapitation);
 
     spindexerRunSlow.global().condition(Copilot.spindexerFwdSlow()::getAsBoolean);
 
@@ -55,7 +53,9 @@ public class SpindexerState extends StateMachineBase {
 
     spindexerReverse.global().condition(Copilot.spindexerRevFast()::getAsBoolean);
 
-    kickerIdle.to(run).condition(() -> Pilot.shoot().getAsBoolean() && shootState.shooterReady());
+    kickerIdle
+        .to(run)
+        .condition(() -> Pilot.shoot().getAsBoolean() && flywheelState.shooterReady());
 
     kickerRunSlow.global().condition(Copilot.kickerFwdSlow()::getAsBoolean);
 

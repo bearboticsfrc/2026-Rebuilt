@@ -380,20 +380,6 @@ class VisionSystemTest {
   }
 
   // -------------------------------------------------------------------------
-  // updateCameraSettings / resetPose — no limelight, should be no-ops
-  // -------------------------------------------------------------------------
-
-  @Test
-  void updateCameraSettings_noLimelight_doesNotThrow() {
-    assertDoesNotThrow(() -> visionSystem.updateCameraSettings());
-  }
-
-  @Test
-  void resetPose_noLimelight_doesNotThrow() {
-    assertDoesNotThrow(() -> visionSystem.resetPose());
-  }
-
-  // -------------------------------------------------------------------------
   // Geometry getters
   // -------------------------------------------------------------------------
 
