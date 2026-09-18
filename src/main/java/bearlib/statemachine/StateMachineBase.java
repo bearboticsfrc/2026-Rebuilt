@@ -1,6 +1,7 @@
 package bearlib.statemachine;
 
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -27,7 +28,10 @@ public class StateMachineBase extends SubsystemBase {
 
   @Override
   public void periodic() {
-    update();
+
+    if (RobotState.isTeleop()) {
+      update();
+    }
   }
 
   /** Initializes states, transitions, and actions in proper order. Call this last on init! */
@@ -155,5 +159,24 @@ public class StateMachineBase extends SubsystemBase {
   @Logged
   public String requested() {
     return current != null && !current.isComplete() ? current.name : "";
+  }
+
+  public State getStateByString(String state) {
+    State getState = null;
+    for (State s : this.states) {
+      if (s.name == state) {
+        getState = s;
+      }
+    }
+    return getState;
+  }
+
+  /**
+   * Sets the current state, only functions during autonomous.
+   *
+   * @param state The state you want to change to.
+   */
+  public void setState(String state) {
+    this.current = this.getStateByString(state);
   }
 }
