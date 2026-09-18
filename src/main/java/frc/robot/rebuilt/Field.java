@@ -1,12 +1,9 @@
 package frc.robot.rebuilt;
 
-import static edu.wpi.first.units.Units.Degrees;
-
 import bearlib.util.AllianceFlipUtil;
 import bearlib.util.GeomUtil.Zone2d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
@@ -17,19 +14,23 @@ public class Field {
   public static final double ROBOT_WIDTH = 0.85725;
   public static final Translation2d BLUE_HUB = new Translation2d(4.625, 4.034536);
   public static final Translation2d RED_HUB = new Translation2d(11.915394, 4.034536);
-  public static final Pose2d BLUE_OUTPOST_POSE =
-      new Pose2d(new Translation2d(0.42, 0.7), new Rotation2d(Degrees.of(180)));
-
   public static final Translation2d BLUE_LEFT = new Translation2d(1.2, 7.0);
   public static final Translation2d BLUE_RIGHT = new Translation2d(1.2, 1);
   public static final Translation2d BLUE_ALLIANCE_LINE = new Translation2d(4, 4);
 
-  public static Zone2d test =
+  public static Zone2d allianceZone =
       new Zone2d(
-          new Translation2d(6, 2),
-          new Translation2d(6, 5),
-          new Translation2d(10, 5),
-          new Translation2d(10, 2));
+          new Translation2d(0.0, 8.15),
+          new Translation2d(5.21, 8.15),
+          new Translation2d(5.21, 0.0),
+          new Translation2d(0.0, 0.0));
+
+  public static Zone2d neutralZone =
+      new Zone2d(
+          new Translation2d(5.21, 8.15),
+          new Translation2d(5.21, 0.0),
+          new Translation2d(16.59, 0.0),
+          new Translation2d(16.59, 8.15));
 
   public static Zone2d blueNet =
       new Zone2d(
@@ -58,10 +59,6 @@ public class Field {
           new Translation2d(5.3, 0.0),
           new Translation2d(3.638, 0.0));
 
-  public static Pose2d getMyOutputPose() {
-    return AllianceFlipUtil.apply(BLUE_OUTPOST_POSE);
-  }
-
   public static Translation2d getMyHub() {
     return AllianceFlipUtil.apply(BLUE_HUB);
   }
@@ -83,8 +80,12 @@ public class Field {
     return AllianceFlipUtil.apply(BLUE_ALLIANCE_LINE);
   }
 
-  public static Zone2d getMyTestZone() {
-    return test;
+  public static Zone2d getMyAllianceZone() {
+    return AllianceFlipUtil.shouldFlip() ? allianceZone.flip() : allianceZone;
+  }
+
+  public static Zone2d getMyNeutralZone() {
+    return AllianceFlipUtil.shouldFlip() ? neutralZone.flip() : neutralZone.flip();
   }
 
   public static Zone2d getMyNet() {

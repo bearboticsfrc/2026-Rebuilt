@@ -161,7 +161,12 @@ public class StateMachineBase extends SubsystemBase {
     return current != null && !current.isComplete() ? current.name : "";
   }
 
-  public State getStateByString(String state) {
+  /**
+   * Returns a state through its corresponding name.
+   *
+   * @param state The name of the state.
+   */
+  private State getStateByString(String state) {
     State getState = null;
     for (State s : this.states) {
       if (s.name == state) {

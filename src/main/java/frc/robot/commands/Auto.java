@@ -1,5 +1,6 @@
-import com.pathplanner.lib.events.EventTrigger;
+package frc.robot.commands;
 
+import com.pathplanner.lib.events.EventTrigger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.intake.IntakeState;
@@ -17,7 +18,6 @@ public class Auto {
   private final HoodState hoodState;
 
   private final EventTrigger shoot = new EventTrigger("shoot");
-  
 
   public Auto(
       SpindexerState spindexerState,
@@ -32,21 +32,21 @@ public class Auto {
     this.hoodState = hoodState;
 
     shoot.onTrue(shootCommand());
-
   }
 
   public Command shootCommand() {
     return Commands.runOnce(() -> hoodState.setState("Track"))
-        .alongWith(Commands.runOnce(() -> flywheelState.setState("Shoot")).alongWith(Commands.run(() -> spindexerState.setState("Run"))));
+        .alongWith(
+            Commands.runOnce(() -> flywheelState.setState("Shoot"))
+                .alongWith(Commands.run(() -> spindexerState.setState("Run"))));
   }
-  
 
   public Command intakeCommand() {
-    return Commands.runOnce(() -> intakeState.setState("Intake")).alongWith(Commands.runOnce(() -> ))
+    return Commands.runOnce(() -> intakeState.setState("Intake"));
   }
 
-  //public Command stopShootCommand
+  // public Command stopShootCommand
 
-  //public Command oscillateCommand
+  // public Command oscillateCommand
 
 }

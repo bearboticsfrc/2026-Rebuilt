@@ -28,17 +28,21 @@ public class RobotState {
   }
 
   /** Turret translation. */
-  @Logged public Translation2d turretTranslation;
+  @Logged(name = "Turret Translation")
+  public Translation2d turretTranslation;
 
   /** Turret pose. */
-  @Logged @Getter public Pose2d turretPose;
+  @Logged(name = "Turret Pose")
+  @Getter
+  public Pose2d turretPose;
 
   /** Turret transform. */
   public static final Transform2d turretToRobot =
       new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d());
 
   /** Trigger for the {@code isStopped()} boolean. */
-  @Logged public Trigger stopped = new Trigger(() -> isStopped());
+  @Logged(name = "Stopped Trigger")
+  public Trigger stopped = new Trigger(() -> isStopped());
 
   /** Signals whether or not to update the robot pose in auto. */
   public boolean updatePoseInAutonomous = true;
@@ -71,12 +75,13 @@ public class RobotState {
   }
 
   /** The field velocity of the chassis. */
-  @Logged
+  @Logged(name = "Field Velocity")
   public ChassisSpeeds getFieldVelocity() {
     return ChassisSpeeds.fromRobotRelativeSpeeds(robotVelocity, getRotation());
   }
 
   /** Signals whether the robot is stopped. */
+  @Logged(name = "Stopped")
   public boolean isStopped() {
     if (isInAllianceZone()) {
       return Math.abs(getFieldVelocity().vxMetersPerSecond) < 0.00005
@@ -87,56 +92,52 @@ public class RobotState {
   }
 
   /** Signals whether or not the robot is in the alliance zone. */
-  @Logged
+  @Logged(name = "Is in Alliance Zone")
   public boolean isInAllianceZone() {
-    if (isBlueAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX()) return true;
-    else if (isRedAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return true;
-    else return false;
+    return GeomUtil.inZone(Field.getMyAllianceZone(), robotPose);
   }
 
   /** Signals whether or not the robot is in the neutral zone. */
-  @Logged
+  @Logged(name = "Is in Neutral Zone")
   public BooleanSupplier isInNeutralZone() {
-    if (isBlueAlliance() && robotPose.getX() > Field.getMyAllianceLine().getX()) return () -> true;
-    else if (isRedAlliance() && robotPose.getX() < Field.getMyAllianceLine().getX())
-      return () -> true;
-    else return () -> false;
+    return () -> GeomUtil.inZone(Field.getMyNeutralZone(), robotPose);
   }
 
   /** Signals whether or not the robot is field left. */
-  @Logged
+  @Logged(name = "Is Left")
   public boolean iSLeft() {
     return (isBlueAlliance() && robotPose.getY() > Field.getMyAllianceLine().getY()
         || isRedAlliance() && robotPose.getY() < Field.getMyAllianceLine().getY());
   }
 
   /** Signals whether or not the robot is field left neutral zone. */
-  @Logged
+  @Logged(name = "Is Left Neutral Zone")
   public boolean isLeftNeutralZone() {
     return (iSLeft() && isInNeutralZone().getAsBoolean());
   }
 
   /** Signals whether or not the robot is field right neutral zone. */
-  @Logged
+  @Logged(name = "Is Right Neutral Zone")
   public boolean isRightNeutralZone() {
     return (!iSLeft() && isInNeutralZone().getAsBoolean());
   }
 
   /** Signals whether or not the robot is in a restricted shooting zone. */
-  @Logged
+  @Logged(name = "Shooter Blocked")
   public boolean shootBlocked() {
     return GeomUtil.inZone(Field.getMyNet(), robotPose)
         || GeomUtil.inZone(Field.getMyTower(), robotPose);
   }
 
   /** Signals when the robot is in danger of decapitation. */
-  @Logged
+  @Logged(name = "Decapitate Zone")
   public boolean decapitateZone() {
     return GeomUtil.inZone(Field.getMyLeftTrench(), robotPose)
         || GeomUtil.inZone(Field.getMyRightTrench(), robotPose);
   }
 
   /** The angle from the turret pose to the hub. */
+  @Logged(name = "Angle to Hub")
   public Rotation2d getAngleToHub() {
     return Field.getMyHub()
         .minus((robotPose.transformBy(turretToRobot).getTranslation()))
@@ -145,12 +146,13 @@ public class RobotState {
   }
 
   /** The distance from the turret pose to the hub. */
+  @Logged(name = "Distance to Hub")
   public double getDistanceToHub() {
     return Field.getMyHub().getDistance((robotPose.transformBy(turretToRobot).getTranslation()));
   }
 
   /** The distance from the turret pose to the shooting target. */
-  @Logged
+  @Logged(name = "Target Distance")
   public double getTargetDistance() {
     if (isInNeutralZone().getAsBoolean()) {
       return (iSLeft())
@@ -161,9 +163,22 @@ public class RobotState {
   }
 
   /** The distance from the lookahead pose to the hub. */
+  @Logged(name = "Hub Lookahead")
   public double getLookaheadDistanceToHub() {
     return Field.getMyHub()
         .getDistance((DynamicShootingCalculator.getInstance().getLookaheadPose().getTranslation()));
+  }
+
+  /** The Alliance Zone. */
+  @Logged(name = "Alliance Zone")
+  public Translation2d[] getAllianceZone() {
+    return Field.getMyAllianceZone().get();
+  }
+
+  /** The Neutral Zone. */
+  @Logged(name = "Neutral Zone")
+  public Translation2d[] getNeutralZone() {
+    return Field.getMyNeutralZone().get();
   }
 
   /** The zone under the tower. */
@@ -179,13 +194,13 @@ public class RobotState {
   }
 
   /** The right trench. */
-  @Logged
+  @Logged(name = "Right Trench")
   public Translation2d[] getRightTrench() {
     return Field.getMyRightTrench().get();
   }
 
   /** The left trench. */
-  @Logged
+  @Logged(name = "Left Trench")
   public Translation2d[] getLeftTrench() {
     return Field.getMyLeftTrench().get();
   }
