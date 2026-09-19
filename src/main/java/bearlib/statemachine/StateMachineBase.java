@@ -108,7 +108,7 @@ public class StateMachineBase extends SubsystemBase {
       this.on(state)
           .onTrue(
               Commands.defer(state.action, state.action.get().getRequirements())
-                  .withName(getName() + "." + state.name));
+                  .withName(state.name));
     }
   }
 

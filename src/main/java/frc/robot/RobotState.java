@@ -125,15 +125,21 @@ public class RobotState {
   /** Signals whether or not the robot is in a restricted shooting zone. */
   @Logged(name = "Shooter Blocked")
   public boolean shootBlocked() {
-    return GeomUtil.inZone(Field.getMyNet(), robotPose)
-        || GeomUtil.inZone(Field.getMyTower(), robotPose);
+    return GeomUtil.inZone(Field.getMyNet(), robotPose.transformBy(turretToRobot))
+        || GeomUtil.inZone(Field.getMyTower(), robotPose.transformBy(turretToRobot));
   }
 
   /** Signals when the robot is in danger of decapitation. */
   @Logged(name = "Decapitate Zone")
-  public boolean decapitateZone() {
-    return GeomUtil.inZone(Field.getMyLeftTrench(), robotPose)
-        || GeomUtil.inZone(Field.getMyRightTrench(), robotPose);
+  public Trigger decapitateZone() {
+
+    Trigger decapitate =
+        new Trigger(
+            () ->
+                GeomUtil.inZone(Field.getMyLeftTrench(), robotPose)
+                    || GeomUtil.inZone(Field.getMyRightTrench(), robotPose));
+
+    return decapitate;
   }
 
   /** The angle from the turret pose to the hub. */

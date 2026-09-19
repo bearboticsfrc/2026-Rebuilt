@@ -40,8 +40,6 @@ public class HoodState extends StateMachineBase {
 
     idle.to(track).condition(Pilot.shoot()::getAsBoolean);
 
-    track.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
-
     hood75.global().condition(Copilot.hood0_75()::getAsBoolean);
 
     hood25.global().condition(Copilot.hood0_25()::getAsBoolean);
@@ -52,7 +50,7 @@ public class HoodState extends StateMachineBase {
 
     hood100.global().condition(Copilot.hood1()::getAsBoolean);
 
-    ground.global().condition(robotState::decapitateZone);
+    ground.global().condition(robotState.decapitateZone()::getAsBoolean);
 
     initState(idle);
 

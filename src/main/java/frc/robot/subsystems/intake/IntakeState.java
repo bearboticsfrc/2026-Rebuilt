@@ -12,11 +12,11 @@ public class IntakeState extends StateMachineBase {
 
     State retract =
         new State("Retract", () -> rollers.stop().alongWith(slider.retract()))
-            .withEnd(slider::isRetracted);
+            .withEnd(() -> rollers.isStopped());
 
     State intake =
         new State("Intake", () -> rollers.run().alongWith(slider.extend()))
-            .withEnd(() -> slider.isExtended() && !rollers.isStopped());
+            .withEnd(() -> !rollers.isStopped());
 
     State oscillate =
         new State("Oscillate", () -> rollers.runSlow().alongWith(slider.lowOscillate()))
@@ -126,9 +126,8 @@ public class IntakeState extends StateMachineBase {
         rollersReverse);
   }
 
-  /** Signals whether the intake is retracting. */
   @Logged
-  public boolean retracting() {
-    return currentState() == "Retract" && !current().isComplete();
+  public boolean retract() {
+    return currentState() == "Retract";
   }
 }

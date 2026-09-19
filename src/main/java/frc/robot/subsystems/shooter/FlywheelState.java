@@ -20,7 +20,7 @@ public class FlywheelState extends StateMachineBase {
     State shoot =
         new State(
                 "Shoot",
-                () -> (flywheel.runAtSpeed(() -> calculator.getParameters().flywheelVelocity())))
+                () -> flywheel.runAtSpeed(() -> calculator.getParameters().flywheelVelocity()))
             .withEnd(() -> true);
 
     State flywheelIdle =

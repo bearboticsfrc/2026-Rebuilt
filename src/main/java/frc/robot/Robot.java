@@ -14,8 +14,6 @@ import bearlib.fms.AllianceReadyListener;
 import bearlib.util.AllianceFlipUtil;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.epilogue.Epilogue;
 import edu.wpi.first.epilogue.Logged;
@@ -29,10 +27,10 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.commands.Auton;
 import frc.robot.rebuilt.HubTracker;
 import frc.robot.rebuilt.Pilot;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -45,6 +43,7 @@ import frc.robot.subsystems.shooter.DynamicShootingCalculator;
 import frc.robot.subsystems.shooter.Flywheel;
 import frc.robot.subsystems.shooter.FlywheelState;
 import frc.robot.subsystems.shooter.Hood;
+import frc.robot.subsystems.shooter.HoodState;
 import frc.robot.subsystems.spindexer.Kicker;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerState;
@@ -68,10 +67,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   }
 
   private final Importance MINIMUM_IMPORTANCE = Importance.DEBUG;
-
-  private Command m_autonomousCommand;
-
-  private final SendableChooser<Command> autoChooser;
 
   private final HubTracker tracker;
 
@@ -106,6 +101,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged private final SpindexerState spindexerState;
 
   @Logged private final TurretState turretState;
+
+  @Logged private final HoodState hoodState;
+
+  private final Auton auton;
 
   private Command introspectedAutoCommand;
 
@@ -160,8 +159,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     selfTest = new SelfTest(rollers, flywheel, hood, spindexer, kicker, turret, slider, drivetrain);
 
-    autoChooser = AutoBuilder.buildAutoChooser("D");
-    SmartDashboard.putData("Auto Mode", autoChooser);
     configureLogging();
     selfTest.bindTriggers();
     configureDefaultCommands();
@@ -174,7 +171,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     turretState = new TurretState(turret);
 
-    CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
+    hoodState = new HoodState(hood);
+
+    auton = new Auton(spindexerState, intakeState, flywheelState, hoodState);
+
     AllianceColor.addListener(this);
 
     DriverStation.silenceJoystickConnectionWarning(false);
@@ -194,8 +194,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   public void teleopInit() {
     CommandScheduler.getInstance().cancelAll();
 
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
+    if (auton.getAutonomousCommand() != null) {
+      auton.getAutonomousCommand().cancel();
     }
   }
 
@@ -208,13 +208,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void autonomousInit() {
-
     CommandScheduler.getInstance().schedule(slider.calibrateZero().andThen(slider.retract()));
 
-    m_autonomousCommand = autoChooser.getSelected();
-
-    if (m_autonomousCommand != null) {
-      CommandScheduler.getInstance().schedule(m_autonomousCommand);
+    if (auton.getAutonomousCommand() != null) {
+      CommandScheduler.getInstance().schedule(auton.getAutonomousCommand());
     }
   }
 
@@ -262,9 +259,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Override
   public void updateAlliance(Alliance alliance) {
     if (!initialPoseSet) {
-      Command firstAuto = autoChooser.getSelected();
+      Command firstAuto = auton.getAutoChooser().getSelected();
       if (firstAuto instanceof PathPlannerAuto) {
-        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FirstAuto: " + firstAuto.getName());
+        System.out.println("FirstAuto: " + firstAuto.getName());
         drivetrain.resetPose(
             AllianceFlipUtil.apply(((PathPlannerAuto) firstAuto).getStartingPose()));
         initialPoseSet = true;
@@ -293,7 +290,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void disabledPeriodic() {
-    Command selectedAutoCommand = autoChooser.getSelected();
+    Command selectedAutoCommand = auton.getAutoChooser().getSelected();
 
     if (introspectedAutoCommand != selectedAutoCommand
         && selectedAutoCommand instanceof PathPlannerAuto) {
@@ -301,7 +298,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
           AllianceFlipUtil.apply(((PathPlannerAuto) selectedAutoCommand).getStartingPose());
       introspectedAutoCommand = selectedAutoCommand;
       drivetrain.resetPose(autoStartPose);
-      System.out.println("Setting autostartpose!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      System.out.println("Setting autostartpose.........................");
     }
   }
 
