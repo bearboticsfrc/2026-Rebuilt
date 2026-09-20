@@ -15,46 +15,28 @@ public class HoodState extends StateMachineBase {
 
   public HoodState(Hood hood) {
 
-    State idle = new State("Idle", () -> hood.stopCommand()).withEnd(() -> true);
+    State idle = new State("Idle", () -> hood.stopCommand());
 
     State track =
         new State(
             "Track",
             () -> hood.goToSetpointRotationsDouble(() -> calculator.getParameters().hoodAngle()));
 
-    State hood25 =
-        new State("Hood .25", () -> hood.goToSetpointRotationsDouble(() -> 0.25))
-            .withEnd(() -> true);
+    State ground = new State("Ground", () -> hood.ground());
 
-    State hood50 =
-        new State("Hood .5", () -> hood.goToSetpointRotationsDouble(() -> 0.5)).withEnd(() -> true);
+    State hood100 = new State("Hood 1", () -> hood.goToSetpointRotationsDouble(() -> 1.0));
 
-    State hood75 =
-        new State("Hood .75", () -> hood.goToSetpointRotationsDouble(() -> 0.75))
-            .withEnd(() -> true);
+    idle.to(ground).condition(robotState.decapitateZone()::getAsBoolean);
 
-    State hood100 =
-        new State("Hood 1", () -> hood.goToSetpointRotationsDouble(() -> 1.0)).withEnd(() -> true);
-
-    State ground = new State("Ground", () -> hood.ground()).withEnd(() -> true);
+    track.to(ground).condition(robotState.decapitateZone()::getAsBoolean);
 
     idle.to(track).condition(Pilot.shoot()::getAsBoolean);
 
-    hood75.global().condition(Copilot.hood0_75()::getAsBoolean);
-
-    hood25.global().condition(Copilot.hood0_25()::getAsBoolean);
-
-    hood50.global().condition(Copilot.hood0_5()::getAsBoolean);
-
-    idle.global().condition(Copilot.hoodIdle()::getAsBoolean);
-
-    hood100.global().condition(Copilot.hood1()::getAsBoolean);
-
-    ground.global().condition(robotState.decapitateZone()::getAsBoolean);
+    idle.to(hood100).condition(Copilot.hood1()::getAsBoolean);
 
     initState(idle);
 
-    configure(idle, track, hood75, hood25, hood50, hood100, ground);
+    configure(idle, track, ground, hood100);
   }
 
   /** Signals if the hood is trying not to be decapitated. */

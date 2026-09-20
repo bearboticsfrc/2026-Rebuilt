@@ -9,8 +9,8 @@ import lombok.Getter;
 /** A defined state for subsytems/motors on the robot. */
 public class State {
 
-  protected String name;
-  protected Supplier<Command> action;
+  protected String name; // State name.
+  protected Supplier<Command> action; // State action.
 
   private BooleanSupplier end;
 
@@ -36,13 +36,6 @@ public class State {
     return new Transition(this, goal);
   }
 
-  /** Used for global transitions. */
-  public Transition global() {
-    Transition transition = new Transition(this, this);
-    transition.global = true;
-    return transition;
-  }
-
   /**
    * Assigns an explicit end to a state.
    *
@@ -56,5 +49,9 @@ public class State {
   /** Signals whether or not a state is completed. */
   public boolean isComplete() {
     return this.end.getAsBoolean();
+  }
+
+  public String name() {
+    return this.name;
   }
 }

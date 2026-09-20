@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.commands.Auton;
+import frc.robot.auto.Auton;
 import frc.robot.rebuilt.HubTracker;
 import frc.robot.rebuilt.Pilot;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -48,7 +48,6 @@ import frc.robot.subsystems.spindexer.Kicker;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerState;
 import frc.robot.subsystems.turret.Turret;
-import frc.robot.subsystems.turret.TurretState;
 import frc.robot.test.SelfTest;
 import frc.robot.vision.VisionConstants;
 import frc.robot.vision.VisionSystem;
@@ -99,8 +98,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged private final FlywheelState flywheelState;
 
   @Logged private final SpindexerState spindexerState;
-
-  @Logged private final TurretState turretState;
 
   @Logged private final HoodState hoodState;
 
@@ -169,11 +166,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     intakeState = new IntakeState(slider, rollers);
 
-    turretState = new TurretState(turret);
-
     hoodState = new HoodState(hood);
 
-    auton = new Auton(spindexerState, intakeState, flywheelState, hoodState);
+    auton = new Auton(spindexer, flywheel, hood, slider, rollers, kicker);
 
     AllianceColor.addListener(this);
 
@@ -197,6 +192,11 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     if (auton.getAutonomousCommand() != null) {
       auton.getAutonomousCommand().cancel();
     }
+
+    flywheelState.reset();
+    spindexerState.reset();
+    intakeState.reset();
+    hoodState.reset();
   }
 
   @Override

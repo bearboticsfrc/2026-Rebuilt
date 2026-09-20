@@ -13,11 +13,10 @@ import java.util.function.BooleanSupplier;
  */
 public class Transition {
 
-  public final State origin;
-  public final State goal;
-  public BooleanSupplier transitionCondition;
-  public BooleanSupplier transitionRequest;
-  public boolean global;
+  public final State origin; // origin state of the transistion
+  public final State goal; // end/goal state of transistion
+  public BooleanSupplier transitionCondition; // when true, execute transition.
+  public BooleanSupplier transitionRequest; // condition w/out saftey logic.
 
   /**
    * Default Constructor for a Transition, not used in implementation.
@@ -30,8 +29,6 @@ public class Transition {
     this.origin = origin;
     this.goal = goal;
     this.transitionCondition = condition;
-    this.transitionRequest = condition;
-    this.global = false;
   }
 
   /**
@@ -56,34 +53,8 @@ public class Transition {
    * @param condition The condition required.
    */
   public Transition condition(BooleanSupplier condition) {
-    this.transitionRequest = condition;
-
-    // only use transition request if transition is forced
-    if (this.global) {
-      this.transitionCondition = () -> condition.getAsBoolean();
-      this.origin.transitions.add(this);
-    }
-    // normal behavior
-    else {
-      this.transitionCondition = () -> condition.getAsBoolean() && this.origin.isComplete();
-      this.origin.transitions.add(this);
-    }
-    return this;
-  }
-
-  /**
-   * Added to a transition to override saftey logic. Intended use onto emergency states, where a
-   * forced transition would not cause mechanical damage
-   */
-  public Transition fallback() {
-    this.origin.transitions.remove(this);
-    this.transitionCondition = transitionRequest;
+    this.transitionCondition = () -> condition.getAsBoolean() && this.origin.isComplete();
     this.origin.transitions.add(this);
     return this;
-  }
-
-  /** Signals whether or not a transition is global, meaning it can be entered from any state. */
-  public boolean global() {
-    return this.global;
   }
 }
