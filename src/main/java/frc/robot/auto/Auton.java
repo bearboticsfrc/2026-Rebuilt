@@ -59,7 +59,7 @@ public class Auton {
     intake.onTrue(Commands.defer(this::intakeCommand, Set.of()));
     stopShoot.onTrue(Commands.defer(this::stopShootCommand, Set.of()));
 
-    autoChooser = AutoBuilder.buildAutoChooser("MO"); // Default auto middle.
+    autoChooser = AutoBuilder.buildAutoChooser("O"); // Default auto middle.
     SmartDashboard.putData("Auto Mode", autoChooser);
   }
 

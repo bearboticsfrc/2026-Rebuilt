@@ -34,6 +34,8 @@ public class HoodState extends StateMachineBase {
 
     idle.to(hood100).condition(Copilot.hood1()::getAsBoolean);
 
+    ground.to(idle).condition(() -> !robotState.decapitateZone().getAsBoolean());
+
     initState(idle);
 
     configure(idle, track, ground, hood100);

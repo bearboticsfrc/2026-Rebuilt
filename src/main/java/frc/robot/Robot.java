@@ -101,6 +101,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final HoodState hoodState;
 
+  // @Logged private final TurretState turretState;
+
   private final Auton auton;
 
   private Command introspectedAutoCommand;
@@ -168,6 +170,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     hoodState = new HoodState(hood);
 
+    // turretState = new TurretState(turret);
+
     auton = new Auton(spindexer, flywheel, hood, slider, rollers, kicker);
 
     AllianceColor.addListener(this);
@@ -187,16 +191,12 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void teleopInit() {
+
     CommandScheduler.getInstance().cancelAll();
 
     if (auton.getAutonomousCommand() != null) {
       auton.getAutonomousCommand().cancel();
     }
-
-    flywheelState.reset();
-    spindexerState.reset();
-    intakeState.reset();
-    hoodState.reset();
   }
 
   @Override
@@ -312,8 +312,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   /** Limit linear velocity in reference to distance from the hub. */
   public Supplier<Double> getMaxLinearVelocity() {
-    double distanceToHub = robotState.getDistanceToHub();
-    return () -> (robotState.isShooting()) ? 1.15 - ((distanceToHub / 5.5) * 0.5) : MaxSpeed - 0.5;
+    return () -> (robotState.isShooting()) ? 0.5 : MaxSpeed - 0.5;
   }
 
   /** Limit Angular velocity. */
