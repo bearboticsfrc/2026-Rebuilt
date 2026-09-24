@@ -5,7 +5,6 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
@@ -20,7 +19,6 @@ import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.epilogue.Logged.Importance;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -193,8 +191,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Override
   public void teleopInit() {
 
-    CommandScheduler.getInstance().cancelAll();
-
     if (auton.getAutonomousCommand() != null) {
       auton.getAutonomousCommand().cancel();
     }
@@ -329,21 +325,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
       resetPose = AllianceFlipUtil.apply(new Pose2d(8.3, 4, new Rotation2d()));
     }
     return AllianceFlipUtil.apply(resetPose);
-  }
-
-  //
-  // TURRET.
-  //
-
-  private Command getTurretCommand() {
-    return turret
-        .setAngle(
-            () -> getTargetTurretAngleRads(), () -> calculator.getParameters().turretVelocity())
-        .withName("TurretCommand");
-  }
-
-  public Angle getTargetTurretAngleRads() {
-    return Radians.of(calculator.getParameters().turretAngle().getMeasure().in(Radians));
   }
 
   //

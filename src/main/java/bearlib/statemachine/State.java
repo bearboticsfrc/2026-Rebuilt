@@ -51,6 +51,7 @@ public class State {
     return this.end.getAsBoolean();
   }
 
+  /** The name of the state. */
   public String name() {
     return this.name;
   }

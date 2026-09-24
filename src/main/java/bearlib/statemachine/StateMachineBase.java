@@ -45,11 +45,6 @@ public class StateMachineBase extends SubsystemBase {
 
   @Override
   public void periodic() {
-
-    if (current == null) {
-      current = initial;
-    }
-
     // Limiting update allows forcing states w/ setState() during auto.
     if (!RobotState.isAutonomous()) {
       update();
@@ -75,7 +70,13 @@ public class StateMachineBase extends SubsystemBase {
   }
 
   /** Manages and monitors transitions from state to state. */
-  private void update() {
+  protected void update() {
+
+    // saftey precaution, and stay in state w/out exit.
+    if (current == null || current.transitions == null) {
+      return;
+    }
+
     for (Transition transition : current.transitions) {
       // If transistion can occur and is requested.
       if (transition.transitionCondition.getAsBoolean()) {
@@ -105,7 +106,7 @@ public class StateMachineBase extends SubsystemBase {
   private void actionsInit() {
     for (State state : this.states) {
       this.on(state)
-          .onTrue(
+          .whileTrue(
               Commands.defer(state.action, state.action.get().getRequirements())
                   .withName(state.name));
     }
@@ -127,7 +128,7 @@ public class StateMachineBase extends SubsystemBase {
    * @param state The {@link State} monitored
    */
   public Trigger on(State state) {
-    return this.stateTriggers.get(state);
+    return this.stateTriggers.getOrDefault(state, Trigger.kFalse);
   }
 
   /** The current state. */
