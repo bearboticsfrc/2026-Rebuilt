@@ -2,6 +2,7 @@ package bearlib.statemachine;
 
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -173,8 +174,8 @@ public class StateMachineBase extends SubsystemBase {
    *
    * @param state The state you want to change to.
    */
-  public void setState(String state) {
-    this.current = this.getStateByString(state);
+  public Command setState(String state) {
+    return Commands.runOnce(() -> this.current = this.getStateByString(state));
   }
 
   /** Resets to inital state. */

@@ -6,44 +6,25 @@ import com.pathplanner.lib.events.EventTrigger;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
-import frc.robot.subsystems.intake.Rollers;
-import frc.robot.subsystems.intake.Slider;
-import frc.robot.subsystems.shooter.DynamicShootingCalculator;
-import frc.robot.subsystems.shooter.Flywheel;
-import frc.robot.subsystems.shooter.Hood;
-import frc.robot.subsystems.spindexer.Kicker;
-import frc.robot.subsystems.spindexer.Spindexer;
-import java.util.Set;
+import frc.robot.subsystems.intake.IntakeState;
+import frc.robot.subsystems.shooter.FlywheelState;
+import frc.robot.subsystems.spindexer.SpindexerState;
 
 public class Auton {
 
   private final SendableChooser<Command> autoChooser;
 
-  private final Spindexer spindexer;
-  private final Flywheel flywheel;
-  private final Hood hood;
-  private final Slider slider;
-  private final Rollers rollers;
-  private final Kicker kicker;
-
-  private final DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
+  private final FlywheelState flywheelState;
+  private final SpindexerState spindexerState;
+  private final IntakeState intakeState;
 
   public Auton(
-      Spindexer spindexer,
-      Flywheel flywheel,
-      Hood hood,
-      Slider slider,
-      Rollers rollers,
-      Kicker kicker) {
+      FlywheelState flywheelState, SpindexerState spindexerState, IntakeState intakeState) {
 
-    this.spindexer = spindexer;
-    this.flywheel = flywheel;
-    this.hood = hood;
-    this.slider = slider;
-    this.rollers = rollers;
-    this.kicker = kicker;
+    this.flywheelState = flywheelState;
+    this.spindexerState = spindexerState;
+    this.intakeState = intakeState;
 
     // Setup Commands & EventTriggers.
 
@@ -51,13 +32,12 @@ public class Auton {
     EventTrigger intake = new EventTrigger("INTAKE");
     EventTrigger stopShoot = new EventTrigger("STOPSHOOT");
 
-    NamedCommands.registerCommand("SHOOT", Commands.defer(this::shootCommand, Set.of()));
-    NamedCommands.registerCommand(
-        "STOPROLLERS", Commands.defer(this::stopRollersCommand, Set.of()));
+    NamedCommands.registerCommand("SHOOT", shootCommand());
+    NamedCommands.registerCommand("STOPROLLERS", stopRollersCommand());
 
-    shoot.onTrue(Commands.defer(this::shootCommand, Set.of()));
-    intake.onTrue(Commands.defer(this::intakeCommand, Set.of()));
-    stopShoot.onTrue(Commands.defer(this::stopShootCommand, Set.of()));
+    shoot.onTrue(shootCommand());
+    intake.onTrue(intakeCommand());
+    stopShoot.onTrue(stopShootCommand());
 
     autoChooser = AutoBuilder.buildAutoChooser("O"); // Default auto middle.
     SmartDashboard.putData("Auto Mode", autoChooser);
@@ -83,29 +63,21 @@ public class Auton {
    * spindexer state to run.
    */
   private Command shootCommand() {
-    return flywheel
-        .runAtSpeed(() -> calculator.getParameters().flywheelVelocity())
-        .alongWith(hood.goToSetpointRotationsDouble(() -> calculator.getParameters().hoodAngle()))
-        .alongWith(spindexer.run())
-        .alongWith(kicker.run());
+    return flywheelState.setState("Shoot").alongWith(spindexerState.setState("Run"));
   }
 
   /** Sets intake state to intake. */
   private Command intakeCommand() {
-    return slider.extend().alongWith(rollers.run());
+    return intakeState.setState("Intake");
   }
 
   /** Sets the flywheel state to idle. Sets the spindexer state to idle. */
   private Command stopShootCommand() {
-    return flywheel
-        .stopCommand()
-        .alongWith(hood.ground())
-        .alongWith(spindexer.stop())
-        .alongWith(kicker.stop());
+    return flywheelState.setState("Idle").alongWith(spindexerState.setState("Idle"));
   }
 
   /** Sets the intake state to rollers idle. Will leave slider extended. */
   private Command stopRollersCommand() {
-    return rollers.stop();
+    return intakeState.setState("Retract");
   }
 }

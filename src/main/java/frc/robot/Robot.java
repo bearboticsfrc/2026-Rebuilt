@@ -48,6 +48,7 @@ import frc.robot.subsystems.spindexer.Kicker;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerState;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretState;
 import frc.robot.test.SelfTest;
 import frc.robot.vision.VisionConstants;
 import frc.robot.vision.VisionSystem;
@@ -101,7 +102,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final HoodState hoodState;
 
-  // @Logged private final TurretState turretState;
+  @Logged private final TurretState turretState;
 
   private final Auton auton;
 
@@ -170,9 +171,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     hoodState = new HoodState(hood);
 
-    // turretState = new TurretState(turret);
+    turretState = new TurretState(turret);
 
-    auton = new Auton(spindexer, flywheel, hood, slider, rollers, kicker);
+    auton = new Auton(flywheelState, spindexerState, intakeState);
 
     AllianceColor.addListener(this);
 
@@ -250,8 +251,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
             ));
 
     drivetrain.registerTelemetry(driveTelemetry::telemeterize);
-
-    turret.setDefaultCommand(getTurretCommand());
   }
 
   private boolean initialPoseSet = false;

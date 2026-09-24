@@ -31,7 +31,7 @@ public class Flywheel extends Mechanism implements SelfTestable {
 
   private DCMotorSim motorSimModel;
 
-  private static final double SIM_GEAR_RATIO = 1.0;
+  private static final double SIM_GEAR_RATIO = 1.00;
   private static final double inertia = 0.004;
 
   public Flywheel() {

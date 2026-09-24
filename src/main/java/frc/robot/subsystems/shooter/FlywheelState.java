@@ -14,7 +14,7 @@ public class FlywheelState extends StateMachineBase {
 
   public FlywheelState(Flywheel flywheel) {
 
-    State idle = new State("Idle", () -> flywheel.runAtSpeed(600));
+    State idle = new State("Idle", () -> flywheel.runAtSpeed(601));
 
     State shoot =
         new State(
