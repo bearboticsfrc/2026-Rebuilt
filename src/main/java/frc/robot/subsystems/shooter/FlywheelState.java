@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import bearlib.statemachine.State;
 import bearlib.statemachine.StateMachineBase;
+import bearlib.util.TunableNumber;
 import edu.wpi.first.epilogue.Logged;
 import frc.robot.RobotState;
 import frc.robot.rebuilt.Pilot;
@@ -12,9 +13,9 @@ public class FlywheelState extends StateMachineBase {
 
   RobotState robotState = RobotState.getInstance();
 
-  public FlywheelState(Flywheel flywheel) {
+  public FlywheelState(Flywheel flywheel, TunableNumber rpm) {
 
-    State idle = new State("Idle", () -> flywheel.runAtSpeed(601));
+    State idle = new State("Idle", () -> flywheel.runAtSpeed(0.0));
 
     State shoot =
         new State(
@@ -22,13 +23,15 @@ public class FlywheelState extends StateMachineBase {
                 () -> flywheel.runAtSpeed(() -> calculator.getParameters().flywheelVelocity()))
             .withEnd(() -> true);
 
-    idle.to(shoot).condition(Pilot.shoot()::getAsBoolean);
+    State tune = new State("Tune", () -> flywheel.runAtSpeed(rpm));
 
-    shoot.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
+    idle.to(tune).condition(Pilot.shoot()::getAsBoolean);
+
+    tune.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
 
     initState(idle);
 
-    configure(idle, shoot);
+    configure(idle, shoot, tune);
   }
 
   /** Signals if the shooter is ready. */

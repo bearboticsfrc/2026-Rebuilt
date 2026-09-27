@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import bearlib.fms.AllianceColor;
 import bearlib.fms.AllianceReadyListener;
 import bearlib.util.AllianceFlipUtil;
+import bearlib.util.TunableNumber;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -102,6 +103,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final TurretState turretState;
 
+  @Logged private final TunableNumber rpm = new TunableNumber("RPM", 3600, () -> getTuningMode());
+
   private final Auton auton;
 
   private Command introspectedAutoCommand;
@@ -161,7 +164,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     selfTest.bindTriggers();
     configureDefaultCommands();
 
-    flywheelState = new FlywheelState(flywheel);
+    flywheelState = new FlywheelState(flywheel, rpm);
 
     spindexerState = new SpindexerState(kicker, spindexer, flywheelState);
 
@@ -175,7 +178,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     AllianceColor.addListener(this);
 
-    DriverStation.silenceJoystickConnectionWarning(false);
+    DriverStation.silenceJoystickConnectionWarning(true);
   }
 
   //
@@ -338,5 +341,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged
   public double getMatchTime() {
     return DriverStation.getMatchTime();
+  }
+
+  public boolean getTuningMode() {
+    return true;
   }
 }

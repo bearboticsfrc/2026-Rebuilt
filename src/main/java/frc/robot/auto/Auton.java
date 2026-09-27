@@ -39,7 +39,7 @@ public class Auton {
     intake.onTrue(intakeCommand());
     stopShoot.onTrue(stopShootCommand());
 
-    autoChooser = AutoBuilder.buildAutoChooser("O"); // Default auto middle.
+    autoChooser = AutoBuilder.buildAutoChooser("D"); // Default auto middle.
     SmartDashboard.putData("Auto Mode", autoChooser);
   }
 
@@ -58,12 +58,9 @@ public class Auton {
     return autoChooser;
   }
 
-  /**
-   * Sets the flywheel state to ground, prevent decapitation. Sets flywheel state to shoot. Sets
-   * spindexer state to run.
-   */
+  /** Sets flywheel state to shoot. Sets spindexer state to run. */
   private Command shootCommand() {
-    return flywheelState.setState("Shoot").alongWith(spindexerState.setState("Run"));
+    return flywheelState.setState("Tune").alongWith(spindexerState.setState("Run"));
   }
 
   /** Sets intake state to intake. */

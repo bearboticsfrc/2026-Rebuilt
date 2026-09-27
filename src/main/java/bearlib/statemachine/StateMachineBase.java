@@ -171,7 +171,7 @@ public class StateMachineBase extends SubsystemBase {
   }
 
   /**
-   * Sets the current state, only functions during autonomous.
+   * Sets the current state.
    *
    * @param state The state you want to change to.
    */
