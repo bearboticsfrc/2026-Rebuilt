@@ -72,8 +72,8 @@ public class StateMachineBase extends SubsystemBase {
   /** Manages and monitors transitions from state to state. */
   protected void update() {
 
-    // saftey precaution, and stay in state w/out exit.
-    if (current == null || current.transitions == null) {
+    // saftey precaution.
+    if (current == null) {
       return;
     }
 
