@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.PrintCommand;
 import frc.robot.subsystems.intake.IntakeState;
 import frc.robot.subsystems.shooter.FlywheelState;
 import frc.robot.subsystems.spindexer.SpindexerState;
+import frc.robot.subsystems.turret.TurretState;
 
 public class Auton {
 
@@ -18,13 +19,18 @@ public class Auton {
   private final FlywheelState flywheelState;
   private final SpindexerState spindexerState;
   private final IntakeState intakeState;
+  private final TurretState turretState;
 
   public Auton(
-      FlywheelState flywheelState, SpindexerState spindexerState, IntakeState intakeState) {
+      FlywheelState flywheelState,
+      SpindexerState spindexerState,
+      IntakeState intakeState,
+      TurretState turretState) {
 
     this.flywheelState = flywheelState;
     this.spindexerState = spindexerState;
     this.intakeState = intakeState;
+    this.turretState = turretState;
 
     // Setup Commands & EventTriggers.
 
@@ -34,6 +40,7 @@ public class Auton {
 
     NamedCommands.registerCommand("SHOOT", shootCommand());
     NamedCommands.registerCommand("STOPROLLERS", stopRollersCommand());
+    NamedCommands.registerCommand("TURRET", turretRunCommand());
 
     shoot.onTrue(shootCommand());
     intake.onTrue(intakeCommand());
@@ -76,5 +83,10 @@ public class Auton {
   /** Sets the intake state to rollers idle. Will leave slider extended. */
   private Command stopRollersCommand() {
     return intakeState.setState("Retract");
+  }
+
+  /** Set turret to track, run this at start of autos */
+  private Command turretRunCommand() {
+    return turretState.setState("Track");
   }
 }

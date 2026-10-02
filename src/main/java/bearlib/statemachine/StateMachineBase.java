@@ -71,17 +71,12 @@ public class StateMachineBase extends SubsystemBase {
 
   /** Manages and monitors transitions from state to state. */
   protected void update() {
-
-    // saftey precaution.
-    if (current == null) {
-      return;
-    }
-
-    for (Transition transition : current.transitions) {
-      // If transistion can occur and is requested.
+    // monitor available transistions out of current state.
+    for (int i = 0; i < current.transitions.size(); i++) {
+      Transition transition = current.transitions.get(i);
       if (transition.transitionCondition.getAsBoolean()) {
+        previous = current;
         current = transition.goal;
-        previous = transition.origin;
         return;
       }
     }

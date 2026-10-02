@@ -174,7 +174,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     turretState = new TurretState(turret);
 
-    auton = new Auton(flywheelState, spindexerState, intakeState);
+    auton = new Auton(flywheelState, spindexerState, intakeState, turretState);
 
     AllianceColor.addListener(this);
 
