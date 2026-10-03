@@ -1,8 +1,7 @@
 package frc.robot.subsystems.spindexer;
 
-import bearlib.statemachine.State;
-import bearlib.statemachine.StateMachineBase;
-import edu.wpi.first.epilogue.Logged;
+import frc.robot.bearlib.statemachine.State;
+import frc.robot.bearlib.statemachine.StateMachineBase;
 import frc.robot.rebuilt.Pilot;
 import frc.robot.subsystems.shooter.FlywheelState;
 
@@ -21,11 +20,5 @@ public class SpindexerState extends StateMachineBase {
     initState(idle);
 
     configure(idle, run);
-  }
-
-  /** Signals if the spindexer is running. */
-  @Logged
-  public boolean spindexerReady() {
-    return currentState() == "Run" && current().isComplete();
   }
 }

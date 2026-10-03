@@ -3,7 +3,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 
-import bearlib.util.GeomUtil;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -13,6 +12,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.bearlib.util.GeomUtil;
 import frc.robot.rebuilt.Field;
 import frc.robot.subsystems.shooter.DynamicShootingCalculator;
 import java.util.function.BooleanSupplier;

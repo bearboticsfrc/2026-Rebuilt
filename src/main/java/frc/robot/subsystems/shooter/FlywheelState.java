@@ -1,10 +1,9 @@
 package frc.robot.subsystems.shooter;
 
-import bearlib.statemachine.State;
-import bearlib.statemachine.StateMachineBase;
-import bearlib.util.TunableNumber;
-import edu.wpi.first.epilogue.Logged;
 import frc.robot.RobotState;
+import frc.robot.bearlib.statemachine.State;
+import frc.robot.bearlib.statemachine.StateMachineBase;
+import frc.robot.bearlib.util.TunableNumber;
 import frc.robot.rebuilt.Pilot;
 
 public class FlywheelState extends StateMachineBase {
@@ -34,9 +33,7 @@ public class FlywheelState extends StateMachineBase {
     configure(idle, shoot, tune);
   }
 
-  /** Signals if the shooter is ready. */
-  @Logged
   public boolean shooterReady() {
-    return currentState() == "Shoot" && current().isComplete();
+    return currentState().equals("Shoot") && current().isComplete();
   }
 }

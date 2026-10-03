@@ -3,7 +3,6 @@ package frc.robot.subsystems.shooter;
 
 import static edu.wpi.first.units.Units.*;
 
-import bearlib.Mechanism;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -16,6 +15,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Robot;
+import frc.robot.bearlib.Mechanism;
 import frc.robot.rebuilt.CAN;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;

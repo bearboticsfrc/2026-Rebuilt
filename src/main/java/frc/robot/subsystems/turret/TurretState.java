@@ -3,9 +3,9 @@ package frc.robot.subsystems.turret;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Radians;
 
-import bearlib.statemachine.State;
-import bearlib.statemachine.StateMachineBase;
-import edu.wpi.first.epilogue.Logged;
+import frc.robot.bearlib.statemachine.State;
+import frc.robot.bearlib.statemachine.StateMachineBase;
+import frc.robot.rebuilt.Copilot;
 import frc.robot.subsystems.shooter.DynamicShootingCalculator;
 
 public class TurretState extends StateMachineBase {
@@ -33,12 +33,10 @@ public class TurretState extends StateMachineBase {
 
     initState(track);
 
-    configure(idle, track, zeroDegrees);
-  }
+    track.to(idle).condition(Copilot.turret0Degrees()::getAsBoolean);
 
-  /** Signals whether or not the turret is tracking. */
-  @Logged
-  public boolean tracking() {
-    return currentState() == "Track";
+    idle.to(track).condition(Copilot.turret0Degrees().negate()::getAsBoolean);
+
+    configure(idle, track, zeroDegrees);
   }
 }

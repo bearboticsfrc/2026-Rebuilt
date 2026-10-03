@@ -1,4 +1,4 @@
-package bearlib.util;
+package frc.robot.bearlib.util;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;

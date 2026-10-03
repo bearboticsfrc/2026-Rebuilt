@@ -1,4 +1,4 @@
-package bearlib.util;
+package frc.robot.bearlib.util;
 
 import com.ctre.phoenix6.StatusCode;
 import edu.wpi.first.wpilibj.DriverStation;
