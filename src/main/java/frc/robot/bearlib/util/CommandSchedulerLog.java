@@ -1,4 +1,4 @@
-package bearlib.util;
+package frc.robot.bearlib.util;
 
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;

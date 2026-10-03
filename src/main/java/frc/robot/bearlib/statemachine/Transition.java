@@ -1,4 +1,4 @@
-package bearlib.statemachine;
+package frc.robot.bearlib.statemachine;
 
 import java.util.function.BooleanSupplier;
 
@@ -16,7 +16,6 @@ public class Transition {
   public final State origin; // origin state of the transistion
   public final State goal; // end/goal state of transistion
   public BooleanSupplier transitionCondition; // when true, execute transition.
-  public BooleanSupplier transitionRequest; // condition w/out saftey logic.
 
   /**
    * Default Constructor for a Transition, not used in implementation.
@@ -47,8 +46,8 @@ public class Transition {
    *
    * <blockquote>
    *
-   * <b>Notice:</b> For a state transition to "automatically" occur/occur when an origin state is
-   * complete, pass in a {@link BooleanSupplier} that returns true.
+   * <b>Notice:</b> For a state transition to "automatically" occur, leave off a .withEnd()
+   * condition.
    *
    * @param condition The condition required.
    */

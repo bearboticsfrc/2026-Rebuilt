@@ -1,4 +1,4 @@
-package bearlib.location;
+package frc.robot.bearlib.location;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;

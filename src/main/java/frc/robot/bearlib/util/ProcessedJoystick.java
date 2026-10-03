@@ -1,4 +1,4 @@
-package bearlib.util;
+package frc.robot.bearlib.util;
 
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;

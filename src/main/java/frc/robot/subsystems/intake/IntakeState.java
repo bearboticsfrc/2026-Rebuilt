@@ -1,8 +1,7 @@
 package frc.robot.subsystems.intake;
 
-import bearlib.statemachine.State;
-import bearlib.statemachine.StateMachineBase;
-import edu.wpi.first.epilogue.Logged;
+import frc.robot.bearlib.statemachine.State;
+import frc.robot.bearlib.statemachine.StateMachineBase;
 import frc.robot.rebuilt.Pilot;
 
 public class IntakeState extends StateMachineBase {
@@ -29,10 +28,5 @@ public class IntakeState extends StateMachineBase {
     intake.to(oscillate).condition(Pilot.oscillate()::getAsBoolean);
 
     configure(retract, intake, oscillate);
-  }
-
-  @Logged
-  public boolean retract() {
-    return currentState() == "Retract";
   }
 }

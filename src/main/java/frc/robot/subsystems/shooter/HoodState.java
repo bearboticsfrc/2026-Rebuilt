@@ -1,9 +1,8 @@
 package frc.robot.subsystems.shooter;
 
-import bearlib.statemachine.State;
-import bearlib.statemachine.StateMachineBase;
-import edu.wpi.first.epilogue.Logged;
 import frc.robot.RobotState;
+import frc.robot.bearlib.statemachine.State;
+import frc.robot.bearlib.statemachine.StateMachineBase;
 import frc.robot.rebuilt.Copilot;
 import frc.robot.rebuilt.Pilot;
 
@@ -39,11 +38,5 @@ public class HoodState extends StateMachineBase {
     initState(idle);
 
     configure(idle, track, ground, hood100);
-  }
-
-  /** Signals if the hood is trying not to be decapitated. */
-  @Logged
-  public boolean decapitate() {
-    return currentState() == "Ground";
   }
 }

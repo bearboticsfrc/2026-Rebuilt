@@ -1,4 +1,4 @@
-package bearlib.fms;
+package frc.robot.bearlib.fms;
 
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 

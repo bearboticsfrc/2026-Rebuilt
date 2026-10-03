@@ -1,6 +1,5 @@
-package bearlib.statemachine;
+package frc.robot.bearlib.statemachine;
 
-import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -14,7 +13,8 @@ import java.util.List;
 /**
  * Base class for state machine, for a singular subsystem or mechanism. States are a representations
  * of simple actions, associated with simple commands. More complex behavior can be cleanly managed
- * w/out complicated commands via transition and state logic.
+ * w/out complicated commands via transition and state logic. For autonmous, use setState() in order
+ * to seperate teleop and auto logic.
  *
  * @see {@link State}, {@link Transition}
  */
@@ -24,9 +24,6 @@ public class StateMachineBase extends SubsystemBase {
 
   /** All the States for the Subsytem. */
   private List<State> states = new ArrayList<>();
-
-  /** All the defined transistions in states */
-  private List<Transition> transitions = new ArrayList<>();
 
   /** Map for all the triggers for when current = a specific state. */
   private HashMap<State, Trigger> stateTriggers = new HashMap<>();
@@ -51,19 +48,29 @@ public class StateMachineBase extends SubsystemBase {
     }
   }
 
-  /** Initializes states, transitions, and actions in proper order. Call this last on init! */
+  /**
+   * Initializes states, transitions, and actions in proper order. Must be called only once, and
+   * after initState().
+   */
   public void configure(State... robotStates) {
+
+    // ensure initState() was called before configure().
+    if (current == null) {
+      throw new IllegalStateException(getName() + ": call initState() before configure()");
+    }
 
     // add states to stored list of states.
     Collections.addAll(this.states, robotStates);
 
     // populate state name map.
     for (State state : this.states) {
-      stateNames.put(state.name(), state);
+      if (stateNames.put(state.name(), state) != null) {
+        throw new IllegalArgumentException(getName() + ": duplicate state name " + state.name());
+      }
     }
 
+    // initialize triggers and actions.
     triggersInit();
-    transitionsInit();
     actionsInit();
 
     System.out.println(getName() + " Initialized!");
@@ -74,6 +81,7 @@ public class StateMachineBase extends SubsystemBase {
     // monitor available transistions out of current state.
     for (int i = 0; i < current.transitions.size(); i++) {
       Transition transition = current.transitions.get(i);
+      // if the transition condition is true, move to the goal state.
       if (transition.transitionCondition.getAsBoolean()) {
         previous = current;
         current = transition.goal;
@@ -82,15 +90,9 @@ public class StateMachineBase extends SubsystemBase {
     }
   }
 
-  /** Initializes every {@link Transition} for every {@link State} in state machine. */
-  private void transitionsInit() {
-    for (State state : this.states) {
-      this.transitions.addAll(state.getTransitions());
-    }
-  }
-
-  /** Creates an "on enter" {@link Trigger} for every state. */
+  /** Creates a "while active" {@link Trigger} for every state. */
   private void triggersInit() {
+    // create a trigger for each state, that is true when current = state.
     for (State state : this.states) {
       final State s = state;
       this.stateTriggers.put(state, new Trigger(() -> s == current));
@@ -100,10 +102,17 @@ public class StateMachineBase extends SubsystemBase {
   /** Manages proper actions when states are entered. */
   private void actionsInit() {
     for (State state : this.states) {
+
+      // get the action for the state, and throw if it fails.
+      Command execute;
+      try {
+        execute = state.action.get();
+      } catch (RuntimeException e) {
+        throw new IllegalStateException(
+            getName() + ": action factory for state '" + state.name + "' threw", e);
+      }
       this.on(state)
-          .whileTrue(
-              Commands.defer(state.action, state.action.get().getRequirements())
-                  .withName(state.name));
+          .whileTrue(Commands.defer(state.action, execute.getRequirements()).withName(state.name));
     }
   }
 
@@ -123,6 +132,7 @@ public class StateMachineBase extends SubsystemBase {
    * @param state The {@link State} monitored
    */
   public Trigger on(State state) {
+    // return the trigger for the state, or a false trigger if the state is not found.
     return this.stateTriggers.getOrDefault(state, Trigger.kFalse);
   }
 
@@ -141,8 +151,7 @@ public class StateMachineBase extends SubsystemBase {
     return initial;
   }
 
-  /** Logs the current state */
-  @Logged
+  /** The current state */
   public String currentState() {
     if (current() != null) {
       return !current().isComplete() ? "Transitioning" : current().name;
@@ -150,8 +159,7 @@ public class StateMachineBase extends SubsystemBase {
     return "Waiting for Init...";
   }
 
-  /** Logs the state that is requested (ie currently being transitioned into). */
-  @Logged
+  /** The state that is requested (ie currently being transitioned into). */
   public String requested() {
     return current() != null && !current.isComplete() ? current().name : "";
   }
@@ -168,10 +176,18 @@ public class StateMachineBase extends SubsystemBase {
   /**
    * Sets the current state.
    *
-   * @param state The state you want to change to.
+   * @param name The state you want to change to.
    */
-  public Command setState(String state) {
-    return Commands.runOnce(() -> this.current = this.getStateByString(state));
+  public Command setState(String name) {
+    State target = getStateByString(name);
+    if (target == null) {
+      throw new IllegalArgumentException(getName() + ": unknown state '" + name + "'");
+    }
+    return Commands.runOnce(
+        () -> {
+          previous = current;
+          current = target;
+        });
   }
 
   /** Resets to inital state. */

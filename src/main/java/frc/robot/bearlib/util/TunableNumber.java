@@ -4,7 +4,7 @@
  *
  */
 
-package bearlib.util;
+package frc.robot.bearlib.util;
 
 import java.util.Arrays;
 import java.util.function.BooleanSupplier;

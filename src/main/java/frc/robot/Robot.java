@@ -8,10 +8,6 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
-import bearlib.fms.AllianceColor;
-import bearlib.fms.AllianceReadyListener;
-import bearlib.util.AllianceFlipUtil;
-import bearlib.util.TunableNumber;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -30,6 +26,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.auto.Auton;
+import frc.robot.bearlib.fms.AllianceColor;
+import frc.robot.bearlib.fms.AllianceReadyListener;
+import frc.robot.bearlib.util.AllianceFlipUtil;
+import frc.robot.bearlib.util.TunableNumber;
 import frc.robot.rebuilt.HubTracker;
 import frc.robot.rebuilt.Pilot;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -160,10 +160,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     selfTest = new SelfTest(rollers, flywheel, hood, spindexer, kicker, turret, slider, drivetrain);
 
-    configureLogging();
-    selfTest.bindTriggers();
-    configureDefaultCommands();
-
     flywheelState = new FlywheelState(flywheel, rpm);
 
     spindexerState = new SpindexerState(kicker, spindexer, flywheelState);
@@ -175,6 +171,10 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     turretState = new TurretState(turret);
 
     auton = new Auton(flywheelState, spindexerState, intakeState, turretState);
+
+    configureLogging();
+    selfTest.bindTriggers();
+    configureDefaultCommands();
 
     AllianceColor.addListener(this);
 
