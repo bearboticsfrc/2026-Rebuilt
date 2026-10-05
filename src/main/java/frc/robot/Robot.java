@@ -25,11 +25,11 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.auto.Auton;
 import frc.robot.bearlib.fms.AllianceColor;
 import frc.robot.bearlib.fms.AllianceReadyListener;
 import frc.robot.bearlib.util.AllianceFlipUtil;
 import frc.robot.bearlib.util.TunableNumber;
+import frc.robot.commands.Auton;
 import frc.robot.rebuilt.HubTracker;
 import frc.robot.rebuilt.Pilot;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -40,14 +40,10 @@ import frc.robot.subsystems.intake.Rollers;
 import frc.robot.subsystems.intake.Slider;
 import frc.robot.subsystems.shooter.DynamicShootingCalculator;
 import frc.robot.subsystems.shooter.Flywheel;
-import frc.robot.subsystems.shooter.FlywheelState;
 import frc.robot.subsystems.shooter.Hood;
-import frc.robot.subsystems.shooter.HoodState;
 import frc.robot.subsystems.spindexer.Kicker;
 import frc.robot.subsystems.spindexer.Spindexer;
-import frc.robot.subsystems.spindexer.SpindexerState;
 import frc.robot.subsystems.turret.Turret;
-import frc.robot.subsystems.turret.TurretState;
 import frc.robot.test.SelfTest;
 import frc.robot.vision.VisionConstants;
 import frc.robot.vision.VisionSystem;
@@ -92,16 +88,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Logged private RobotState robotState = RobotState.getInstance();
 
   @Getter public Field2d field2d = new Field2d();
-
-  @Logged private final IntakeState intakeState;
-
-  @Logged private final FlywheelState flywheelState;
-
-  @Logged private final SpindexerState spindexerState;
-
-  @Logged private final HoodState hoodState;
-
-  @Logged private final TurretState turretState;
 
   @Logged private final TunableNumber rpm = new TunableNumber("RPM", 3600, () -> getTuningMode());
 
@@ -160,17 +146,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     selfTest = new SelfTest(rollers, flywheel, hood, spindexer, kicker, turret, slider, drivetrain);
 
-    flywheelState = new FlywheelState(flywheel, rpm);
-
-    spindexerState = new SpindexerState(kicker, spindexer, flywheelState);
-
-    intakeState = new IntakeState(slider, rollers);
-
-    hoodState = new HoodState(hood);
-
-    turretState = new TurretState(turret);
-
-    auton = new Auton(flywheelState, spindexerState, intakeState, turretState);
+    auton = new Auton(null, null, null, null);
 
     configureLogging();
     selfTest.bindTriggers();
