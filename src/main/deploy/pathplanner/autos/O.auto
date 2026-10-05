@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "TURRET"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "O SWIPE 1"
@@ -26,18 +20,6 @@
           "type": "path",
           "data": {
             "pathName": "O SWIPE 2"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "SHOOT"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "STOPROLLERS"
           }
         }
       ]

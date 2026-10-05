@@ -1,50 +1,28 @@
 package frc.robot.commands;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.events.EventTrigger;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
-import frc.robot.subsystems.intake.IntakeState;
-import frc.robot.subsystems.shooter.FlywheelState;
-import frc.robot.subsystems.spindexer.SpindexerState;
-import frc.robot.subsystems.turret.TurretState;
+import frc.robot.subsystems.intake.Rollers;
+import frc.robot.subsystems.intake.Slider;
 
 public class Auton {
 
   private final SendableChooser<Command> autoChooser;
 
-  private final FlywheelState flywheelState;
-  private final SpindexerState spindexerState;
-  private final IntakeState intakeState;
-  private final TurretState turretState;
-
-  public Auton(
-      FlywheelState flywheelState,
-      SpindexerState spindexerState,
-      IntakeState intakeState,
-      TurretState turretState) {
-
-    this.flywheelState = flywheelState;
-    this.spindexerState = spindexerState;
-    this.intakeState = intakeState;
-    this.turretState = turretState;
+  public Auton(DynamicShootingCommand shootCommand, Rollers rollers, Slider slider) {
 
     // Setup Commands & EventTriggers.
-
     EventTrigger shoot = new EventTrigger("SHOOT");
     EventTrigger intake = new EventTrigger("INTAKE");
     EventTrigger stopShoot = new EventTrigger("STOPSHOOT");
 
-    NamedCommands.registerCommand("SHOOT", shootCommand());
-    NamedCommands.registerCommand("STOPROLLERS", stopRollersCommand());
-    NamedCommands.registerCommand("TURRET", turretRunCommand());
-
-    shoot.onTrue(shootCommand());
-    intake.onTrue(intakeCommand());
-    stopShoot.onTrue(stopShootCommand());
+    intake.onTrue(rollers.run().alongWith(slider.extend()));
+    shoot.onTrue(shootCommand.shoot());
+    stopShoot.onTrue(shootCommand.stop());
 
     autoChooser = AutoBuilder.buildAutoChooser("D"); // Default auto middle.
     SmartDashboard.putData("Auto Mode", autoChooser);
@@ -63,30 +41,5 @@ public class Auton {
   /** Path planner auto chooser. */
   public SendableChooser<Command> getAutoChooser() {
     return autoChooser;
-  }
-
-  /** Sets flywheel state to shoot. Sets spindexer state to run. */
-  private Command shootCommand() {
-    return flywheelState.setState("Tune").alongWith(spindexerState.setState("Run"));
-  }
-
-  /** Sets intake state to intake. */
-  private Command intakeCommand() {
-    return intakeState.setState("Intake");
-  }
-
-  /** Sets the flywheel state to idle. Sets the spindexer state to idle. */
-  private Command stopShootCommand() {
-    return flywheelState.setState("Idle").alongWith(spindexerState.setState("Idle"));
-  }
-
-  /** Sets the intake state to rollers idle. Will leave slider extended. */
-  private Command stopRollersCommand() {
-    return intakeState.setState("Retract");
-  }
-
-  /** Set turret to track, run this at start of autos */
-  private Command turretRunCommand() {
-    return turretState.setState("Track");
   }
 }

@@ -40,7 +40,7 @@
     },
     {
       "name": "STOPSHOOT",
-      "waypointRelativePos": 1.0,
+      "waypointRelativePos": 0.9885212694125576,
       "endWaypointRelativePos": null,
       "command": null
     }

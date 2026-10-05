@@ -87,21 +87,26 @@ public class VisionSystem {
   private Matrix<N3, N1> curStdDevs;
 
   // Simulation
-  private PhotonCameraSim cameraSim;
   private VisionSystemSim visionSim;
   private Notifier simNotifier = null;
   private static final double simLoopPeriod = 0.005; // 5ms
 
-  @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
-  public Map<String, Pose2d> latestCameraPose =
+  private final Map<String, Pose2d> latestCameraPose =
       Collections.synchronizedMap(new HashMap<String, Pose2d>());
+
+  @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
+  public Map<String, Pose2d> getLatestCameraPoses() {
+    synchronized (latestCameraPose) {
+      return new HashMap<>(latestCameraPose);
+    }
+  }
 
   public final List<Pose2d> targetPoses = Collections.synchronizedList(new ArrayList<>());
 
   @Logged(name = "Target Poses", importance = Importance.CRITICAL)
   public List<Pose2d> getTargetPoses() {
     synchronized (targetPoses) {
-      return targetPoses;
+      return new ArrayList<>(targetPoses);
     }
   }
 
@@ -134,6 +139,10 @@ public class VisionSystem {
       if (Robot.isSimulation()) {
         addCameraToSim(camera, visionCamera.getTransform());
       }
+    }
+
+    if (Robot.isSimulation()) {
+      startSimThread();
     }
 
     poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
@@ -434,7 +443,6 @@ public class VisionSystem {
     visionSim = new VisionSystemSim("main");
     // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
     visionSim.addAprilTags(APRIL_TAG_FIELD_LAYOUT);
-    startSimThread();
   }
 
   private void addCameraToSim(PhotonCamera camera, Transform3d cameraTransform) {
@@ -448,9 +456,11 @@ public class VisionSystem {
 
     // Create a PhotonCameraSim which will update the linked PhotonCamera's values with visible
     // targets.
-    cameraSim = new PhotonCameraSim(camera, cameraProp);
+    PhotonCameraSim cameraSim = new PhotonCameraSim(camera, cameraProp);
     // Add the simulated camera to view the targets on this simulated field.
-    visionSim.addCamera(cameraSim, cameraTransform);
+    synchronized (visionSim) {
+      visionSim.addCamera(cameraSim, cameraTransform);
+    }
 
     // Enable the raw and processed streams. These are enabled by default.
     // cameraSim.enableRawStream(false);
@@ -476,12 +486,18 @@ public class VisionSystem {
   }
 
   public void simulationPeriodic(Pose2d robotSimPose) {
-    visionSim.update(robotSimPose);
+    synchronized (visionSim) {
+      visionSim.update(robotSimPose);
+    }
   }
 
   /** Reset pose history of the robot in the vision system simulation. */
   public void resetSimPose(Pose2d pose) {
-    if (Robot.isSimulation()) visionSim.resetRobotPose(pose);
+    if (Robot.isSimulation()) {
+      synchronized (visionSim) {
+        visionSim.resetRobotPose(pose);
+      }
+    }
   }
 
   /** A Field2d for visualizing our robot and objects on the field. */

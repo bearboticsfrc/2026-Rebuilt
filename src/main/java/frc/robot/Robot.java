@@ -5,6 +5,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
@@ -30,12 +31,13 @@ import frc.robot.bearlib.fms.AllianceReadyListener;
 import frc.robot.bearlib.util.AllianceFlipUtil;
 import frc.robot.bearlib.util.TunableNumber;
 import frc.robot.commands.Auton;
+import frc.robot.commands.DynamicShootingCommand;
+import frc.robot.commands.StaticShootCommand;
 import frc.robot.rebuilt.HubTracker;
 import frc.robot.rebuilt.Pilot;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
-import frc.robot.subsystems.intake.IntakeState;
 import frc.robot.subsystems.intake.Rollers;
 import frc.robot.subsystems.intake.Slider;
 import frc.robot.subsystems.shooter.DynamicShootingCalculator;
@@ -90,6 +92,13 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Getter public Field2d field2d = new Field2d();
 
   @Logged private final TunableNumber rpm = new TunableNumber("RPM", 3600, () -> getTuningMode());
+
+  @Logged
+  private final TunableNumber angle = new TunableNumber("ANGLE", 0.0, () -> getTuningMode());
+
+  private final DynamicShootingCommand dynamicShootingCommand;
+
+  private final StaticShootCommand staticShootCommand;
 
   private final Auton auton;
 
@@ -146,10 +155,15 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     selfTest = new SelfTest(rollers, flywheel, hood, spindexer, kicker, turret, slider, drivetrain);
 
-    auton = new Auton(null, null, null, null);
+    dynamicShootingCommand = new DynamicShootingCommand(hood, flywheel, spindexer, kicker);
+
+    staticShootCommand = new StaticShootCommand(hood, flywheel, spindexer, kicker, rpm, angle);
+
+    auton = new Auton(dynamicShootingCommand, rollers, slider);
 
     configureLogging();
     selfTest.bindTriggers();
+    configureBindings();
     configureDefaultCommands();
 
     AllianceColor.addListener(this);
@@ -169,6 +183,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Override
   public void teleopInit() {
+
+    CommandScheduler.getInstance().cancelAll();
 
     if (auton.getAutonomousCommand() != null) {
       auton.getAutonomousCommand().cancel();
@@ -204,28 +220,6 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
     Epilogue.configure(config -> config.minimumImportance = this.MINIMUM_IMPORTANCE);
 
     Epilogue.bind(this);
-  }
-
-  public void configureDefaultCommands() {
-
-    drivetrain.setDefaultCommand(
-        drivetrain.applyRequest(
-            () ->
-                drive
-                    .withVelocityX(
-                        Pilot.getLeftY()
-                            * getMaxLinearVelocity()
-                                .get()) // Drive forward with negative Y (forward)
-                    .withVelocityY(
-                        Pilot.getLeftX()
-                            * getMaxLinearVelocity().get()) // Drive left with negative X (left)
-                    .withRotationalRate(
-                        Pilot.getRightX()
-                            * getMaxAngularVelocity()
-                                .get()) // Drive counterclockwise with negative X (left)
-            ));
-
-    drivetrain.registerTelemetry(driveTelemetry::telemeterize);
   }
 
   private boolean initialPoseSet = false;
@@ -321,5 +315,58 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   public boolean getTuningMode() {
     return true;
+  }
+
+  //
+  // COMMANDS
+  //
+
+  public void configureDefaultCommands() {
+
+    drivetrain.setDefaultCommand(
+        drivetrain.applyRequest(
+            () ->
+                drive
+                    .withVelocityX(
+                        Pilot.getLeftY()
+                            * getMaxLinearVelocity()
+                                .get()) // Drive forward with negative Y (forward)
+                    .withVelocityY(
+                        Pilot.getLeftX()
+                            * getMaxLinearVelocity().get()) // Drive left with negative X (left)
+                    .withRotationalRate(
+                        Pilot.getRightX()
+                            * getMaxAngularVelocity()
+                                .get()) // Drive counterclockwise with negative X (left)
+            ));
+
+    // turret track
+    turret.setDefaultCommand(getTurretCommand());
+
+    drivetrain.registerTelemetry(driveTelemetry::telemeterize);
+  }
+
+  private void configureBindings() {
+
+    // shoot
+    Pilot.shoot().onTrue(staticShootCommand.shoot()).onFalse(staticShootCommand.stop());
+
+    // intake
+    Pilot.intake()
+        .onTrue(rollers.run().alongWith(slider.extend()))
+        .onFalse(rollers.stop().alongWith(slider.retract()));
+
+    // oscillate
+    Pilot.oscillate()
+        .onTrue(slider.lowOscillate().alongWith(rollers.runSlow()))
+        .onFalse(slider.retract().alongWith(rollers.stop()));
+  }
+
+  private Command getTurretCommand() {
+    return turret
+        .setAngle(
+            () -> Radians.of(calculator.getParameters().turretAngle().getMeasure().in(Radians)),
+            () -> calculator.getParameters().turretVelocity())
+        .withName("TurretCommand");
   }
 }

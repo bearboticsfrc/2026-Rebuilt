@@ -14,7 +14,11 @@ public class Pilot {
   /** Returns a trigger to shoot based on driver input and field restrictions. */
   public static Trigger shoot() {
     Trigger shoot =
-        new Trigger(() -> pilot.rightTrigger().getAsBoolean() && !robotState.shootBlocked());
+        new Trigger(
+            () ->
+                pilot.rightTrigger().getAsBoolean()
+                    && !robotState.shootBlocked()
+                    && !robotState.decapitateZone().getAsBoolean());
     return shoot;
   }
 
