@@ -24,7 +24,7 @@ public class Kicker extends Mechanism implements SelfTestable {
 
   private final VelocityVoltage velocityReq = new VelocityVoltage(0.0).withEnableFOC(true);
 
-  private final AngularVelocity NORMAL_SPEED = RPM.of(2200);
+  private final AngularVelocity NORMAL_SPEED = RPM.of(2400);
   private final AngularVelocity SLOW_SPEED = RPM.of(200);
 
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);

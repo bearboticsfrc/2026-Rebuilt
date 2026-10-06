@@ -31,11 +31,11 @@ public class TurretState extends StateMachineBase {
         new State("Zero Degrees", () -> turret.setAngle(Degrees.of(0)))
             .withEnd(() -> turret.isNearTarget(Degrees.of(0)));
 
-    initState(track);
+    initState(idle);
 
-    track.to(idle).condition(Copilot.turret0Degrees()::getAsBoolean);
+    idle.to(track).condition(Copilot.turretIdle().negate()::getAsBoolean);
 
-    idle.to(track).condition(Copilot.turret0Degrees().negate()::getAsBoolean);
+    track.to(idle).condition(Copilot.turretIdle()::getAsBoolean);
 
     configure(idle, track, zeroDegrees);
   }

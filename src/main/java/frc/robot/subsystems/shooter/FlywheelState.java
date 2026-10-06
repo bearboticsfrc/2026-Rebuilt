@@ -8,11 +8,15 @@ import frc.robot.rebuilt.Pilot;
 
 public class FlywheelState extends StateMachineBase {
 
+  private final Flywheel flywheel;
+
   DynamicShootingCalculator calculator = DynamicShootingCalculator.getInstance();
 
   RobotState robotState = RobotState.getInstance();
 
   public FlywheelState(Flywheel flywheel, TunableNumber rpm) {
+
+    this.flywheel = flywheel;
 
     State idle = new State("Idle", () -> flywheel.runAtSpeed(0.0));
 
@@ -34,6 +38,6 @@ public class FlywheelState extends StateMachineBase {
   }
 
   public boolean shooterReady() {
-    return currentState().equals("Shoot") && current().isComplete();
+    return flywheel.isAtTarget();
   }
 }

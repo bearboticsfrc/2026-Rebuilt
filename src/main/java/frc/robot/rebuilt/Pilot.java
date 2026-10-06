@@ -45,7 +45,11 @@ public class Pilot {
     return -pilot.getRightX();
   }
 
-  public static Trigger reverse() {
-    return pilot.y();
+  /** Returns a trigger signaling that the robot is shooting statically. */
+  public static Trigger staticShoot() {
+    Trigger staticShoot =
+        new Trigger(
+            () -> pilot.rightTrigger().debounce(0.75).getAsBoolean() && robotState.isStopped());
+    return staticShoot;
   }
 }

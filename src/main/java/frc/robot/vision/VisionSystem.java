@@ -106,7 +106,6 @@ public class VisionSystem {
   @Logged(name = "Target Poses", importance = Importance.CRITICAL)
   public List<Pose2d> getTargetPoses() {
     synchronized (targetPoses) {
-
       return new ArrayList<>(targetPoses);
     }
   }

@@ -25,7 +25,7 @@ public class Spindexer extends Mechanism implements SelfTestable {
   private final VelocityVoltage velocityReq =
       new VelocityVoltage(0.0).withEnableFOC(true).withSlot(0);
 
-  private final AngularVelocity NORMAL_SPEED = RPM.of(600);
+  private final AngularVelocity NORMAL_SPEED = RPM.of(800);
   private final AngularVelocity SLOW_SPEED = RPM.of(60);
   private final AngularVelocity REVERSE_SPEED = RPM.of(-200);
   private final AngularVelocity REVERSE_SPEED_SLOW = RPM.of(-60);
