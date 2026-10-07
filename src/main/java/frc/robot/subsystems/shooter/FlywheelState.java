@@ -26,15 +26,13 @@ public class FlywheelState extends StateMachineBase {
                 () -> flywheel.runAtSpeed(() -> calculator.getParameters().flywheelVelocity()))
             .withEnd(() -> true);
 
-    State tune = new State("Tune", () -> flywheel.runAtSpeed(rpm));
+    idle.to(shoot).condition(Pilot.shoot()::getAsBoolean);
 
-    idle.to(tune).condition(Pilot.shoot()::getAsBoolean);
-
-    tune.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
+    shoot.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
 
     initState(idle);
 
-    configure(idle, shoot, tune);
+    configure(idle, shoot);
   }
 
   public boolean shooterReady() {

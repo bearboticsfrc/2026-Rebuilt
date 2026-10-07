@@ -25,7 +25,7 @@ public class Flywheel extends Mechanism implements SelfTestable {
 
   private final MotionMagicVelocityVoltage velocityOut = new MotionMagicVelocityVoltage(0);
 
-  private final double tolerance = 750;
+  private final double tolerance = 200;
 
   @Logged private boolean selfTestPassed = false;
 

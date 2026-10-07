@@ -26,7 +26,8 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   public enum Setpoint {
     Ground(Rotations.of(0)),
     Middle(Rotations.of(0.7)),
-    Top(Rotations.of(1.0));
+    Top(Rotations.of(1.0)),
+    Set(Rotations.of(0.2));
 
     /** The position target of the setpoint in angular units. */
     public final Angle target;
@@ -156,6 +157,10 @@ public class Hood extends Mechanism implements frc.robot.test.SelfTestable {
   /** "Grounds" the hood. */
   public Command ground() {
     return goToSetpoint(() -> Setpoint.Ground);
+  }
+
+  public Command set() {
+    return goToSetpoint(() -> Setpoint.Set);
   }
 
   /**

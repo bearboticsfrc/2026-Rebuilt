@@ -1,6 +1,5 @@
 package frc.robot.subsystems.shooter;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -21,7 +20,7 @@ public class DynamicShootingCalculator {
   private static DynamicShootingCalculator instance;
 
   public static final Transform2d turretToRobot =
-      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d(Degrees.of(180)));
+      new Transform2d(Inches.of(-6.25), Inches.of(-6.25), new Rotation2d());
 
   private Translation2d lastTarget = Field.getMyHub();
 
@@ -72,37 +71,31 @@ public class DynamicShootingCalculator {
       new InterpolatingDoubleTreeMap();
 
   static {
-    maxDistance = 12;
-    minDistance = 1.17;
+    maxDistance = 20;
+    minDistance = 2.0;
 
     /* Values for shooting */
 
-    flywheelSpeedMap.put(1.17, 2400.0);
-    flywheelSpeedMap.put(2.0, 2425.0);
-    flywheelSpeedMap.put(2.67, 2625.0);
-    flywheelSpeedMap.put(3.0, 2700.0);
-    flywheelSpeedMap.put(3.57, 2900.0);
-    flywheelSpeedMap.put(4.0, 3100.0);
-    flywheelSpeedMap.put(4.67, 3250.0);
-    flywheelSpeedMap.put(5.5, 3750.0);
+    flywheelSpeedMap.put(2.0, 2410.0);
+    flywheelSpeedMap.put(2.498, 2520.0);
+    flywheelSpeedMap.put(3.01, 2660.0);
+    flywheelSpeedMap.put(3.65, 2970.0);
+    flywheelSpeedMap.put(4.0, 3175.0);
+    flywheelSpeedMap.put(4.2, 3600.0);
 
-    hoodAngleMap.put(1.17, 0.0);
     hoodAngleMap.put(2.0, 0.0);
-    hoodAngleMap.put(2.67, 0.0);
+    hoodAngleMap.put(2.498, 0.0);
     hoodAngleMap.put(3.0, 0.0);
-    hoodAngleMap.put(3.57, 0.0);
+    hoodAngleMap.put(3.65, 0.0);
     hoodAngleMap.put(4.0, 0.0);
-    hoodAngleMap.put(4.67, 0.0);
-    hoodAngleMap.put(5.5, 0.0);
+    hoodAngleMap.put(4.2, 0.2);
 
-    timeOfFlightMap.put(1.17, 0.94);
-    timeOfFlightMap.put(2.0, 1.03);
-    timeOfFlightMap.put(2.67, 1.1);
-    timeOfFlightMap.put(3.0, 1.09);
-    timeOfFlightMap.put(3.57, 1.3);
-    timeOfFlightMap.put(4.0, 1.4);
-    timeOfFlightMap.put(4.67, 1.46);
-    timeOfFlightMap.put(5.5, 1.59);
+    timeOfFlightMap.put(2.0, 0.88);
+    timeOfFlightMap.put(2.498, .93);
+    timeOfFlightMap.put(3.01, 1.05);
+    timeOfFlightMap.put(3.65, 1.17);
+    timeOfFlightMap.put(4.0, 1.25);
+    timeOfFlightMap.put(4.2, 1.43);
 
     /* Values for passing */
 

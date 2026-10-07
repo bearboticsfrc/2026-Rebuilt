@@ -35,6 +35,7 @@ import frc.robot.subsystems.shooter.DynamicShootingCalculator;
 import frc.robot.test.SelfTestable;
 import java.util.function.Supplier;
 import lombok.Getter;
+import lombok.Setter;
 
 public class Turret extends Mechanism implements NTSendable, SelfTestable {
 
@@ -47,10 +48,12 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
 
   @Getter private double gearRatio = 10.44;
 
-  @Getter public Angle minRotations = Rotations.of(-.25);
-  @Getter public Angle maxRotations = Rotations.of(.25);
+  @Getter public Angle minRotations = Rotations.of(-.69);
+  @Getter public Angle maxRotations = Rotations.of(.5);
 
   @Getter public boolean attached = true;
+
+  @Logged @Getter @Setter boolean springZone = false;
 
   @Logged private boolean selfTestPassed = false;
 
@@ -64,6 +67,23 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
 
   public Turret() {
     super("Turret", CAN.TURRET, new CANBus(CAN.NAME));
+
+    // 🎯 PID & Feedforward Slots
+    // Slot 0 (Primary Control)
+    // • kP = 70 (Notes: 72 = 5° error, 180 = 2° error, 360 = 1° error. If you increase P, also
+    // increase D)
+    // • kD = 3 (Notes: Start with D = P / 100, increase until oscillation stops)
+    // • kS = 0.6 (Notes: Start with 0.4. Tune up if mechanism stalls at the end of its move)
+    // • kV = 1.25 (Notes: Formula is 0.124 x 4.34 = 0.54 V/mechanism-RPS. Note that this is not
+    // used in PositionVoltage control)
+    // • kA = 0.05
+    // • Global Volts Variable: kV = Volts.of(10.0) (Notes: Consider zeroing this OR zeroing
+    // Slot0.kV and using only this)
+    // Slot 1 (Alternative/Secondary Control)
+    // • kP = 150
+    // • kD = 12
+    // • kA, kS, kV = 0
+    // notes the big gemini made for me.
 
     neutralMode(NeutralModeValue.Brake);
     inverted(InvertedValue.Clockwise_Positive);
@@ -83,8 +103,8 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
     statorCurrentLimit(80);
     peakForwardTorqueCurrent(120);
     peakReverseTorqueCurrent(-120);
-    forwardSoftLimit(.62);
-    reverseSoftLimit(-.62);
+    forwardSoftLimit(.45);
+    reverseSoftLimit(-.65);
     addConfig();
     motionMagicCruiseVelocity(3.0);
     motionMagicAcceleration(20);
@@ -200,12 +220,21 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
   private void controlMotor(Angle angle, AngularVelocity velocity) {
     Angle target = wrapDegreesToSoftLimits(angle);
     double errorRotations = Math.abs(motorPosition.getValue().minus(target).in(Rotations));
+    Voltage velocityFeedForward = kV.times(velocity.in(RotationsPerSecond));
 
     if (errorRotations > LARGE_JUMP_THRESHOLD) {
       motor.setControl(motionMagicVoltage.withPosition(target));
-    } else {
-      Voltage velocityFeedForward = kV.times(velocity.in(RotationsPerSecond));
+    }
 
+    if (getPositionDegrees() < 36 & getPositionDegrees() > 0 || getPositionDegrees() < -225) {
+      // add 3.04 lbs force consideration to feedforward. range 0.065 - 0.139.
+      setSpringZone(true);
+      motor.setControl(
+          positionVoltage
+              .withPosition(target)
+              .withFeedForward(velocityFeedForward.plus(Volts.of(0.09))));
+    } else {
+      setSpringZone(false);
       motor.setControl(positionVoltage.withPosition(target).withFeedForward(velocityFeedForward));
     }
   }

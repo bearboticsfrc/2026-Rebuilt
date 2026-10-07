@@ -3,6 +3,7 @@ package frc.robot.subsystems.shooter;
 import frc.robot.RobotState;
 import frc.robot.bearlib.statemachine.State;
 import frc.robot.bearlib.statemachine.StateMachineBase;
+import frc.robot.bearlib.util.TunableNumber;
 import frc.robot.rebuilt.Copilot;
 import frc.robot.rebuilt.Pilot;
 
@@ -12,7 +13,7 @@ public class HoodState extends StateMachineBase {
 
   RobotState robotState = RobotState.getInstance();
 
-  public HoodState(Hood hood) {
+  public HoodState(Hood hood, TunableNumber rotations) {
 
     State idle = new State("Idle", () -> hood.stopCommand());
 

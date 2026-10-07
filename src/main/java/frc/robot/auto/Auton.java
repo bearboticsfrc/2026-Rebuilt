@@ -60,7 +60,7 @@ public class Auton {
 
   /** Sets flywheel state to shoot. Sets spindexer state to run. */
   private Command shootCommand() {
-    return flywheelState.setState("Tune").alongWith(spindexerState.setState("Run"));
+    return flywheelState.setState("Shoot").alongWith(spindexerState.setState("Run"));
   }
 
   /** Sets intake state to intake. */

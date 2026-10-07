@@ -103,6 +103,9 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final TunableNumber rpm = new TunableNumber("RPM", 3600, () -> getTuningMode());
 
+  @Logged
+  private final TunableNumber rotations = new TunableNumber("ROTS", 0.0, () -> getTuningMode());
+
   private final Auton auton;
 
   private Command introspectedAutoCommand;
@@ -164,7 +167,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     intakeState = new IntakeState(slider, rollers);
 
-    hoodState = new HoodState(hood);
+    hoodState = new HoodState(hood, rotations);
 
     auton = new Auton(flywheelState, spindexerState, intakeState);
 
