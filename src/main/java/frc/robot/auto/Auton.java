@@ -65,8 +65,8 @@ public class Auton {
   private Command shootCommand() {
     return flywheelState
         .setState("Shoot")
-        .until(() -> flywheelState.shooterReady())
         .andThen(Commands.waitSeconds(.25))
+        .until(() -> flywheelState.shooterReady())
         .andThen(spindexerState.setState("Run"));
   }
 

@@ -69,20 +69,15 @@ public class Turret extends Mechanism implements NTSendable, SelfTestable {
     super("Turret", CAN.TURRET, new CANBus(CAN.NAME));
 
     // 🎯 PID & Feedforward Slots
-    // Slot 0 (Primary Control)
     // • kP = 70 (Notes: 72 = 5° error, 180 = 2° error, 360 = 1° error. If you increase P, also
     // increase D)
     // • kD = 3 (Notes: Start with D = P / 100, increase until oscillation stops)
     // • kS = 0.6 (Notes: Start with 0.4. Tune up if mechanism stalls at the end of its move)
     // • kV = 1.25 (Notes: Formula is 0.124 x 4.34 = 0.54 V/mechanism-RPS. Note that this is not
     // used in PositionVoltage control)
-    // • kA = 0.05
     // • Global Volts Variable: kV = Volts.of(10.0) (Notes: Consider zeroing this OR zeroing
     // Slot0.kV and using only this)
     // Slot 1 (Alternative/Secondary Control)
-    // • kP = 150
-    // • kD = 12
-    // • kA, kS, kV = 0
     // notes the big gemini made for me.
 
     neutralMode(NeutralModeValue.Brake);
