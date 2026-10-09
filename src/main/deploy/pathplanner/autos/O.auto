@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "D SWIPE"
+            "pathName": "O SWIPE"
           }
         },
         {
@@ -31,13 +31,13 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 1000000.0
+            "waitTime": 10000.0
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "D SWIPE 2"
+            "pathName": "O SWIPE 2"
           }
         },
         {
