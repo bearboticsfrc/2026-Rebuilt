@@ -6,6 +6,7 @@ import com.pathplanner.lib.events.EventTrigger;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import frc.robot.subsystems.intake.IntakeState;
 import frc.robot.subsystems.shooter.FlywheelState;
@@ -34,6 +35,8 @@ public class Auton {
 
     NamedCommands.registerCommand("SHOOT", shootCommand());
     NamedCommands.registerCommand("STOPROLLERS", stopRollersCommand());
+    NamedCommands.registerCommand("OSC", oscCommand());
+    NamedCommands.registerCommand("RAMP", ramp());
 
     shoot.onTrue(shootCommand());
     intake.onTrue(intakeCommand());
@@ -60,7 +63,11 @@ public class Auton {
 
   /** Sets flywheel state to shoot. Sets spindexer state to run. */
   private Command shootCommand() {
-    return flywheelState.setState("Shoot").alongWith(spindexerState.setState("Run"));
+    return flywheelState
+        .setState("Shoot")
+        .until(() -> flywheelState.shooterReady())
+        .andThen(Commands.waitSeconds(.25))
+        .andThen(spindexerState.setState("Run"));
   }
 
   /** Sets intake state to intake. */
@@ -76,5 +83,14 @@ public class Auton {
   /** Sets the intake state to rollers idle. Will leave slider extended. */
   private Command stopRollersCommand() {
     return intakeState.setState("Retract");
+  }
+
+  /** Oscillates the intake. */
+  private Command oscCommand() {
+    return intakeState.setState("Oscillate");
+  }
+
+  private Command ramp() {
+    return flywheelState.setState("Idle");
   }
 }

@@ -7,19 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "D SWIPE 1"
+            "pathName": "D SWIPE"
           }
         },
         {
-          "type": "path",
+          "type": "wait",
           "data": {
-            "pathName": "D SHOOT"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "D SWIPE 2"
+            "waitTime": 1.0
           }
         },
         {
@@ -31,7 +25,7 @@
         {
           "type": "named",
           "data": {
-            "name": "STOPROLLERS"
+            "name": "OSC"
           }
         }
       ]

@@ -137,7 +137,9 @@ public class RobotState {
         new Trigger(
             () ->
                 GeomUtil.inZone(Field.getMyLeftTrench(), robotPose)
-                    || GeomUtil.inZone(Field.getMyRightTrench(), robotPose));
+                    || GeomUtil.inZone(Field.getMyRightTrench(), robotPose)
+                    || GeomUtil.inZone(Field.getMyLeftTrench().flip(), robotPose)
+                    || GeomUtil.inZone(Field.getMyRightTrench().flip(), robotPose));
 
     return decapitate;
   }
