@@ -18,7 +18,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
-import frc.robot.rebuilt.Field;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -320,9 +319,9 @@ public class VisionSystem {
 
   private boolean shouldReject(Pose2d pose, double targetSize) {
     /* rejections */
-    if (Field.poseOutOfField(pose)) {
-      return true;
-    }
+    //  if (Field.poseOutOfField(pose)) {
+    //    return true;
+    //  }
 
     if (Math.abs(Robot.get().getSwerve().getCurrentRobotChassisSpeeds().omegaRadiansPerSecond)
         >= 1.6) {
@@ -330,7 +329,7 @@ public class VisionSystem {
     }
 
     // Final check, if it's small reject, else return false and integrate
-    return targetSize <= 0.025;
+    return targetSize <= 0.015;
   }
 
   /** Helper to integrate multiple estimates close in time by fusing them together first */

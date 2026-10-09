@@ -34,6 +34,7 @@ public class Auton {
     EventTrigger stopShoot = new EventTrigger("STOPSHOOT");
 
     NamedCommands.registerCommand("SHOOT", shootCommand());
+    NamedCommands.registerCommand("STOP_SHOOT", stopShootCommand());
     NamedCommands.registerCommand("STOPROLLERS", stopRollersCommand());
     NamedCommands.registerCommand("OSC", oscCommand());
     NamedCommands.registerCommand("RAMP", ramp());
@@ -65,8 +66,8 @@ public class Auton {
   private Command shootCommand() {
     return flywheelState
         .setState("Shoot")
+        .andThen(Commands.waitSeconds(.65))
         .until(() -> flywheelState.shooterReady())
-        .andThen(Commands.waitSeconds(.25))
         .andThen(spindexerState.setState("Run"));
   }
 

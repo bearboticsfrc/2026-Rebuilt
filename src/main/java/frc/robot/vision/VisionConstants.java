@@ -15,7 +15,7 @@ import edu.wpi.first.math.numbers.N3;
 public class VisionConstants {
   public static final double CULLING_DISTANCE = 4.0; // Meters
 
-  public static final double CULLING_AMBIGUITY = 0.2;
+  public static final double CULLING_AMBIGUITY = 0.1;
 
   public static final String FRONT_CAMERA_NAME = "ThriftyFront";
   public static final String REAR_CAMERA_NAME = "ThriftyRear";

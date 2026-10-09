@@ -79,6 +79,7 @@ public class DynamicShootingCalculator {
     flywheelSpeedMap.put(2.0, 2410.0);
     flywheelSpeedMap.put(2.498, 2520.0);
     flywheelSpeedMap.put(3.01, 2660.0);
+    flywheelSpeedMap.put(3.18, 2925.0);
     flywheelSpeedMap.put(3.65, 2970.0);
     flywheelSpeedMap.put(4.0, 3175.0);
     flywheelSpeedMap.put(4.2, 3600.0);
