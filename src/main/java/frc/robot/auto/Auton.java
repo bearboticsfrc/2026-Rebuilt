@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import frc.robot.subsystems.intake.IntakeState;
 import frc.robot.subsystems.shooter.FlywheelState;
+import frc.robot.subsystems.shooter.HoodState;
 import frc.robot.subsystems.spindexer.SpindexerState;
 
 public class Auton {
@@ -19,13 +20,18 @@ public class Auton {
   private final FlywheelState flywheelState;
   private final SpindexerState spindexerState;
   private final IntakeState intakeState;
+  private final HoodState hoodState;
 
   public Auton(
-      FlywheelState flywheelState, SpindexerState spindexerState, IntakeState intakeState) {
+      FlywheelState flywheelState,
+      SpindexerState spindexerState,
+      IntakeState intakeState,
+      HoodState hoodState) {
 
     this.flywheelState = flywheelState;
     this.spindexerState = spindexerState;
     this.intakeState = intakeState;
+    this.hoodState = hoodState;
 
     // Setup Commands & EventTriggers.
 
@@ -73,7 +79,7 @@ public class Auton {
 
   /** Sets intake state to intake. */
   private Command intakeCommand() {
-    return intakeState.setState("Intake");
+    return intakeState.setState("Intake").alongWith(hoodState.setState("Ground"));
   }
 
   /** Sets the flywheel state to idle. Sets the spindexer state to idle. */

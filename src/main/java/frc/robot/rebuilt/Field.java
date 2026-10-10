@@ -48,15 +48,15 @@ public class Field {
   public static Zone2d leftTrench =
       new Zone2d(
           new Translation2d(3.638, 8.234),
-          new Translation2d(5.3, 8.324),
-          new Translation2d(5.3, 6.849),
+          new Translation2d(6.2, 8.324),
+          new Translation2d(6.2, 6.849),
           new Translation2d(3.638, 6.849));
 
   public static Zone2d rightTrench =
       new Zone2d(
           new Translation2d(3.638, 1.4),
-          new Translation2d(5.3, 1.4),
-          new Translation2d(5.3, 0.0),
+          new Translation2d(6.2, 1.4),
+          new Translation2d(6.2, 0.0),
           new Translation2d(3.638, 0.0));
 
   public static Translation2d getMyHub() {

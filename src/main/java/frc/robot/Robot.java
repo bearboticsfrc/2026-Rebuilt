@@ -169,7 +169,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
     hoodState = new HoodState(hood, rotations);
 
-    auton = new Auton(flywheelState, spindexerState, intakeState);
+    auton = new Auton(flywheelState, spindexerState, intakeState, hoodState);
 
     configureLogging();
     selfTest.bindTriggers();
