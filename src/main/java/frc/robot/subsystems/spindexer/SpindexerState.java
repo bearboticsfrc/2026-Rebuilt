@@ -1,45 +1,31 @@
 package frc.robot.subsystems.spindexer;
 
-import edu.wpi.first.epilogue.Logged;
-import frc.robot.Pilot;
-import frc.robot.statemachine.State;
-import frc.robot.statemachine.StateMachineBase;
-import frc.robot.subsystems.shooter.ShootState;
+import frc.robot.bearlib.statemachine.State;
+import frc.robot.bearlib.statemachine.StateMachineBase;
+import frc.robot.rebuilt.Copilot;
+import frc.robot.rebuilt.Pilot;
+import frc.robot.subsystems.shooter.FlywheelState;
 
 public class SpindexerState extends StateMachineBase {
 
-  private final Kicker kicker;
-  private final Spindexer spindexer;
+  public SpindexerState(Kicker kicker, Spindexer spindexer, FlywheelState flywheelState) {
 
-  public SpindexerState(Kicker kicker, Spindexer spindexer, ShootState shootState) {
+    State idle = new State("Idle", () -> kicker.stop().alongWith(spindexer.stop()));
 
-    super(
-        new State("Idle", () -> kicker.stop().alongWith(spindexer.stop()))
-            .withEnd(() -> kicker.isStopped() && spindexer.isStopped()),
-        new State("Run", () -> kicker.run().alongWith(spindexer.run()))
-            .withEnd(() -> !kicker.isStopped() && !spindexer.isStopped()),
-        new State("Reverse", () -> kicker.reverse().alongWith(spindexer.reverse()))
-            .withEnd(() -> !kicker.isStopped() && !spindexer.isStopped()));
+    State run = new State("Run", () -> kicker.run().alongWith(spindexer.run()));
 
-    this.kicker = kicker;
-    this.spindexer = spindexer;
+    State spindexerReverse = new State("Spindex Rev", () -> spindexer.reverse());
 
-    /* setup transitions */
-    State idle = this.states.get(0);
-    State run = this.states.get(1);
+    idle.to(run).condition(() -> Pilot.shoot().getAsBoolean() && flywheelState.shooterReady());
+
+    run.to(idle).condition(Pilot.shoot().negate()::getAsBoolean);
+
+    idle.to(spindexerReverse).condition(Copilot.spindexerRevFast()::getAsBoolean);
+
+    spindexerReverse.to(idle).condition(Copilot.spindexerRevFast().negate()::getAsBoolean);
 
     initState(idle);
 
-    idle.to(run).condition(() -> Pilot.shoot().getAsBoolean() && shootState.shooterReady());
-    run.to(idle).condition(() -> !Pilot.shoot().getAsBoolean());
-
-    triggersInit();
-    transitionsInit();
-    configure();
-  }
-
-  @Logged
-  public boolean spindexerReady() {
-    return !kicker.isStopped() && !spindexer.isStopped();
+    configure(idle, run, spindexerReverse);
   }
 }

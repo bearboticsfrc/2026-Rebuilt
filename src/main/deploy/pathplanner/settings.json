@@ -2,16 +2,10 @@
   "robotWidth": 0.9,
   "robotLength": 0.9,
   "holonomicMode": true,
-  "pathFolders": [
-    "DepotSide",
-    "OutpostSide"
-  ],
-  "autoFolders": [
-    "DepotAutos",
-    "OutpostAutos"
-  ],
-  "defaultMaxVel": 2.0,
-  "defaultMaxAccel": 2.0,
+  "pathFolders": [],
+  "autoFolders": [],
+  "defaultMaxVel": 2.5,
+  "defaultMaxAccel": 2.5,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,
@@ -34,5 +28,7 @@
   "brModuleY": -0.273,
   "bumperOffsetX": 0.0,
   "bumperOffsetY": 0.0,
-  "robotFeatures": []
+  "robotFeatures": [
+    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.54,\"y\":0.0},\"size\":{\"width\":0.9,\"length\":0.25},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":true}}"
+  ]
 }

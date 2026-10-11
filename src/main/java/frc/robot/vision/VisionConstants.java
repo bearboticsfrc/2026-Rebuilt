@@ -15,7 +15,7 @@ import edu.wpi.first.math.numbers.N3;
 public class VisionConstants {
   public static final double CULLING_DISTANCE = 4.0; // Meters
 
-  public static final double CULLING_AMBIGUITY = 0.2;
+  public static final double CULLING_AMBIGUITY = 0.1;
 
   public static final String FRONT_CAMERA_NAME = "ThriftyFront";
   public static final String REAR_CAMERA_NAME = "ThriftyRear";
@@ -29,17 +29,17 @@ public class VisionConstants {
 
   public static final Transform3d ROBOT_TO_REAR_CAMERA =
       new Transform3d(
-          new Translation3d(Inches.of(-12.53), Inches.of(8.0), Inches.of(16.81)),
+          new Translation3d(Inches.of(-12.53), Inches.of(8.0), Inches.of(13.507231)),
           new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.of(180)));
 
   public static final Transform3d ROBOT_TO_LEFT_CAMERA =
       new Transform3d(
-          new Translation3d(Inches.of(-9.5), Inches.of(12.802), Inches.of(19.765)),
+          new Translation3d(Inches.of(-9.5), Inches.of(12.802), Inches.of(20.169281)),
           new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.of(90)));
 
   public static final Transform3d ROBOT_TO_RIGHT_CAMERA =
       new Transform3d(
-          new Translation3d(Inches.of(-12.442), Inches.of(-8.0), Inches.of(16.435)),
+          new Translation3d(Inches.of(-12.6), Inches.of(-11.7), Inches.of(12.829246)),
           new Rotation3d(Radians.zero(), Degrees.of(-20), Degrees.of(-90)));
 
   public static final VisionCamera FRONT_CAMERA =

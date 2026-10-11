@@ -18,7 +18,6 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Robot;
-import frc.robot.field.Field;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,27 +86,30 @@ public class VisionSystem {
   private Matrix<N3, N1> curStdDevs;
 
   // Simulation
-  private PhotonCameraSim cameraSim;
   private VisionSystemSim visionSim;
   private Notifier simNotifier = null;
   private static final double simLoopPeriod = 0.005; // 5ms
 
-  @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
-  public Map<String, Pose2d> latestCameraPose =
+  private final Map<String, Pose2d> latestCameraPose =
       Collections.synchronizedMap(new HashMap<String, Pose2d>());
+
+  @Logged(name = "Camera Poses", importance = Importance.CRITICAL)
+  public Map<String, Pose2d> getLatestCameraPoses() {
+    synchronized (latestCameraPose) {
+      return new HashMap<>(latestCameraPose);
+    }
+  }
 
   public final List<Pose2d> targetPoses = Collections.synchronizedList(new ArrayList<>());
 
   @Logged(name = "Target Poses", importance = Importance.CRITICAL)
   public List<Pose2d> getTargetPoses() {
     synchronized (targetPoses) {
-      return targetPoses;
+      return new ArrayList<>(targetPoses);
     }
   }
 
   private final CommandSwerveDrivetrain drivetrain;
-
-  private TurretLimelight turretLimelight;
 
   private final Notifier poseEstimationNotifier = new Notifier(this::poseEstimationPeriodic);
 
@@ -138,17 +140,11 @@ public class VisionSystem {
       }
     }
 
-    if (enableLimelight) {
-      turretLimelight = new TurretLimelight(false);
+    if (Robot.isSimulation()) {
+      startSimThread();
     }
 
     poseEstimationNotifier.startPeriodic(VISION_LOOP_PERIOD);
-  }
-
-  public void updateCameraSettings() {
-    if (turretLimelight != null) {
-      turretLimelight.updateLimelightSettings();
-    }
   }
 
   private void poseEstimationPeriodic() {
@@ -251,21 +247,6 @@ public class VisionSystem {
       latestCameraPose.put(camera.getName(), visionEstimation.get().estimatedPose.toPose2d());
     }
 
-    if (turretLimelight != null) {
-      double robotYawRads = Robot.get().getSwerve().getRobotPose().getRotation().getRadians();
-      turretLimelight.update(
-          robotYawRads,
-          Units.degreesToRadians(turretRotationSupplier.getAsDouble()),
-          robotRotationVelocitySupplier.getAsDouble());
-
-      VisionEstimate visionEstimate = turretLimelight.getTurretVisionEstimate();
-      if (visionEstimate.isAccepted()) {
-        visionEstimates.add(visionEstimate);
-
-        updatedTargetPosesFromLimelight(turretLimelight.getTagList());
-      }
-    }
-
     return visionEstimates;
   }
 
@@ -327,15 +308,6 @@ public class VisionSystem {
     }
   }
 
-  private void updatedTargetPosesFromLimelight(limelight.results.RawFiducial[] tags) {
-    for (limelight.results.RawFiducial tag : tags) {
-      int fiducialId = tag.id;
-      Pose3d tagPose = VisionConstants.APRIL_TAG_FIELD_LAYOUT.getTagPose(fiducialId).get();
-
-      targetPoses.add(tagPose.toPose2d());
-    }
-  }
-
   private boolean isTooFar(EstimatedRobotPose estimate) {
     return estimate.targetsUsed.get(0).getBestCameraToTarget().getTranslation().getNorm()
         > CULLING_DISTANCE;
@@ -347,9 +319,9 @@ public class VisionSystem {
 
   private boolean shouldReject(Pose2d pose, double targetSize) {
     /* rejections */
-    if (Field.poseOutOfField(pose)) {
-      return true;
-    }
+    //  if (Field.poseOutOfField(pose)) {
+    //    return true;
+    //  }
 
     if (Math.abs(Robot.get().getSwerve().getCurrentRobotChassisSpeeds().omegaRadiansPerSecond)
         >= 1.6) {
@@ -357,7 +329,7 @@ public class VisionSystem {
     }
 
     // Final check, if it's small reject, else return false and integrate
-    return targetSize <= 0.025;
+    return targetSize <= 0.015;
   }
 
   /** Helper to integrate multiple estimates close in time by fusing them together first */
@@ -464,19 +436,12 @@ public class VisionSystem {
     }
   }
 
-  public void resetPose() {
-    if (turretLimelight != null) {
-      turretLimelight.resetLastAcceptedPose();
-    }
-  }
-
   // ----- Simulation
   private void setupSimulation() {
     // Create the vision system simulation which handles cameras and targets on the field.
     visionSim = new VisionSystemSim("main");
     // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
     visionSim.addAprilTags(APRIL_TAG_FIELD_LAYOUT);
-    startSimThread();
   }
 
   private void addCameraToSim(PhotonCamera camera, Transform3d cameraTransform) {
@@ -490,9 +455,11 @@ public class VisionSystem {
 
     // Create a PhotonCameraSim which will update the linked PhotonCamera's values with visible
     // targets.
-    cameraSim = new PhotonCameraSim(camera, cameraProp);
+    PhotonCameraSim cameraSim = new PhotonCameraSim(camera, cameraProp);
     // Add the simulated camera to view the targets on this simulated field.
-    visionSim.addCamera(cameraSim, cameraTransform);
+    synchronized (visionSim) {
+      visionSim.addCamera(cameraSim, cameraTransform);
+    }
 
     // Enable the raw and processed streams. These are enabled by default.
     // cameraSim.enableRawStream(false);
@@ -518,12 +485,18 @@ public class VisionSystem {
   }
 
   public void simulationPeriodic(Pose2d robotSimPose) {
-    visionSim.update(robotSimPose);
+    synchronized (visionSim) {
+      visionSim.update(robotSimPose);
+    }
   }
 
   /** Reset pose history of the robot in the vision system simulation. */
   public void resetSimPose(Pose2d pose) {
-    if (Robot.isSimulation()) visionSim.resetRobotPose(pose);
+    if (Robot.isSimulation()) {
+      synchronized (visionSim) {
+        visionSim.resetRobotPose(pose);
+      }
+    }
   }
 
   /** A Field2d for visualizing our robot and objects on the field. */

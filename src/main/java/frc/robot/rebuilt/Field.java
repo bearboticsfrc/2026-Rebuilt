@@ -1,0 +1,117 @@
+package frc.robot.rebuilt;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
+import frc.robot.bearlib.util.AllianceFlipUtil;
+import frc.robot.bearlib.util.GeomUtil.Zone2d;
+
+public class Field {
+  public static final double LENGTH = 16.541;
+  public static final double WIDTH = 8.069;
+  public static final double ROBOT_WIDTH = 0.85725;
+  public static final Translation2d BLUE_HUB = new Translation2d(4.625, 4.034536);
+  public static final Translation2d RED_HUB = new Translation2d(11.915394, 4.034536);
+  public static final Translation2d BLUE_LEFT = new Translation2d(1.2, 7.0);
+  public static final Translation2d BLUE_RIGHT = new Translation2d(1.2, 1);
+  public static final Translation2d BLUE_ALLIANCE_LINE = new Translation2d(4, 4);
+
+  public static Zone2d allianceZone =
+      new Zone2d(
+          new Translation2d(0.0, 8.15),
+          new Translation2d(5.21, 8.15),
+          new Translation2d(5.21, 0.0),
+          new Translation2d(0.0, 0.0));
+
+  public static Zone2d neutralZone =
+      new Zone2d(
+          new Translation2d(5.21, 8.15),
+          new Translation2d(5.21, 0.0),
+          new Translation2d(16.59, 0.0),
+          new Translation2d(16.59, 8.15));
+
+  public static Zone2d blueNet =
+      new Zone2d(
+          new Translation2d(5.33, 4.74),
+          new Translation2d(7.325, 4.041),
+          new Translation2d(5.33, 3.459));
+
+  public static Zone2d blueTower =
+      new Zone2d(
+          new Translation2d(0.0, 4.15),
+          new Translation2d(1.1, 4.15),
+          new Translation2d(1.1, 3.36),
+          new Translation2d(0.0, 3.36));
+
+  public static Zone2d leftTrench =
+      new Zone2d(
+          new Translation2d(3.638, 8.234),
+          new Translation2d(6.2, 8.324),
+          new Translation2d(6.2, 6.849),
+          new Translation2d(3.638, 6.849));
+
+  public static Zone2d rightTrench =
+      new Zone2d(
+          new Translation2d(3.638, 1.4),
+          new Translation2d(6.2, 1.4),
+          new Translation2d(6.2, 0.0),
+          new Translation2d(3.638, 0.0));
+
+  public static Translation2d getMyHub() {
+    return AllianceFlipUtil.apply(BLUE_HUB);
+  }
+
+  public static Translation3d getMyHub3d() {
+    return AllianceFlipUtil.apply(
+        new Translation3d(BLUE_HUB.getX(), BLUE_HUB.getY(), Units.inchesToMeters(72.0)));
+  }
+
+  public static Translation2d getMyRight() {
+    return AllianceFlipUtil.apply(BLUE_RIGHT);
+  }
+
+  public static Translation2d getMyLeft() {
+    return AllianceFlipUtil.apply(BLUE_LEFT);
+  }
+
+  public static Translation2d getMyAllianceLine() {
+    return AllianceFlipUtil.apply(BLUE_ALLIANCE_LINE);
+  }
+
+  public static Zone2d getMyAllianceZone() {
+    return AllianceFlipUtil.shouldFlip() ? allianceZone.flip() : allianceZone;
+  }
+
+  public static Zone2d getMyNeutralZone() {
+    return AllianceFlipUtil.shouldFlip() ? neutralZone.flip() : neutralZone.flip();
+  }
+
+  public static Zone2d getMyNet() {
+    return AllianceFlipUtil.shouldFlip() ? blueNet.flip() : blueNet;
+  }
+
+  public static Zone2d getMyTower() {
+    return AllianceFlipUtil.shouldFlip() ? blueTower.flip() : blueTower;
+  }
+
+  public static Zone2d getMyRightTrench() {
+    return AllianceFlipUtil.shouldFlip() ? rightTrench.flip() : rightTrench;
+  }
+
+  public static Zone2d getMyLeftTrench() {
+    return AllianceFlipUtil.shouldFlip() ? leftTrench.flip() : leftTrench;
+  }
+
+  public static boolean poseOutOfField(Pose2d pose2D) {
+    double x = pose2D.getX();
+    double y = pose2D.getY();
+    return (x <= ROBOT_WIDTH || x >= Field.LENGTH - ROBOT_WIDTH)
+        || (y <= ROBOT_WIDTH || y >= Field.WIDTH - ROBOT_WIDTH);
+  }
+
+  public static boolean poseOutOfField(Pose3d pose3D) {
+    return poseOutOfField(pose3D.toPose2d());
+  }
+}
