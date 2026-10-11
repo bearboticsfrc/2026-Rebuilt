@@ -193,6 +193,8 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
   @Override
   public void teleopInit() {
 
+    CommandScheduler.getInstance().cancelAll();
+
     if (auton.getAutonomousCommand() != null) {
       auton.getAutonomousCommand().cancel();
     }

@@ -27,7 +27,7 @@ public class IntakeState extends StateMachineBase {
 
     intake.to(oscillate).condition(Pilot.oscillate()::getAsBoolean);
 
-    retract.to(oscillate).condition(Pilot.staticShoot());
+    // retract.to(oscillate).condition(Pilot.staticShoot());
 
     configure(retract, intake, oscillate);
   }
