@@ -3,7 +3,7 @@ package frc.robot.bearlib.util;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import frc.robot.field.AllianceFlipUtil;
+import frc.robot.bearlib.util.AllianceFlipUtil;
 
 public class GeomUtil {
 

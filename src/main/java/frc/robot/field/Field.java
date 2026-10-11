@@ -2,13 +2,14 @@ package frc.robot.field;
 
 import static edu.wpi.first.units.Units.Degrees;
 
-import bearlib.util.GeomUtil.Zone2d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.bearlib.util.AllianceFlipUtil;
+import frc.robot.bearlib.util.GeomUtil.Zone2d;
 
 public class Field {
   public static final double LENGTH = 16.541;
