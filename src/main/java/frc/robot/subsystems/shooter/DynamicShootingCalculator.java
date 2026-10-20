@@ -84,12 +84,7 @@ public class DynamicShootingCalculator {
     flywheelSpeedMap.put(4.0, 3300.0);
     flywheelSpeedMap.put(4.2, 3410.0);
 
-    hoodAngleMap.put(2.0, 0.0);
-    hoodAngleMap.put(2.498, 0.0);
-    hoodAngleMap.put(3.0, 0.0);
-    hoodAngleMap.put(3.65, 0.0);
-    hoodAngleMap.put(4.0, 0.0);
-    hoodAngleMap.put(4.2, 0.3);
+    hoodAngleMap.put(4.2, 1.0);
 
     timeOfFlightMap.put(2.0, 0.88);
     timeOfFlightMap.put(2.498, .93);

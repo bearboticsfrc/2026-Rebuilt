@@ -1,7 +1,5 @@
 package frc.robot.subsystems.shooter;
 
-import static edu.wpi.first.units.Units.RPM;
-
 import frc.robot.RobotState;
 import frc.robot.bearlib.statemachine.State;
 import frc.robot.bearlib.statemachine.StateMachineBase;
@@ -28,10 +26,7 @@ public class FlywheelState extends StateMachineBase {
                 () -> flywheel.runAtSpeed(() -> calculator.getParameters().flywheelVelocity()))
             .withEnd(() -> true);
 
-    State tune = 
-        new State(
-                "tune",
-                 () -> flywheel.runAtSpeed(rpm));
+    State tune = new State("tune", () -> flywheel.runAtSpeed(rpm));
 
     idle.to(tune).condition(Pilot.shoot()::getAsBoolean);
 
