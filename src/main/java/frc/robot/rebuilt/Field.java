@@ -12,7 +12,7 @@ public class Field {
   public static final double LENGTH = 16.541;
   public static final double WIDTH = 8.069;
   public static final double ROBOT_WIDTH = 0.85725;
-  public static final Translation2d BLUE_HUB = new Translation2d(4.625, 4.034536);
+  public static final Translation2d BLUE_HUB = new Translation2d(8.28, 4.034536);
   public static final Translation2d RED_HUB = new Translation2d(11.915394, 4.034536);
   public static final Translation2d BLUE_LEFT = new Translation2d(1.2, 7.0);
   public static final Translation2d BLUE_RIGHT = new Translation2d(1.2, 1);
@@ -60,7 +60,7 @@ public class Field {
           new Translation2d(3.638, 0.0));
 
   public static Translation2d getMyHub() {
-    return AllianceFlipUtil.apply(BLUE_HUB);
+    return BLUE_HUB;
   }
 
   public static Translation3d getMyHub3d() {
