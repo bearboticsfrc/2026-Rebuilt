@@ -3,7 +3,6 @@ package frc.robot.vision;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -11,6 +10,9 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Filesystem;
+import java.io.File;
+import java.io.IOException;
 
 public class VisionConstants {
   public static final double CULLING_DISTANCE = 4.0; // Meters
@@ -58,8 +60,8 @@ public class VisionConstants {
   public static final Matrix<N3, N1> SINGLE_TAG_STD_DEVS = VecBuilder.fill(0.4, 0.4, 2.0);
   public static final Matrix<N3, N1> MULTI_TAG_STD_DEVS = VecBuilder.fill(0.1, 0.1, 0.5);
 
-  public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT =
-      AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+  public static final AprilTagFieldLayout APRIL_TAG_FIELD_LAYOUT = loadAprilTagFieldLayout();
+  //    AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
   public static final AprilTagFieldLayout HUB_TAGS_ONLY_LAYOUT =
       new AprilTagFieldLayout(
@@ -82,4 +84,16 @@ public class VisionConstants {
               .toList(),
           APRIL_TAG_FIELD_LAYOUT.getFieldLength(),
           APRIL_TAG_FIELD_LAYOUT.getFieldWidth());
+
+  private static AprilTagFieldLayout loadAprilTagFieldLayout() {
+    try {
+      String path = Filesystem.getDeployDirectory() + File.separator + "demoFieldMap.json";
+      System.out.println("Loading apriltag map from " + path);
+      return new AprilTagFieldLayout(path);
+    } catch (IOException e) {
+      System.out.println("Error loading AprilTagFieldLayout " + e);
+      e.printStackTrace();
+      throw new RuntimeException("Failed to load AprilTag field layout", e);
+    }
+  }
 }

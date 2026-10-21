@@ -117,7 +117,7 @@ public class Flywheel extends Mechanism implements SelfTestable {
   /** Signals whether or not the flywheel is at its setpoint. */
   @Logged
   public boolean isAtTarget() {
-    return getTargetVelocityInRPM() > 500
+    return getTargetVelocityInRPM() > 100
         && Math.abs(getVelocityInRPM() - getTargetVelocityInRPM()) < tolerance;
   }
 
