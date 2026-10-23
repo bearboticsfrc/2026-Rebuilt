@@ -101,7 +101,7 @@ public class Robot extends TimedRobot implements AllianceReadyListener {
 
   @Logged private final HoodState hoodState;
 
-  @Logged private final TunableNumber rpm = new TunableNumber("RPM", 3600, () -> getTuningMode());
+  @Logged private final TunableNumber rpm = new TunableNumber("RPM", 900, () -> getTuningMode());
 
   @Logged
   private final TunableNumber rotations = new TunableNumber("ROTS", 0.0, () -> getTuningMode());

@@ -25,7 +25,7 @@ public class Flywheel extends Mechanism implements SelfTestable {
 
   private final MotionMagicVelocityVoltage velocityOut = new MotionMagicVelocityVoltage(0);
 
-  private final double tolerance = 50;
+  private final double tolerance = 20;
 
   @Logged private boolean selfTestPassed = false;
 
@@ -117,8 +117,7 @@ public class Flywheel extends Mechanism implements SelfTestable {
   /** Signals whether or not the flywheel is at its setpoint. */
   @Logged
   public boolean isAtTarget() {
-    return getTargetVelocityInRPM() > 100
-        && Math.abs(getVelocityInRPM() - getTargetVelocityInRPM()) < tolerance;
+    return Math.abs(getVelocityInRPM() - getTargetVelocityInRPM()) < tolerance;
   }
 
   /** Signals whether or not the flywheel is stopped. */

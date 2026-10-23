@@ -76,15 +76,12 @@ public class DynamicShootingCalculator {
 
     /* Values for shooting */
 
-    flywheelSpeedMap.put(2.0, 2410.0);
-    flywheelSpeedMap.put(2.498, 2520.0);
-    flywheelSpeedMap.put(3.01, 2660.0);
-    flywheelSpeedMap.put(3.18, 2925.0);
-    flywheelSpeedMap.put(3.65, 3100.0);
-    flywheelSpeedMap.put(4.0, 3300.0);
-    flywheelSpeedMap.put(4.2, 3410.0);
+    flywheelSpeedMap.put(0.915, 1500.0);
 
-    hoodAngleMap.put(4.2, 1.0);
+    flywheelSpeedMap.put(1.5, 1900.0);
+    flywheelSpeedMap.put(2.0, 2200.0);
+
+    hoodAngleMap.put(4.2, 0.0);
 
     timeOfFlightMap.put(2.0, 0.88);
     timeOfFlightMap.put(2.498, .93);
@@ -95,17 +92,19 @@ public class DynamicShootingCalculator {
 
     /* Values for passing */
 
-    passFlywheelSpeedMap.put(4.7, 2000.0);
-    passFlywheelSpeedMap.put(7.2, 2800.0);
-    passFlywheelSpeedMap.put(8.7, 3200.0);
-    passFlywheelSpeedMap.put(11.8, 4250.0);
-    passFlywheelSpeedMap.put(14.5, 5400.0);
+    passFlywheelSpeedMap.put(1.0, 900.0);
+    passFlywheelSpeedMap.put(2.0, 900.0);
+    passFlywheelSpeedMap.put(3.0, 900.0);
+    passFlywheelSpeedMap.put(7.2, 1500.0);
+    passFlywheelSpeedMap.put(8.7, 2000.0);
+    passFlywheelSpeedMap.put(11.8, 2500.0);
+    passFlywheelSpeedMap.put(14.5, 3000.0);
 
-    passHoodAngleMap.put(4.7, 1.0);
-    passHoodAngleMap.put(7.2, 1.0);
-    passHoodAngleMap.put(8.7, 1.0);
-    passHoodAngleMap.put(11.8, 1.0);
-    passHoodAngleMap.put(14.5, 1.0);
+    passHoodAngleMap.put(4.7, 0.0);
+    passHoodAngleMap.put(7.2, 0.0);
+    passHoodAngleMap.put(8.7, 0.0);
+    passHoodAngleMap.put(11.8, 0.0);
+    passHoodAngleMap.put(14.5, 0.0);
 
     passTimeOfFlightMap.put(4.7, 1.0);
     passTimeOfFlightMap.put(14.5, 1.0);
@@ -249,7 +248,7 @@ public class DynamicShootingCalculator {
   }
 
   private Translation2d selectTarget() {
-    RobotState state = RobotState.getInstance();
+    // RobotState state = RobotState.getInstance();
     // if (state.isInAllianceZone()) return Field.getMyHub();
     // if (state.isLeftNeutralZone()) return Field.getMyLeft();
     // if (state.isRightNeutralZone()) return Field.getMyRight();
@@ -257,13 +256,17 @@ public class DynamicShootingCalculator {
   }
 
   private InterpolatingDoubleTreeMap getFlywheelMap() {
-    RobotState state = RobotState.getInstance();
-    return (!state.isInAllianceZone()) ? passFlywheelSpeedMap : flywheelSpeedMap;
+    // RobotState state = RobotState.getInstance();
+    // return (!state.isInAllianceZone()) ? passFlywheelSpeedMap : flywheelSpeedMap;
+
+    return flywheelSpeedMap;
   }
 
   private InterpolatingDoubleTreeMap getHoodMap() {
-    RobotState state = RobotState.getInstance();
-    return (!state.isInAllianceZone()) ? passHoodAngleMap : hoodAngleMap;
+    // RobotState state = RobotState.getInstance();
+    // return (!state.isInAllianceZone()) ? passHoodAngleMap : hoodAngleMap;
+
+    return hoodAngleMap;
   }
 
   private InterpolatingDoubleTreeMap getTOFMap() {
